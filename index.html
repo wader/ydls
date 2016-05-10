@@ -1,0 +1,14 @@
+<html>
+<body style="text-align: center; margin-top: 150px">
+  <form method="GET">
+    <input name="url" type="text" size="40" placeholder="URL" />
+    <select name="format">
+      <option value="">auto</option>
+      {{range .}}
+      <option value="{{.Name}}">{{.Name}}</option>
+      {{end}}
+    </select>
+    <input type="submit" value="Download" />
+  </form>
+</body>
+</html>

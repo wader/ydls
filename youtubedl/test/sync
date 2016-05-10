@@ -1,0 +1,38 @@
+#!/bin/bash
+
+shopt -s nullglob
+set -e
+
+function dl() {
+  n=$(echo "$1" | sed -E 's/^https?:\/\/([^/]*)\/.*$/\1/')
+  mkdir -p "$PWD/$n"
+  cd "$PWD/$n"
+  rm -f *
+  youtube-dl \
+    --no-call-home \
+    --skip-download \
+    --write-info-json \
+    --write-thumbnail \
+    "$1"
+  json=$(echo *.json)
+  mv "$json" "$json.temp"
+  jq . "$json.temp" > "$json"
+  rm "$json.temp"
+  image=$(echo *.jpg *.jpeg *.png)
+  if [ "$image" != "" ] ; then
+    mv "$image" "$image.temp"
+    dd "if=$image.temp" "of=$image" bs=1 count=1024
+    rm "$image.temp"
+  fi
+  cd ..
+}
+
+for i in \
+  "https://www.infoq.com/presentations/Simple-Made-Easy" \
+  "https://soundcloud.com/timsweeney/thedrifter" \
+  "http://www.svtplay.se/video/1929195/pa-jakt-med-lotta-och-leif/avsnitt-1" \
+  "https://vimeo.com/129701495" \
+  "https://www.youtube.com/watch?v=uVYWQJ5BB_w" \
+; do
+  dl "$i"
+done

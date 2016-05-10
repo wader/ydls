@@ -1,0 +1,59 @@
+[
+  {
+    "Name": "mp3",
+    "Formats": ["mp3"],
+    "ACodecs": ["mp3"],
+    "ACodecFlags": ["-id3v2_version", "0"],
+    "Prepend": "id3v2",
+    "Ext": "mp3",
+    "MIMEType": "audio/mpeg"
+  },
+  {
+    "Name": "m4a",
+    "Formats": ["mov", "m4a", "3gp", "mj2"],
+    "ACodecs": ["aac"],
+    "FormatFlags": ["-frag_size", "1000000", "-bsf:a", "aac_adtstoasc"],
+    "Ext": "m4a",
+    "MIMEType": "audio/mp4"
+  },
+  {
+    "Name": "ogg",
+    "Formats": ["ogg"],
+    "ACodecs": ["vorbis"],
+    "Ext": "ogg",
+    "MIMEType": "audio/ogg"
+  },
+  {
+    "Name": "mp4",
+    "Formats": ["mov", "m4a", "3gp", "mj2"],
+    "ACodecs": ["aac", "mp3", "vorbis"],
+    "VCodecs": ["h264"],
+    "FormatFlags": ["-frag_size", "1000000", "-bsf:a", "aac_adtstoasc"],
+    "Ext": "mp4",
+    "MIMEType": "video/mp4"
+  },
+  {
+    "Name": "webm",
+    "Formats": ["webm", "matroska"],
+    "ACodecs": ["opus", "vorbis"],
+    "VCodecs": ["vp9", "vp8"],
+    "Ext": "webm",
+    "MIMEType": "video/webm"
+  },
+  {
+    "Name": "webmhigh",
+    "Formats": ["webm", "matroska"],
+    "ACodecs": ["opus"],
+    "VCodecs": ["vp9"],
+    "Ext": "webm",
+    "MIMEType": "video/webm"
+  },
+  {
+    "Name": "mkv",
+    "Formats": ["matroska"],
+    "ACodecs": ["aac", "mp3", "opus", "vorbis"],
+    "VCodecs": ["h264", "vp9", "vp8"],
+    "Ext": "mkv",
+    "MIMEType": "video/x-matroska"
+  }
+]
