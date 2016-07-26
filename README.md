@@ -1,16 +1,16 @@
-#### youtube-dl HTTP service
+### youtube-dl HTTP service
 
 HTTP service for [youtube-dl](https://yt-dl.org) that downloads media for
 the requested URL and transmuxes and transcodes to request format if needed.
 
-#### Usage
+### Usage
 
-##### Docker
+#### Docker
 
-Build image using Dockerfile and run a container. Depending on your setup you
-might want to publish port 8080.
+Pull `mwader/ydls` or build image using Dockerfile and run a container. Depending on
+your setup you should publish port 8080 somehow.
 
-##### Installing
+#### Installing
 
 Run `go get github.com/wader/ydls/...` this  will install `ydls-server` and
 `ydls-get`. Make sure you have ffmpeg, youtube-dl, rtmpdump and mplayer
@@ -19,9 +19,10 @@ installed and in path.
 Copy and edit [formats.json](formats.json) to match your ffmpeg builds
 supported formats and codecs.
 
-Start with `ydls-server -formats /path/to/formats.json`.
+Start with `ydls-server -formats /path/to/formats.json` and it default will listen
+on port 8080.
 
-#### Endpoints
+### Endpoints
 
 Download in best format:  
 `GET /<URL>`  
@@ -47,9 +48,9 @@ Download and make sure media is in webm format:
 Download in best format:  
 `http://ydls-host/https://www.youtube.com/watch?v=cF1zJYkBW4A`
 
-#### Can't youtube-dl already do this?
+### Can't youtube-dl already do this?
 
-Yes sort of. It can do some transmuxing and transcodin but it's done post-download
+Yes sort of. It can do some transmuxing and transcoding but it's done post-download
 so it can take a lot of time before you get any data. That did not work that great
 with the clients and usage I wanted. Also ydls have some extra logic for how to
 download, e.g. if you want media in mp3 format it will look for formats in this
@@ -66,7 +67,7 @@ transmuxed and transcoded while streaming.
 
 There is also ID3v2 support and logic to prefer formats suitable for streaming.
 
-#### Formats config
+### Formats config
 
 ```javascript
 [
@@ -95,18 +96,19 @@ Download with curl and save to filename provided by response header:
 Docker image can download from command line. This will download in mp3 format
 to current directory:
 
-`docker run --rm -v $PWD:/go --user=root <ydls-image> https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
+`docker run --rm -v "$PWD:/go" --user=root <ydls-image> https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
 
 youtube-dl URL can point to a plain media file.
 
 If you run the service using some cloud services you might run into geo-restriction
 issues with some sites like youtube.
 
-#### TODO
+### TODO
 
 - X-Remote IP header?
 - Flags should be per format and codec?
 - seccomp and chroot things
+- Auto update youtube-dl somehow?
 
 ### License
 
