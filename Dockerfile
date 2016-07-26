@@ -66,6 +66,7 @@ RUN \
   go test github.com/wader/ydls/... && \
   go install github.com/wader/ydls/... && \
   cp /go/bin/* /usr/local/bin && \
+  go clean -r github.com/wader/ydls/... && \
   rm -rf /go/*
 
 USER nobody
