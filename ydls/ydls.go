@@ -272,7 +272,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 			canCopy := outFormat.VCodecs.member(vProbedFormat.VCodec())
 			ffmpegCodec := boolString(canCopy, "copy", outFormat.VCodecs.first())
 			ydlVCodec := "n/a"
-			if aYDLFormat != nil {
+			if vYDLFormat != nil {
 				ydlVCodec = vYDLFormat.NormVCodec
 			}
 
