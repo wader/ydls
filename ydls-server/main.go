@@ -55,48 +55,63 @@ func contentDispositionFilename(s string) string {
 	return string(rs)
 }
 
-func parseDownloadFormatURL(URL *url.URL) (format string, downloadURL *url.URL) {
-	parts := strings.SplitN(URL.Path, "/", 3)
-	if len(parts) != 3 {
+func splitRequestURL(URL *url.URL) (format string, urlStr string) {
+	if URL.Query().Get("url") != "" {
 		// ?url=url&format=format
-		u, err := url.Parse(URL.Query().Get("url"))
-		if err != nil {
-			return "", nil
-		}
-		format = URL.Query().Get("format")
-
-		return format, u
+		return URL.Query().Get("format"), URL.Query().Get("url")
 	}
 
-	// format/schema://host.tld/path
-	// format/host.tld/path
-	// schema://host.tld/path
-	// host.tld/path
+	// /format/schema://host.domin/path?query
+	// /format/host.domain/path?query
+	// /schema://host.domain/path?query
+	// /host.domain/path?query
 
-	// note: query is in URL.RawQuery
+	parts := strings.SplitN(URL.Path, "/", 3)
+	// parts[0] always empty, path always starts with /
+	parts = parts[1:]
 
-	hostPath := ""
-	if !(strings.Contains(parts[1], ":") || strings.Contains(parts[1], ".")) {
-		format = parts[1]
-		hostPath = parts[2]
-	} else {
-		format = ""
-		hostPath = parts[1] + "/" + parts[2]
-	}
-	if !(strings.HasPrefix(hostPath, "http://") || strings.HasPrefix(hostPath, "https://")) {
-		hostPath = "http://" + hostPath
+	// format? part does not contains ":" or "."
+	if !strings.Contains(parts[0], ":") && !strings.Contains(parts[0], ".") {
+		format = parts[0]
+		parts = parts[1:]
 	}
 
-	u, err := url.Parse(hostPath)
+	if len(parts) == 0 {
+		return "", ""
+	}
+
+	if len(parts) == 2 {
+		// had schema:// but split has removed one /
+		return format, parts[0] + "/" + parts[1] + "?" + URL.RawQuery
+
+	}
+
+	return format, parts[0] + "?" + URL.RawQuery
+}
+
+func parseFormatDownloadURL(URL *url.URL) (format string, downloadURL *url.URL) {
+	var urlStr string
+	format, urlStr = splitRequestURL(URL)
+
+	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
+		urlStr = "http://" + urlStr
+	}
+
+	downloadURL, err := url.Parse(urlStr)
 	if err != nil {
 		return "", nil
 	}
-	u.RawQuery = URL.RawQuery
-	if u.Scheme != "http" && u.Scheme != "https" {
+
+	if downloadURL.Host == "" {
 		return "", nil
 	}
 
-	return format, u
+	if downloadURL.Host == "" ||
+		(downloadURL.Scheme != "http" && downloadURL.Scheme != "https") {
+		return "", nil
+	}
+
+	return format, downloadURL
 }
 
 type ydlsHandler struct {
@@ -106,6 +121,8 @@ type ydlsHandler struct {
 
 func (yh *ydlsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
+
+	debugLog.Printf("%s Request %s %s", r.RemoteAddr, r.Method, r.URL.String())
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -120,17 +137,23 @@ func (yh *ydlsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			http.Error(w, "Not found", http.StatusNotFound)
 		}
 		return
+	} else if r.URL.Path == "/favicon.ico" {
+		http.Error(w, "Not found", http.StatusNotFound)
+		return
 	}
 
-	formatName, downloadURL := parseDownloadFormatURL(r.URL)
-
+	formatName, downloadURL := parseFormatDownloadURL(r.URL)
 	if downloadURL == nil {
 		infoLog.Printf("%s Invalid request %s %s", r.RemoteAddr, r.Method, r.URL.Path)
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
 
-	infoLog.Printf("%s Request %s %s %s", r.RemoteAddr, r.Method, formatName, downloadURL)
+	fancyFormatName := "best"
+	if formatName != "" {
+		fancyFormatName = formatName
+	}
+	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, fancyFormatName, downloadURL)
 
 	mediaReader, filename, mimeType, err := yh.ydls.Download(downloadURL.String(), formatName, debugLog)
 	if err != nil {

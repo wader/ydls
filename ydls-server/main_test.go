@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestParseDownloadFormatURL(t *testing.T) {
+func TestParseFormatDownloadURL(t *testing.T) {
 	for _, c := range []struct {
 		url            *url.URL
 		expectedFormat string
@@ -25,14 +25,20 @@ func TestParseDownloadFormatURL(t *testing.T) {
 			"format", "http://domain.com"},
 		{&url.URL{Path: "/", RawQuery: "url=http://domain.com"},
 			"", "http://domain.com"},
-		{&url.URL{Path: "/b", RawQuery: "b"},
+		{&url.URL{Path: "/", RawQuery: "url=domain.com&format=format"},
+			"format", "http://domain.com"},
+		{&url.URL{Path: "/", RawQuery: "url=domain.com"},
+			"", "http://domain.com"},
+		{&url.URL{Path: "/b", RawQuery: "query"},
+			"", ""},
+		{&url.URL{Path: "/", RawQuery: "query"},
 			"", ""},
 	} {
-		format, URL := parseDownloadFormatURL(c.url)
+		format, URL := parseFormatDownloadURL(c.url)
 		if URL == nil {
 			if c.expectedURL != "" {
-				t.Errorf("url=%+v, got format=%v url=%v expected error",
-					c.url, format, URL)
+				t.Errorf("url=%+v, got fail, expected format=%v url=%v",
+					c.url, c.expectedFormat, c.expectedURL)
 			}
 		} else {
 			if format != c.expectedFormat || URL.String() != c.expectedURL {
