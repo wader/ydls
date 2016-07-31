@@ -51,8 +51,9 @@ RUN \
   rm -rf FFmpeg && \
   ldconfig
 
+# keep in sync with youtubedl/test/sync version
 RUN \
-  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2016.07.22/youtube-dl && \
+  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2016.07.30/youtube-dl && \
   chmod a+x /usr/local/bin/youtube-dl
 
 RUN \

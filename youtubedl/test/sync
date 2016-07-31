@@ -3,12 +3,16 @@
 shopt -s nullglob
 set -e
 
+curl -L -o youtube-dl https://yt-dl.org/downloads/2016.07.30/youtube-dl
+chmod a+x youtube-dl
+YOUTUBEDL="$PWD/youtube-dl"
+
 function dl() {
   n=$(echo "$1" | sed -E 's/^https?:\/\/([^/]*)\/.*$/\1/')
   mkdir -p "$PWD/$n"
   cd "$PWD/$n"
   rm -f *
-  youtube-dl \
+  "$YOUTUBEDL" \
     --no-call-home \
     --skip-download \
     --write-info-json \
@@ -21,18 +25,16 @@ function dl() {
   image=$(echo *.jpg *.jpeg *.png)
   if [ "$image" != "" ] ; then
     mv "$image" "$image.temp"
-    dd "if=$image.temp" "of=$image" bs=1 count=1024
+    dd "if=$image.temp" "of=$image" bs=1 count=64
     rm "$image.temp"
   fi
   cd ..
 }
 
-for i in \
-  "https://www.infoq.com/presentations/Simple-Made-Easy" \
-  "https://soundcloud.com/timsweeney/thedrifter" \
-  "http://www.svtplay.se/video/1929195/pa-jakt-med-lotta-och-leif/avsnitt-1" \
-  "https://vimeo.com/129701495" \
-  "https://www.youtube.com/watch?v=uVYWQJ5BB_w" \
-; do
-  dl "$i"
-done
+dl "https://www.infoq.com/presentations/Simple-Made-Easy"
+dl "https://soundcloud.com/timsweeney/thedrifter"
+dl "http://www.svtplay.se/video/1929195/pa-jakt-med-lotta-och-leif/avsnitt-1"
+dl "https://vimeo.com/129701495"
+dl "https://www.youtube.com/watch?v=uVYWQJ5BB_w"
+
+rm "$YOUTUBEDL"

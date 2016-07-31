@@ -1,0 +1,139 @@
+{
+  "upload_date": "20150603",
+  "protocol": "https",
+  "extractor": "vimeo",
+  "height": 540,
+  "like_count": null,
+  "duration": 3435,
+  "fulltitle": "Ben Nagy Fuzzing OSX At Scale",
+  "id": "129701495",
+  "view_count": null,
+  "playlist": null,
+  "title": "Ben Nagy Fuzzing OSX At Scale",
+  "_filename": "Ben Nagy Fuzzing OSX At Scale-129701495.mp4",
+  "playlist_index": null,
+  "width": 960,
+  "comment_count": null,
+  "uploader_url": "https://vimeo.com/user18478112",
+  "fps": 30,
+  "thumbnail": "https://i.vimeocdn.com/video/521315228_1280.jpg",
+  "webpage_url_basename": "129701495",
+  "display_id": "129701495",
+  "description": "This is \"Ben Nagy Fuzzing OSX At Scale\" by  on Vimeo, the home for high quality videos and the people who love them.",
+  "format": "http-720p - 960x540",
+  "tbr": null,
+  "uploader": "Immunity Videos",
+  "format_id": "http-720p",
+  "uploader_id": "user18478112",
+  "subtitles": {},
+  "thumbnails": [
+    {
+      "url": "https://i.vimeocdn.com/video/521315228_1280.jpg",
+      "id": "0"
+    }
+  ],
+  "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577244.mp4?expires=1470011803&token=0de7182d23f7b7a5deed4",
+  "extractor_key": "Vimeo",
+  "http_headers": {
+    "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+    "Accept-Language": "en-us,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+  },
+  "ext": "mp4",
+  "webpage_url": "https://vimeo.com/129701495",
+  "formats": [
+    {
+      "http_headers": {
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+      },
+      "protocol": "m3u8",
+      "format": "hls-meta - multiple (Quality selection URL)",
+      "url": "https://08-lvl3-hls.vimeocdn.com/1469991223-4e535e5011079af7037b6ed4004b8dfb986637a4/01/940/5/129701495/master.m3u8",
+      "format_note": "Quality selection URL",
+      "ext": "mp4",
+      "preference": -1,
+      "format_id": "hls-meta",
+      "resolution": "multiple"
+    },
+    {
+      "http_headers": {
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+      },
+      "protocol": "m3u8_native",
+      "format": "hls-401 - 640x360",
+      "url": "https://08-lvl3-hls.vimeocdn.com/1469991223-4e535e5011079af7037b6ed4004b8dfb986637a4/01/940/5/129701495/375577240.mp4.m3u8",
+      "tbr": 401,
+      "height": 360,
+      "width": 640,
+      "ext": "mp4",
+      "preference": null,
+      "fps": null,
+      "format_id": "hls-401"
+    },
+    {
+      "http_headers": {
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+      },
+      "protocol": "https",
+      "format": "http-360p - 640x360",
+      "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577240.mp4?expires=1470011803&token=09facc248ee2f3b0728d4",
+      "tbr": null,
+      "height": 360,
+      "width": 640,
+      "ext": "mp4",
+      "fps": 30,
+      "format_id": "http-360p"
+    },
+    {
+      "http_headers": {
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+      },
+      "protocol": "m3u8_native",
+      "format": "hls-1316 - 960x540",
+      "url": "https://08-lvl3-hls.vimeocdn.com/1469991223-4e535e5011079af7037b6ed4004b8dfb986637a4/01/940/5/129701495/375577244.mp4.m3u8",
+      "tbr": 1316,
+      "height": 540,
+      "width": 960,
+      "ext": "mp4",
+      "preference": null,
+      "fps": null,
+      "format_id": "hls-1316"
+    },
+    {
+      "http_headers": {
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+      },
+      "protocol": "https",
+      "format": "http-720p - 960x540",
+      "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577244.mp4?expires=1470011803&token=0de7182d23f7b7a5deed4",
+      "tbr": null,
+      "height": 540,
+      "width": 960,
+      "ext": "mp4",
+      "fps": 30,
+      "format_id": "http-720p"
+    }
+  ]
+}

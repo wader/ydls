@@ -1,0 +1,87 @@
+{
+  "upload_date": "20150805",
+  "protocol": "https",
+  "extractor": "soundcloud",
+  "duration": 5124,
+  "fulltitle": "BIS Radio Show #793 with The Drifter",
+  "playlist_index": null,
+  "playlist": null,
+  "http_headers": {
+    "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+    "Accept-Language": "en-us,en;q=0.5",
+    "Accept-Encoding": "gzip, deflate",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+  },
+  "_filename": "BIS Radio Show #793 with The Drifter-217909338.mp3",
+  "id": "217909338",
+  "thumbnail": "https://i1.sndcdn.com/artworks-000125434880-6b971c-t500x500.jpg",
+  "webpage_url_basename": "thedrifter",
+  "display_id": "217909338",
+  "description": "Broadcast live on WNYU 89.1FM in New York City on August 4th, 2015. \nhttps://soundcloud.com/thedriftersound\nhttp://www.beatsinspace.net/playlists/793\nhttp://www.facebook.com/bisradio\nhttp://www.twitter.com/bisradio",
+  "format": "download - audio only",
+  "preference": 10,
+  "uploader": "timsweeney",
+  "format_id": "download",
+  "thumbnails": [
+    {
+      "url": "https://i1.sndcdn.com/artworks-000125434880-6b971c-t500x500.jpg",
+      "id": "0"
+    }
+  ],
+  "url": "https://api.soundcloud.com/tracks/217909338/download?client_id=02gUJC0hH2ct1EGOcYXQIzRFU91c72Ea",
+  "extractor_key": "Soundcloud",
+  "vcodec": "none",
+  "title": "BIS Radio Show #793 with The Drifter",
+  "ext": "mp3",
+  "webpage_url": "http://soundcloud.com/timsweeney/thedrifter",
+  "formats": [
+    {
+      "protocol": "rtmp",
+      "format": "rtmp_mp3_128_url - audio only",
+      "url": "rtmp://ec-rtmp-media.soundcloud.com/",
+      "play_path": "mp3:VYPMhlXzfxCI.128?9527d18f1063a01f059bf10590159adb10dea0996b8c0cdb674f99212d14879e2f8c42a4425dd9674a81ba701c9eb3ae4ff9e23aa8d4d8241e62bb4ce4623cc458c893df91e6510b7ef920b4d7e5a1c0edb5f5de280ebb6eaa56",
+      "vcodec": "none",
+      "http_headers": {
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+      },
+      "ext": "flv",
+      "format_id": "rtmp_mp3_128_url"
+    },
+    {
+      "protocol": "http",
+      "format": "http_mp3_128_url - audio only",
+      "url": "https://cf-media.sndcdn.com/VYPMhlXzfxCI.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vVllQTWhsWHpmeENJLjEyOC5tcDMiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0Njk5ODkyNTl9fX1dfQ__&Signature=hL6ACyubDKbo7X-4~p7oEkBC6AQcK4cHX~2XZn8iLBiD1O9wC97v9JszQeu2~fGjUBjzdWoMAKebEwoZuwof7hTf4gYNCn6CENWrrZ625bqcmjs~K1pTi-7jlq3dIQHChyKEvBE52x5SOkFZDm4IuZSqBF7xjGANPvGWCh942WVt88NJlUsFcc6rS6dpy6CyshzObb3zta8aBFulBO6NARhLIjHOMLu1omlV31uMJy6fmwjichIxkqaKJrLOtzebVKpjFZYozS3LU2u9jmRAX4WBY5~FiE2ZBtAN0oZBp1jeV~S-1XzcoMiEQUL~csHMTZ4sSYCqJRe0dJAsviLurA__&Key-Pair-Id=APKAJAGZ7VMH2PFPW6UQ",
+      "vcodec": "none",
+      "http_headers": {
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+      },
+      "ext": "mp3",
+      "format_id": "http_mp3_128_url"
+    },
+    {
+      "protocol": "https",
+      "format": "download - audio only",
+      "url": "https://api.soundcloud.com/tracks/217909338/download?client_id=02gUJC0hH2ct1EGOcYXQIzRFU91c72Ea",
+      "vcodec": "none",
+      "http_headers": {
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
+      },
+      "ext": "mp3",
+      "preference": 10,
+      "format_id": "download"
+    }
+  ]
+}

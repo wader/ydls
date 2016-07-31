@@ -23,12 +23,12 @@ func writeID3v2FromYoutueDLInfo(w io.Writer, i *youtubedl.Info) {
 	if i.Duration > 0 {
 		id3v2Frames = append(id3v2Frames, &textFrame{"TLEN", fmt.Sprintf("%d", uint32(i.Duration*1000))})
 	}
-	if len(i.Thumbnail) > 0 {
+	if len(i.ThumbnailBytes) > 0 {
 		id3v2Frames = append(id3v2Frames, &apicFrame{
-			http.DetectContentType(i.Thumbnail),
+			http.DetectContentType(i.ThumbnailBytes),
 			id3v2PictureTypeOther,
 			"",
-			i.Thumbnail,
+			i.ThumbnailBytes,
 		})
 	}
 

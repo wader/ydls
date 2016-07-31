@@ -17,14 +17,14 @@ type Info struct {
 	Uploader string `json:"uploader"`
 	Creator  string `json:"creator"`
 
-	Title       string  `json:"title"`
-	Description string  `json:"description"`
-	Duration    float64 `json:"duration"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Duration    float64   `json:"duration"`
+	Thumbnail   string    `json:"thumbnail"`
+	Formats     []*Format `json:"formats"`
 
-	Formats []*Format `json:"formats"`
-
-	// not unmarshalled, populated from image file
-	Thumbnail []byte `json:"-"`
+	// not unmarshalled, populated from image thumbnail file
+	ThumbnailBytes []byte `json:"-"`
 
 	// private, save raw json to be used later when downloading
 	rawJSON []byte
@@ -200,7 +200,7 @@ func NewFromPath(infoPath string) (i *Info, err error) {
 	}
 
 	if thumbnailPath != "" {
-		i.Thumbnail, err = ioutil.ReadFile(thumbnailPath)
+		i.ThumbnailBytes, err = ioutil.ReadFile(thumbnailPath)
 		if err != nil {
 			return nil, fmt.Errorf("failed to read thumbnail")
 		}

@@ -105,6 +105,7 @@ issues with some sites like youtube.
 
 ### TODO
 
+- youtubedl info, just url no formats?
 - X-Remote IP header?
 - Flags should be per format and codec?
 - seccomp and chroot things
