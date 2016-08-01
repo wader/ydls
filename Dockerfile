@@ -10,6 +10,7 @@ RUN \
     git-core \
     yasm \
     pkg-config \
+    libssl-dev \
     libmp3lame-dev \
     libvorbis-dev \
     libvpx-dev \
@@ -29,6 +30,7 @@ RUN \
       --toolchain=hardened \
       --enable-gpl \
       --enable-nonfree \
+      --enable-openssl \
       --disable-ffserver \
       --disable-doc \
       --disable-ffplay \
