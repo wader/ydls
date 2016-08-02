@@ -25,7 +25,7 @@ RUN \
 RUN \
   git clone https://github.com/FFmpeg/FFmpeg.git && \
   (cd FFmpeg && \
-    git checkout release/3.0 && \
+    git checkout release/3.1 && \
     ./configure \
       --toolchain=hardened \
       --enable-gpl \
