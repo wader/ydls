@@ -285,37 +285,59 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 			})
 			log.Printf("  video probed:%s ydl:%s -> %s", vProbedFormat.VCodec(), ydlVCodec, ffmpegCodec)
 		}
+
 		var ffmpegStderr io.Writer
 		if debugLog != nil {
 			ffmpegStderr = &loggerWriter{Logger: debugLog, Prefix: "ffmpeg 2> "}
 		}
+		ffmpegR, ffmpegW := io.Pipe()
 
-		o, err := ffmpeg.FFmpeg(&ffmpeg.Args{
+		f := &ffmpeg.FFmpeg{
 			Maps:     maps,
 			Format:   ffmpeg.Format{Name: outFormat.Formats.first(), Flags: outFormat.FormatFlags},
 			DebugLog: debugLog,
+			Stdout:   ffmpegW,
 			Stderr:   ffmpegStderr,
-		})
-		if err != nil {
+		}
+
+		closeReaders := func() {
+			ffmpegR.Close()
+			if aReader != nil {
+				aReader.Close()
+			}
+			if vReader != nil {
+				vReader.Close()
+			}
+		}
+
+		if err := f.Start(); err != nil {
+			return nil, "", "", err
+		}
+
+		// probe read one byte to see if ffmpeg is happy
+		b := make([]byte, 1)
+		if _, err := io.ReadFull(ffmpegR, b); err != nil {
+			defer closeReaders()
+			if err := f.Wait(); err != nil {
+				log.Printf("ffmpeg failed: %s", err)
+				return nil, "", "", err
+			}
+			log.Printf("read failed: %s", err)
 			return nil, "", "", err
 		}
 
 		var w io.WriteCloser
 		r, w = io.Pipe()
 		go func() {
-			defer o.Close()
-			if aReader != nil {
-				defer aReader.Close()
-			}
-			if vReader != nil {
-				defer vReader.Close()
-			}
+			defer closeReaders()
 			defer w.Close()
 
 			if outFormat.Prepend == "id3v2" {
 				writeID3v2FromYoutueDLInfo(w, ydl)
 			}
-			io.Copy(w, o)
+			w.Write(b)
+			io.Copy(w, ffmpegR)
+			f.Wait()
 		}()
 	}
 

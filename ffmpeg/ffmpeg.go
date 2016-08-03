@@ -114,19 +114,22 @@ type Format struct {
 	Flags []string
 }
 
-// Args ffmpeg arguments
-type Args struct {
-	Maps     []Map
-	Format   Format
-	Stderr   io.Writer
-	DebugLog *log.Logger
+// FFmpeg instance
+type FFmpeg struct {
+	Maps      []Map
+	Format    Format
+	Stderr    io.Writer
+	Stdout    io.WriteCloser
+	DebugLog  *log.Logger
+	Cmd       *exec.Cmd
+	cmdWaitCh chan error
 }
 
-// FFmpeg run ffmpeg
-func FFmpeg(a *Args) (io.ReadCloser, error) {
+// Start ffmpeg instance
+func (f *FFmpeg) Start() error {
 	log := log.New(ioutil.Discard, "", 0)
-	if a.DebugLog != nil {
-		log = a.DebugLog
+	if f.DebugLog != nil {
+		log = f.DebugLog
 	}
 
 	// figure out unique readers and create pipes for each
@@ -142,7 +145,7 @@ func FFmpeg(a *Args) (io.ReadCloser, error) {
 	// from os.Cmd "entry i becomes file descriptor 3+i"
 	childFD := 3
 	inputFileID := 0
-	for _, m := range a.Maps {
+	for _, m := range f.Maps {
 		// skip if reader already created
 		if _, ok := inputToFDMap[m.Input]; ok {
 			continue
@@ -154,7 +157,7 @@ func FFmpeg(a *Args) (io.ReadCloser, error) {
 		inputFileID++
 		ifd.r, ifd.w, err = os.Pipe()
 		if err != nil {
-			return nil, err
+			return err
 		}
 		go func(r io.Reader) {
 			defer ifd.w.Close()
@@ -172,7 +175,7 @@ func FFmpeg(a *Args) (io.ReadCloser, error) {
 		args = append(args, "-i", fmt.Sprintf("pipe:%d", ifd.childFD))
 	}
 
-	for _, m := range a.Maps {
+	for _, m := range f.Maps {
 		ifd := inputToFDMap[m.Input]
 
 		args = append(args, "-map", fmt.Sprintf("%d:%s", ifd.inputFileID, m.StreamSpecifier))
@@ -187,32 +190,33 @@ func FFmpeg(a *Args) (io.ReadCloser, error) {
 		args = append(args, m.Flags...)
 	}
 
-	args = append(args, "-f", a.Format.Name)
-	args = append(args, a.Format.Flags...)
-
+	args = append(args, "-f", f.Format.Name)
+	args = append(args, f.Format.Flags...)
 	args = append(args, "pipe:1")
 
-	cmd := exec.Command("ffmpeg", args...)
-	cmd.ExtraFiles = extraFiles
-	cmd.Stderr = a.Stderr
+	f.Cmd = exec.Command("ffmpeg", args...)
+	f.Cmd.ExtraFiles = extraFiles
+	f.Cmd.Stderr = f.Stderr
+	f.Cmd.Stdout = f.Stdout
 
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		return nil, err
+	log.Printf("cmd %v", f.Cmd.Args)
+
+	if err := f.Cmd.Start(); err != nil {
+		return err
 	}
 
-	log.Printf("cmd %v", cmd.Args)
+	f.cmdWaitCh = make(chan error, 1)
 
 	go func() {
-		if err := cmd.Start(); err != nil {
-			log.Printf("Start err=%v", err)
-			return
-		}
-		if err := cmd.Wait(); err != nil {
-			log.Printf("Wait err=%v", err)
-			return
-		}
+		f.cmdWaitCh <- f.Cmd.Wait()
+		f.Stdout.Close()
+		close(f.cmdWaitCh)
 	}()
 
-	return stdout, nil
+	return nil
+}
+
+// Wait for ffmpeg to exit
+func (f *FFmpeg) Wait() error {
+	return <-f.cmdWaitCh
 }
