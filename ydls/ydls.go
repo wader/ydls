@@ -167,6 +167,20 @@ func NewFromFile(formatsPath string) (*YDLs, error) {
 
 // Download downloads media from URL and makes sure output is in specified format
 func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) (r io.ReadCloser, filename string, mimeType string, err error) {
+	var closeOnDone []io.Closer
+	closeOnDoneFn := func() {
+		for _, c := range closeOnDone {
+			c.Close()
+		}
+	}
+	deferCloseFn := closeOnDoneFn
+	defer func() {
+		// will be nil if cmd starts and goroutine takes care of closing instead
+		if deferCloseFn != nil {
+			deferCloseFn()
+		}
+	}()
+
 	log := log.New(ioutil.Discard, "", 0)
 	if debugLog != nil {
 		log = debugLog
@@ -215,36 +229,51 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 
 		var aProbedFormat *ffmpeg.ProbeInfo
 		var aReader io.ReadCloser
+		var aErr error
 		var vProbedFormat *ffmpeg.ProbeInfo
 		var vReader io.ReadCloser
+		var vErr error
 
 		// FIXME: messy
 
 		if aYDLFormat != nil && vYDLFormat != nil {
 			if aYDLFormat != vYDLFormat {
 				var probeWG sync.WaitGroup
-				probeWG.Add(1)
+				probeWG.Add(2)
 				go func() {
 					defer probeWG.Done()
-					aReader, aProbedFormat, err = downloadAndProbeFormat(ydl, aYDLFormat.FormatID, debugLog)
+					aReader, aProbedFormat, aErr = downloadAndProbeFormat(ydl, aYDLFormat.FormatID, debugLog)
 				}()
-				probeWG.Add(1)
 				go func() {
 					defer probeWG.Done()
-					vReader, vProbedFormat, err = downloadAndProbeFormat(ydl, vYDLFormat.FormatID, debugLog)
+					vReader, vProbedFormat, vErr = downloadAndProbeFormat(ydl, vYDLFormat.FormatID, debugLog)
 				}()
 				probeWG.Wait()
+				if aReader != nil {
+					closeOnDone = append(closeOnDone, aReader)
+				}
+				if vReader != nil {
+					closeOnDone = append(closeOnDone, vReader)
+				}
 			} else {
-				aReader, aProbedFormat, err = downloadAndProbeFormat(ydl, aYDLFormat.FormatID, debugLog)
-				vReader, vProbedFormat = aReader, aProbedFormat
+				aReader, aProbedFormat, aErr = downloadAndProbeFormat(ydl, aYDLFormat.FormatID, debugLog)
+				vReader, vProbedFormat, vErr = aReader, aProbedFormat, aErr
+				if aReader != nil {
+					closeOnDone = append(closeOnDone, aReader)
+				}
 			}
 		} else if aYDLFormat != nil && vYDLFormat == nil {
-			aReader, aProbedFormat, err = downloadAndProbeFormat(ydl, aYDLFormat.FormatID, debugLog)
+			aReader, aProbedFormat, aErr = downloadAndProbeFormat(ydl, aYDLFormat.FormatID, debugLog)
+			if aReader != nil {
+				closeOnDone = append(closeOnDone, aReader)
+			}
 		} else {
-			aReader, aProbedFormat, err = downloadAndProbeFormat(ydl, "best", debugLog)
-			vReader, vProbedFormat = aReader, aProbedFormat
+			aReader, aProbedFormat, aErr = downloadAndProbeFormat(ydl, "best", debugLog)
+			vReader, vProbedFormat, vErr = aReader, aProbedFormat, aErr
+			if aReader != nil {
+				closeOnDone = append(closeOnDone, aReader)
+			}
 		}
-
 		if err != nil {
 			return nil, "", "", fmt.Errorf("failed to probe")
 		}
@@ -291,6 +320,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 			ffmpegStderr = &loggerWriter{Logger: debugLog, Prefix: "ffmpeg 2> "}
 		}
 		ffmpegR, ffmpegW := io.Pipe()
+		closeOnDone = append(closeOnDone, ffmpegR)
 
 		f := &ffmpeg.FFmpeg{
 			Maps:     maps,
@@ -300,16 +330,6 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 			Stderr:   ffmpegStderr,
 		}
 
-		closeReaders := func() {
-			ffmpegR.Close()
-			if aReader != nil {
-				aReader.Close()
-			}
-			if vReader != nil {
-				vReader.Close()
-			}
-		}
-
 		if err := f.Start(); err != nil {
 			return nil, "", "", err
 		}
@@ -317,7 +337,6 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 		// probe read one byte to see if ffmpeg is happy
 		b := make([]byte, 1)
 		if _, err := io.ReadFull(ffmpegR, b); err != nil {
-			defer closeReaders()
 			if err := f.Wait(); err != nil {
 				log.Printf("ffmpeg failed: %s", err)
 				return nil, "", "", err
@@ -326,11 +345,15 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 			return nil, "", "", err
 		}
 
+		// goroutine will take care of closing
+		deferCloseFn = nil
+
 		var w io.WriteCloser
 		r, w = io.Pipe()
+		closeOnDone = append(closeOnDone, w)
+
 		go func() {
-			defer closeReaders()
-			defer w.Close()
+			defer closeOnDoneFn()
 
 			if outFormat.Prepend == "id3v2" {
 				writeID3v2FromYoutueDLInfo(w, ydl)
