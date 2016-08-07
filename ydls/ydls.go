@@ -353,13 +353,12 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 		closeOnDone = append(closeOnDone, w)
 
 		go func() {
-			defer closeOnDoneFn()
-
 			if outFormat.Prepend == "id3v2" {
 				writeID3v2FromYoutueDLInfo(w, ydl)
 			}
 			w.Write(b)
 			io.Copy(w, ffmpegR)
+			closeOnDoneFn()
 			f.Wait()
 		}()
 	}
