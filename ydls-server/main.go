@@ -102,10 +102,6 @@ func parseFormatDownloadURL(URL *url.URL) (format string, downloadURL *url.URL) 
 		return "", nil
 	}
 
-	if downloadURL.Host == "" {
-		return "", nil
-	}
-
 	if downloadURL.Host == "" ||
 		(downloadURL.Scheme != "http" && downloadURL.Scheme != "https") {
 		return "", nil
