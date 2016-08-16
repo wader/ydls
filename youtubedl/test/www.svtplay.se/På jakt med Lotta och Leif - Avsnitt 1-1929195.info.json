@@ -44,6 +44,24 @@
   "webpage_url": "http://www.svtplay.se/video/1929195/pa-jakt-med-lotta-och-leif/avsnitt-1",
   "formats": [
     {
+      "http_headers": {
+        "Accept-Language": "en-us,en;q=0.5",
+        "Accept-Encoding": "gzip, deflate",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
+        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
+        "Cookie": "_alid_=yrLi1JQ1O9MWkGyWT9Nd/A=="
+      },
+      "protocol": "m3u8",
+      "format": "ios-meta - multiple (Quality selection URL)",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/master.m3u8?alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "format_note": "Quality selection URL",
+      "ext": "mp4",
+      "preference": -100,
+      "format_id": "ios-meta",
+      "resolution": "multiple"
+    },
+    {
       "asr": 48000,
       "tbr": 97,
       "protocol": "http_dash_segments",
@@ -1298,25 +1316,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
-      },
-      "protocol": "m3u8",
-      "format": "ios-meta - multiple (Quality selection URL)",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/master.m3u8?alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
-      "format_note": "Quality selection URL",
-      "ext": "mp4",
-      "preference": -1,
-      "format_id": "ios-meta",
-      "resolution": "multiple"
-    },
-    {
-      "http_headers": {
-        "Accept-Language": "en-us,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
-        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=lZeMJkJn1tKlaEG3lm4wEQ=="
       },
       "protocol": "f4m",
       "format": "flash-237 - unknown",
@@ -1335,7 +1335,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=yrLi1JQ1O9MWkGyWT9Nd/A=="
       },
       "protocol": "m3u8_native",
       "format": "ios-237 - 512x288",
@@ -1357,7 +1357,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=lZeMJkJn1tKlaEG3lm4wEQ=="
       },
       "protocol": "f4m",
       "format": "flash-345 - unknown",
@@ -1376,7 +1376,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=yrLi1JQ1O9MWkGyWT9Nd/A=="
       },
       "protocol": "m3u8_native",
       "format": "ios-345 - 512x288",
@@ -1398,7 +1398,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=lZeMJkJn1tKlaEG3lm4wEQ=="
       },
       "protocol": "f4m",
       "format": "flash-453 - unknown",
@@ -1417,7 +1417,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=yrLi1JQ1O9MWkGyWT9Nd/A=="
       },
       "protocol": "m3u8_native",
       "format": "ios-453 - 512x288",
@@ -1439,7 +1439,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=lZeMJkJn1tKlaEG3lm4wEQ=="
       },
       "protocol": "f4m",
       "format": "flash-633 - unknown",
@@ -1458,7 +1458,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=yrLi1JQ1O9MWkGyWT9Nd/A=="
       },
       "protocol": "m3u8_native",
       "format": "ios-633 - 512x288",
@@ -1480,7 +1480,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=lZeMJkJn1tKlaEG3lm4wEQ=="
       },
       "protocol": "f4m",
       "format": "flash-985 - unknown",
@@ -1499,7 +1499,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=yrLi1JQ1O9MWkGyWT9Nd/A=="
       },
       "protocol": "m3u8_native",
       "format": "ios-985 - 768x432",
@@ -1530,7 +1530,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=lZeMJkJn1tKlaEG3lm4wEQ=="
       },
       "protocol": "f4m",
       "format": "flash-1677 - unknown",
@@ -1549,7 +1549,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=yrLi1JQ1O9MWkGyWT9Nd/A=="
       },
       "protocol": "m3u8_native",
       "format": "ios-1677 - 1280x720",
@@ -1571,7 +1571,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=lZeMJkJn1tKlaEG3lm4wEQ=="
       },
       "protocol": "f4m",
       "format": "flash-2793 - unknown",
@@ -1590,7 +1590,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=tcq8VKxYShteNgxpiTFARg=="
+        "Cookie": "_alid_=yrLi1JQ1O9MWkGyWT9Nd/A=="
       },
       "protocol": "m3u8_native",
       "format": "ios-2793 - 1280x720",

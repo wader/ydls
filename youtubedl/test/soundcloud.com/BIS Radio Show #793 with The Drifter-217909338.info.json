@@ -40,7 +40,7 @@
       "protocol": "rtmp",
       "format": "rtmp_mp3_128_url - audio only",
       "url": "rtmp://ec-rtmp-media.soundcloud.com/",
-      "play_path": "mp3:VYPMhlXzfxCI.128?9527d18f1063a01f059bf10590159adb10dea0996b8c0cdb674f99212d14879e2f8c42a4425dd9674a81ba701c9eb3ae4ff9e23aa8d4d8241e62bb4ce4623cc458c893df91e6510b7ef920b4d7e5a1c0edb5f5de280ebb6eaa56",
+      "play_path": "mp3:VYPMhlXzfxCI.128?9527d18f1063a01f059bf10590159adb10dea0996b8c0cdb674f982927148296ca538316c9112cb1a5f12a1d5c2455076060f1ebe440bdf4653f82080a836b78bf9e8b6c0614fffa5e8fc9361150b5a2e3c55f9c283ff4fc1368",
       "vcodec": "none",
       "http_headers": {
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
@@ -55,7 +55,7 @@
     {
       "protocol": "http",
       "format": "http_mp3_128_url - audio only",
-      "url": "https://cf-media.sndcdn.com/VYPMhlXzfxCI.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vVllQTWhsWHpmeENJLjEyOC5tcDMiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0Njk5ODkyNTl9fX1dfQ__&Signature=hL6ACyubDKbo7X-4~p7oEkBC6AQcK4cHX~2XZn8iLBiD1O9wC97v9JszQeu2~fGjUBjzdWoMAKebEwoZuwof7hTf4gYNCn6CENWrrZ625bqcmjs~K1pTi-7jlq3dIQHChyKEvBE52x5SOkFZDm4IuZSqBF7xjGANPvGWCh942WVt88NJlUsFcc6rS6dpy6CyshzObb3zta8aBFulBO6NARhLIjHOMLu1omlV31uMJy6fmwjichIxkqaKJrLOtzebVKpjFZYozS3LU2u9jmRAX4WBY5~FiE2ZBtAN0oZBp1jeV~S-1XzcoMiEQUL~csHMTZ4sSYCqJRe0dJAsviLurA__&Key-Pair-Id=APKAJAGZ7VMH2PFPW6UQ",
+      "url": "https://cf-media.sndcdn.com/VYPMhlXzfxCI.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vVllQTWhsWHpmeENJLjEyOC5tcDMiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0NzEzODcxMDR9fX1dfQ__&Signature=EOqk2LMjpDWRGNbgCChSYNrn9ujyNqQIEmoiPgZWfL-1wrXYD9QidjE7upkkihgrNRHinQ24G-xKrEQILEsM8HOagTWmrgxGbe2Dx2nDSW7UuJIwtjSwo6ElmroBwRIkj1Faec0VWo8pURDz-RcbRXz9iA0gr6ABU5dlPKuCsN9K8VXXQvgq4S7zuTfR4dFmVUb6wkSefKMH-aRsvNZSeADIimqoGLXQ9qmPOQ5KZS95iuaaVw3m7-ptw9SVTcCu7O5jpsFKFJCiS955IpgIjxBmBai-2km5wGEA7fnHfKh76RheeGZ~4zDi6a99TE0k5fLVDtdUU3iHTiHjOENbug__&Key-Pair-Id=APKAJAGZ7VMH2PFPW6UQ",
       "vcodec": "none",
       "http_headers": {
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
