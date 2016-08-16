@@ -82,11 +82,20 @@ func splitRequestURL(URL *url.URL) (format string, urlStr string) {
 
 	if len(parts) == 2 {
 		// had schema:// but split has removed one /
-		return format, parts[0] + "/" + parts[1] + "?" + URL.RawQuery
+		s := parts[0] + "/" + parts[1]
+		if URL.RawQuery != "" {
+			s += "?" + URL.RawQuery
+		}
+		return format, s
 
 	}
 
-	return format, parts[0] + "?" + URL.RawQuery
+	s := parts[0]
+	if URL.RawQuery != "" {
+		s += "?" + URL.RawQuery
+	}
+
+	return format, s
 }
 
 func parseFormatDownloadURL(URL *url.URL) (format string, downloadURL *url.URL) {

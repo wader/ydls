@@ -1,4 +1,4 @@
-FROM golang:1.6
+FROM golang:1.7
 MAINTAINER Mattias Wadman mattias.wadman@gmail.com
 
 RUN \
