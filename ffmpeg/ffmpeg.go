@@ -84,16 +84,17 @@ func FFprobe(r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo
 
 	log.Printf("cmd %v", cmd.Args)
 
-	if err := cmd.Start(); err != nil {
-		return nil, err
+	if cmdErr := cmd.Start(); cmdErr != nil {
+		return nil, cmdErr
 	}
 
-	if pi, err = probeInfoParse(stdout); err != nil {
-		return nil, err
+	var piErr error
+	if pi, piErr = probeInfoParse(stdout); err != nil {
+		return nil, piErr
 	}
 
-	if err := cmd.Wait(); err != nil {
-		return nil, err
+	if cmdErr := cmd.Wait(); cmdErr != nil {
+		return nil, cmdErr
 	}
 
 	return pi, nil

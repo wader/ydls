@@ -274,7 +274,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 				closeOnDone = append(closeOnDone, aReader)
 			}
 		}
-		if err != nil {
+		if aErr != nil || vErr != nil {
 			return nil, "", "", fmt.Errorf("failed to probe")
 		}
 
@@ -336,10 +336,10 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 
 		// probe read one byte to see if ffmpeg is happy
 		b := make([]byte, 1)
-		if _, err := io.ReadFull(ffmpegR, b); err != nil {
-			if err := f.Wait(); err != nil {
-				log.Printf("ffmpeg failed: %s", err)
-				return nil, "", "", err
+		if _, err := io.ReadFull(ffmpegR, probeByte); err != nil {
+			if ffmpegErr := f.Wait(); ffmpegErr != nil {
+				log.Printf("ffmpeg failed: %s", ffmpegErr)
+				return nil, "", "", ffmpegErr
 			}
 			log.Printf("read failed: %s", err)
 			return nil, "", "", err
