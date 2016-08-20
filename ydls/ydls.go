@@ -335,7 +335,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 		}
 
 		// probe read one byte to see if ffmpeg is happy
-		b := make([]byte, 1)
+		probeByte := make([]byte, 1)
 		if _, err := io.ReadFull(ffmpegR, probeByte); err != nil {
 			if ffmpegErr := f.Wait(); ffmpegErr != nil {
 				log.Printf("ffmpeg failed: %s", ffmpegErr)
@@ -356,7 +356,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 			if outFormat.Prepend == "id3v2" {
 				writeID3v2FromYoutueDLInfo(w, ydl)
 			}
-			w.Write(b)
+			w.Write(probeByte)
 			io.Copy(w, ffmpegR)
 			closeOnDoneFn()
 			f.Wait()
