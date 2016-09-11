@@ -89,11 +89,9 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 		neededFormats = append(neededFormats, &neededFormat{nil, nil, nil, &vFormat})
 	}
 
-	// TODO: if only audio... choose stream with lowest video br?
-	// TODO: rtmp only if mp4 etc?
+	// TODO: if only audio => stream with lowest video br?
 
-	// prefer rtmp as it seems to send fragmented mp4 etc
-	for _, proto := range []string{"rtmp", "*"} {
+	for _, proto := range []string{"https", "http", "*"} {
 		for _, f := range neededFormats {
 			m := findFormat(ydlFormats, proto, f.aCodecs, f.vCodecs)
 
@@ -208,7 +206,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 
 	if formatName == "" {
 		var probedInfo *ffmpeg.ProbeInfo
-		r, probedInfo, err = downloadAndProbeFormat(ydl, "best[protocol=rtmp]/best", debugLog)
+		r, probedInfo, err = downloadAndProbeFormat(ydl, "best[protocol=https]/best[protocol=http]/best", debugLog)
 		if err != nil {
 			return nil, "", "", err
 		}
