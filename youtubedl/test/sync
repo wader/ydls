@@ -3,7 +3,7 @@
 shopt -s nullglob
 set -e
 
-curl -L -o youtube-dl https://yt-dl.org/downloads/2016.08.13/youtube-dl
+curl -L -o youtube-dl https://yt-dl.org/downloads/2016.09.08/youtube-dl
 chmod a+x youtube-dl
 YOUTUBEDL="$PWD/youtube-dl"
 
