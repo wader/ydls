@@ -29,6 +29,7 @@
       "id": "0"
     }
   ],
+  "license": "all-rights-reserved",
   "url": "https://api.soundcloud.com/tracks/217909338/download?client_id=02gUJC0hH2ct1EGOcYXQIzRFU91c72Ea",
   "extractor_key": "Soundcloud",
   "vcodec": "none",
@@ -37,25 +38,9 @@
   "webpage_url": "http://soundcloud.com/timsweeney/thedrifter",
   "formats": [
     {
-      "protocol": "rtmp",
-      "format": "rtmp_mp3_128_url - audio only",
-      "url": "rtmp://ec-rtmp-media.soundcloud.com/",
-      "play_path": "mp3:VYPMhlXzfxCI.128?9527d18f1063a01f059bf10590159adb10dea0996b8c0cdb674f982b221c859ab30a3c1d4c0390f74ded877c0b824102326de2d3959a1b79c9c017ecbec1a998e17853d2d43bc718168cd0487f1bdae96b01a82135314d7e4b7d",
-      "vcodec": "none",
-      "http_headers": {
-        "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Accept-Language": "en-us,en;q=0.5",
-        "Accept-Encoding": "gzip, deflate",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-        "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
-      },
-      "ext": "flv",
-      "format_id": "rtmp_mp3_128_url"
-    },
-    {
       "protocol": "http",
       "format": "http_mp3_128_url - audio only",
-      "url": "https://cf-media.sndcdn.com/VYPMhlXzfxCI.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vVllQTWhsWHpmeENJLjEyOC5tcDMiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0NzM2MTE2Mzh9fX1dfQ__&Signature=BS7wwtTgEv6XLIoTpmcxqoHTgbcI4JXeWCZCSdQkSqaqEr2E7DvfjN8VsxOWBoypNqbrRsvAgzy58zB2OkQZ8zFjWfZPI0YCAxS5LKa1F3Mfq5Fv8KFLzoZxcitFedRMv8GDsMTA5~mZuymC0qvXYTPP6gRwfs0rSG6taoHtASxmV4SHjMfcqfRLc3G4CfpdUa8a-VADWfo9YNvBAjyZ4s~8VAdouIov1iUq09S9IAefkjoMgcHv6nOuzfD4FVCwQlklVT3T-QnCet2s7u4DOCjFfHDUQ6o~TJ0jXAEX7OfUb415y-HwIZvcmwUuaYMcG8B7acezskGMl8zoVvzhBw__&Key-Pair-Id=APKAJAGZ7VMH2PFPW6UQ",
+      "url": "https://cf-media.sndcdn.com/VYPMhlXzfxCI.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vVllQTWhsWHpmeENJLjEyOC5tcDMiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0Nzg0MzczMDN9fX1dfQ__&Signature=s2HnwwcPnOdndxnvS6-ZLpAhY2Zm~XRExt2XR5QI4Q0JxiJ-8HLWA5DdwqMcL1FxeoyjsX8TSF8rw~MMh9YIcZ~xNNigl~QOINAqO5xkgbOTKuGCVLKWQRVybA6DlT~w38gtaYGHn8KZ9LFv5BfhzXYiy0Et4qXDBgxQHXlFl~q9U30koK4zVrFqrjUSCwhkRUA4aDKj7xfVYjPnU7J3E7M5YRlqYI0Jd6grLpCcKwmr3NiTNGvN8Lj3x7FDB5ZbNlHsZf9dj4g8GrGO2KzzBX5I3aPMRl9~SbdzkMzMThydeP9ybLcFsweIKgwpRg3UzmMpg08bs67SQXY3j50wGA__&Key-Pair-Id=APKAJAGZ7VMH2PFPW6UQ",
       "vcodec": "none",
       "http_headers": {
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",

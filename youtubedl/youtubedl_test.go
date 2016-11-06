@@ -35,7 +35,7 @@ func TestParseInfo(t *testing.T) {
 		{"soundcloud.com", "BIS Radio Show #793 with The Drifter"},
 		{"vimeo.com", "Ben Nagy Fuzzing OSX At Scale"},
 		{"www.infoq.com", "Simple Made Easy"},
-		{"www.svtplay.se", "På jakt med Lotta och Leif - Avsnitt 1"},
+		{"www.svtplay.se", "Avsnitt 1"},
 		{"www.youtube.com", "A Radiolab Producer on the Making of a Podcast"},
 	} {
 		yi, err := NewFromPath(filepath.Join(testPath, c.name))

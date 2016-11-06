@@ -2,7 +2,6 @@ FROM golang:1.7
 MAINTAINER Mattias Wadman mattias.wadman@gmail.com
 
 RUN \
-  DEBIAN_FRONTEND=noninteractive \
   sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list && \
   apt-get update && \
   apt-get -y install \
@@ -55,7 +54,7 @@ RUN \
 
 # keep in sync with youtubedl/test/sync version
 RUN \
-  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2016.09.08/youtube-dl && \
+  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2016.11.04/youtube-dl && \
   chmod a+x /usr/local/bin/youtube-dl
 
 RUN \

@@ -32,7 +32,7 @@
       "id": "0"
     }
   ],
-  "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577244.mp4?expires=1473634185&token=0f4dc6d8e2cf652dbb202",
+  "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577244.mp4?expires=1478446110&token=0ca048e125810de66833f",
   "extractor_key": "Vimeo",
   "http_headers": {
     "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
@@ -54,7 +54,7 @@
       },
       "protocol": "m3u8",
       "format": "hls-meta - multiple (Quality selection URL)",
-      "url": "https://08-lvl3-hls.vimeocdn.com/1473613605-de458b77274e1bb1be2a906e275c97b673af4de8/01/940/5/129701495/master.m3u8",
+      "url": "https://08-lvl3-hls.vimeocdn.com/1478439270-4cf5e7c45b1a2c03389baa5d22f21e6c4f1543fb/01/940/5/129701495/master.m3u8",
       "format_note": "Quality selection URL",
       "ext": "mp4",
       "preference": -100,
@@ -62,6 +62,13 @@
       "resolution": "multiple"
     },
     {
+      "protocol": "m3u8_native",
+      "format": "hls-401 - 640x360",
+      "tbr": 401,
+      "height": 360,
+      "preference": null,
+      "manifest_url": "https://08-lvl3-hls.vimeocdn.com/1478439270-4cf5e7c45b1a2c03389baa5d22f21e6c4f1543fb/01/940/5/129701495/375577240.mp4.m3u8",
+      "format_id": "hls-401",
       "http_headers": {
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
         "Accept-Language": "en-us,en;q=0.5",
@@ -69,16 +76,10 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
       },
-      "protocol": "m3u8_native",
-      "format": "hls-401 - 640x360",
-      "url": "https://08-lvl3-hls.vimeocdn.com/1473613605-de458b77274e1bb1be2a906e275c97b673af4de8/01/940/5/129701495/375577240.mp4.m3u8",
-      "tbr": 401,
-      "height": 360,
+      "url": "https://08-lvl3-hls.vimeocdn.com/1478439270-4cf5e7c45b1a2c03389baa5d22f21e6c4f1543fb/01/940/5/129701495/375577240.mp4.m3u8",
       "width": 640,
       "ext": "mp4",
-      "preference": null,
-      "fps": null,
-      "format_id": "hls-401"
+      "fps": null
     },
     {
       "http_headers": {
@@ -90,7 +91,7 @@
       },
       "protocol": "https",
       "format": "http-360p - 640x360",
-      "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577240.mp4?expires=1473634185&token=091413331f2a3532501a8",
+      "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577240.mp4?expires=1478446110&token=0852e4069acc92d31a264",
       "tbr": null,
       "height": 360,
       "width": 640,
@@ -99,6 +100,13 @@
       "format_id": "http-360p"
     },
     {
+      "protocol": "m3u8_native",
+      "format": "hls-1316 - 960x540",
+      "tbr": 1316,
+      "height": 540,
+      "preference": null,
+      "manifest_url": "https://08-lvl3-hls.vimeocdn.com/1478439270-4cf5e7c45b1a2c03389baa5d22f21e6c4f1543fb/01/940/5/129701495/375577244.mp4.m3u8",
+      "format_id": "hls-1316",
       "http_headers": {
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
         "Accept-Language": "en-us,en;q=0.5",
@@ -106,16 +114,10 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
       },
-      "protocol": "m3u8_native",
-      "format": "hls-1316 - 960x540",
-      "url": "https://08-lvl3-hls.vimeocdn.com/1473613605-de458b77274e1bb1be2a906e275c97b673af4de8/01/940/5/129701495/375577244.mp4.m3u8",
-      "tbr": 1316,
-      "height": 540,
+      "url": "https://08-lvl3-hls.vimeocdn.com/1478439270-4cf5e7c45b1a2c03389baa5d22f21e6c4f1543fb/01/940/5/129701495/375577244.mp4.m3u8",
       "width": 960,
       "ext": "mp4",
-      "preference": null,
-      "fps": null,
-      "format_id": "hls-1316"
+      "fps": null
     },
     {
       "http_headers": {
@@ -127,7 +129,7 @@
       },
       "protocol": "https",
       "format": "http-720p - 960x540",
-      "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577244.mp4?expires=1473634185&token=0f4dc6d8e2cf652dbb202",
+      "url": "https://08-lvl3-pdl.vimeocdn.com/01/940/5/129701495/375577244.mp4?expires=1478446110&token=0ca048e125810de66833f",
       "tbr": null,
       "height": 540,
       "width": 960,

@@ -110,6 +110,7 @@ issues with some sites like youtube.
 - Flags should be per format and codec?
 - seccomp and chroot things
 - Auto update youtube-dl somehow?
+- hide probe byte read inside ffmpeg package somehow?
 
 ### License
 
