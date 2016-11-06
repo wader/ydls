@@ -14,7 +14,7 @@ RUN \
     libvorbis-dev \
     libvpx-dev \
     libopus-dev \
-    libfaac-dev \
+    libfdk-aac-dev \
     libx264-dev \
     rtmpdump \
     mplayer \
@@ -24,7 +24,7 @@ RUN \
 RUN \
   git clone https://github.com/FFmpeg/FFmpeg.git && \
   (cd FFmpeg && \
-    git checkout release/3.1 && \
+    git checkout release/3.2 && \
     ./configure \
       --toolchain=hardened \
       --enable-gpl \
@@ -42,8 +42,8 @@ RUN \
       --enable-encoder=libvpx_vp9 \
       --enable-libopus \
       --enable-encoder=libopus \
-      --enable-libfaac \
-      --enable-encoder=libfaac \
+      --enable-libfdk-aac \
+      --enable-encoder=libfdk_aac \
       --enable-libx264 \
       --enable-encoder=libx264 \
       && \
