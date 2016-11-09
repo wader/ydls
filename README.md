@@ -74,16 +74,24 @@ There is also ID3v2 support and logic to prefer formats suitable for streaming.
   {
     "Name": "", // Format name in endpoint
     "Formats": [], // Valid container formats. First in list is used for muxing
-    "ACodecs": [], // Valid audio codecs. First in list is used if transcoding is needed
-    "VCodecs": [], // Valid video codecs. First in list is used if transcoding is needed
-    "ACodecFlags": [], // Extra format arguments
-    "ACodecFlags": [], // Extra audio codec arguments
-    "VCodecFlags": [], // Extra video codec arguments
+    "FormatFlags": [], // Global format flags
+    // Zero or more valid audio codecs. First in list is used if transcoding is needed
+    "ACodecs": {
+      "Codec": "", // Codec name
+      "CodecFlags": [], // Codec flags
+      "FormatFlags": [] // Format flags
+    },
+    // Zero or more valid video codecs. First in list is used if transcoding is needed
+    "VCodecs": {
+      "Codec": "", // Codec name
+      "CodecFlags": [], // Codec flags
+      "FormatFlags": [] // Format flags
+    },
     "Prepend": "", // Can currently be "id3v2" to append ID3v2 tag
     "Ext": "", // Filename extension
     "MIMEType": "" // MIME type
   },
-  // More formats
+  // More formats...
 ]
 ```
 
@@ -107,7 +115,6 @@ issues with some sites like youtube.
 
 - youtubedl info, just url no formats?
 - X-Remote IP header?
-- Flags should be per format and codec?
 - seccomp and chroot things
 - Auto update youtube-dl somehow?
 - hide probe byte read inside ffmpeg package somehow?

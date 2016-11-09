@@ -9,19 +9,24 @@ import (
 )
 
 func TestFindBestFormats(t *testing.T) {
-	splitOrEmpty := func(s string) []string {
+	codecsToFormatCodecs := func(s string) prioFormatCodecSet {
 		if s == "" {
-			return []string{}
+			return prioFormatCodecSet{}
 		}
-		return strings.Split(s, ",")
+
+		formatCodecs := []FormatCodec{}
+		for _, c := range strings.Split(s, ",") {
+			formatCodecs = append(formatCodecs, FormatCodec{Codec: c})
+		}
+		return prioFormatCodecSet(formatCodecs)
 	}
 
 	test := func(Formats []*youtubedl.Format, acodecs string, vcodecs string, aFormatID string, vFormatID string) error {
 		aFormat, vFormat := findBestFormats(
 			Formats,
 			&Format{
-				ACodecs: prioStringSet(splitOrEmpty(acodecs)),
-				VCodecs: prioStringSet(splitOrEmpty(vcodecs)),
+				ACodecs: codecsToFormatCodecs(acodecs),
+				VCodecs: codecsToFormatCodecs(vcodecs),
 			},
 		)
 

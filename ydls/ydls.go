@@ -72,11 +72,15 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 	var neededFormats []*neededFormat
 
 	// match exactly, both audio/video codecs found or not found
-	neededFormats = append(neededFormats, &neededFormat{&format.ACodecs, &format.VCodecs, &aFormat, &vFormat})
+	neededFormats = append(neededFormats, &neededFormat{
+		format.ACodecs.PrioStringSet(),
+		format.VCodecs.PrioStringSet(),
+		&aFormat, &vFormat,
+	})
 
 	if !format.ACodecs.empty() {
 		// matching audio codec with any video codec
-		neededFormats = append(neededFormats, &neededFormat{&format.ACodecs, nil, &aFormat, nil})
+		neededFormats = append(neededFormats, &neededFormat{format.ACodecs.PrioStringSet(), nil, &aFormat, nil})
 		// match any audio codec and no video
 		neededFormats = append(neededFormats, &neededFormat{nil, &prioStringSet{}, &aFormat, nil})
 		// match any audio and video codec
@@ -84,7 +88,7 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 	}
 	if !format.VCodecs.empty() {
 		// same logic as above
-		neededFormats = append(neededFormats, &neededFormat{nil, &format.VCodecs, nil, &vFormat})
+		neededFormats = append(neededFormats, &neededFormat{nil, format.VCodecs.PrioStringSet(), nil, &vFormat})
 		neededFormats = append(neededFormats, &neededFormat{&prioStringSet{}, nil, nil, &vFormat})
 		neededFormats = append(neededFormats, &neededFormat{nil, nil, nil, &vFormat})
 	}
@@ -145,7 +149,7 @@ func downloadAndProbeFormat(ydl *youtubedl.Info, filter string, debugLog *log.Lo
 
 // YDLs youtubedl downloader with some extras
 type YDLs struct {
-	Formats Formats
+	Formats *Formats
 }
 
 // NewFromFile new YDLs using formats file
@@ -278,9 +282,19 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 
 		log.Printf("Stream mapping:")
 		var maps []ffmpeg.Map
+		ffmpegFormatFlags := outFormat.FormatFlags
+
 		if len(outFormat.ACodecs) > 0 && aProbedFormat != nil && aProbedFormat.ACodec() != "" {
-			canCopy := outFormat.ACodecs.member(aProbedFormat.ACodec())
-			ffmpegCodec := boolString(canCopy, "copy", outFormat.ACodecs.first())
+			var outputCodecFormat *FormatCodec
+			var ffmpegCodec string
+			outputCodecFormat = outFormat.ACodecs.findByCodecName(aProbedFormat.ACodec())
+			if outputCodecFormat == nil {
+				outputCodecFormat = outFormat.ACodecs.first()
+				ffmpegCodec = outputCodecFormat.Codec
+			} else {
+				ffmpegCodec = "copy"
+			}
+
 			ydlACodec := "n/a"
 			if aYDLFormat != nil {
 				ydlACodec = aYDLFormat.NormACodec
@@ -291,13 +305,23 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 				Kind:            "audio",
 				StreamSpecifier: "a:0",
 				Codec:           ffmpegCodec,
-				Flags:           outFormat.ACodecFlags,
+				Flags:           outputCodecFormat.CodecFlags,
 			})
+			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
+
 			log.Printf("  audio probed:%s ydl:%s -> %s", aProbedFormat.ACodec(), ydlACodec, ffmpegCodec)
 		}
 		if len(outFormat.VCodecs) > 0 && vProbedFormat != nil && vProbedFormat.VCodec() != "" {
-			canCopy := outFormat.VCodecs.member(vProbedFormat.VCodec())
-			ffmpegCodec := boolString(canCopy, "copy", outFormat.VCodecs.first())
+			var outputCodecFormat *FormatCodec
+			var ffmpegCodec string
+			outputCodecFormat = outFormat.VCodecs.findByCodecName(vProbedFormat.VCodec())
+			if outputCodecFormat == nil {
+				outputCodecFormat = outFormat.VCodecs.first()
+				ffmpegCodec = outputCodecFormat.Codec
+			} else {
+				ffmpegCodec = "copy"
+			}
+
 			ydlVCodec := "n/a"
 			if vYDLFormat != nil {
 				ydlVCodec = vYDLFormat.NormVCodec
@@ -308,8 +332,10 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 				Kind:            "video",
 				StreamSpecifier: "v:0",
 				Codec:           ffmpegCodec,
-				Flags:           outFormat.VCodecFlags,
+				Flags:           outputCodecFormat.CodecFlags,
 			})
+			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
+
 			log.Printf("  video probed:%s ydl:%s -> %s", vProbedFormat.VCodec(), ydlVCodec, ffmpegCodec)
 		}
 
@@ -322,7 +348,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 
 		f := &ffmpeg.FFmpeg{
 			Maps:     maps,
-			Format:   ffmpeg.Format{Name: outFormat.Formats.first(), Flags: outFormat.FormatFlags},
+			Format:   ffmpeg.Format{Name: outFormat.Formats.first(), Flags: ffmpegFormatFlags},
 			DebugLog: debugLog,
 			Stdout:   ffmpegW,
 			Stderr:   ffmpegStderr,
