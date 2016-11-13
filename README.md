@@ -117,7 +117,6 @@ issues with some sites like youtube.
 - X-Remote IP header?
 - seccomp and chroot things
 - Auto update youtube-dl somehow?
-- hide probe byte read inside ffmpeg package somehow?
 
 ### License
 

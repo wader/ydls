@@ -117,17 +117,17 @@ type Format struct {
 
 // FFmpeg instance
 type FFmpeg struct {
-	Maps      []Map
-	Format    Format
-	Stderr    io.Writer
-	Stdout    io.WriteCloser
-	DebugLog  *log.Logger
-	Cmd       *exec.Cmd
+	Maps     []Map
+	Format   Format
+	Stderr   io.Writer
+	Stdout   io.WriteCloser
+	DebugLog *log.Logger
+
+	cmd       *exec.Cmd
 	cmdWaitCh chan error
 }
 
-// Start ffmpeg instance
-func (f *FFmpeg) Start() error {
+func (f *FFmpeg) startAux(stdout io.WriteCloser) error {
 	log := log.New(ioutil.Discard, "", 0)
 	if f.DebugLog != nil {
 		log = f.DebugLog
@@ -195,23 +195,51 @@ func (f *FFmpeg) Start() error {
 	args = append(args, f.Format.Flags...)
 	args = append(args, "pipe:1")
 
-	f.Cmd = exec.Command("ffmpeg", args...)
-	f.Cmd.ExtraFiles = extraFiles
-	f.Cmd.Stderr = f.Stderr
-	f.Cmd.Stdout = f.Stdout
+	f.cmd = exec.Command("ffmpeg", args...)
+	f.cmd.ExtraFiles = extraFiles
+	f.cmd.Stderr = f.Stderr
+	f.cmd.Stdout = stdout
 
-	log.Printf("cmd %v", f.Cmd.Args)
+	log.Printf("cmd %v", f.cmd.Args)
 
-	if err := f.Cmd.Start(); err != nil {
+	if err := f.cmd.Start(); err != nil {
 		return err
 	}
 
 	f.cmdWaitCh = make(chan error, 1)
 
 	go func() {
-		f.cmdWaitCh <- f.Cmd.Wait()
+		f.cmdWaitCh <- f.cmd.Wait()
 		f.Stdout.Close()
 		close(f.cmdWaitCh)
+	}()
+
+	return nil
+}
+
+// Start ffmpeg instance
+func (f *FFmpeg) Start() error {
+	return f.startAux(f.Stdout)
+}
+
+// StartWaitForData start ffmpeg instance and return once there is data to be read
+func (f *FFmpeg) StartWaitForData() error {
+	probeR, probeW := io.Pipe()
+	if err := f.startAux(probeW); err != nil {
+		return err
+	}
+
+	probeByte := make([]byte, 1)
+	if _, readErr := io.ReadFull(probeR, probeByte); readErr != nil {
+		if cmdErr := f.cmd.Wait(); cmdErr != nil {
+			return cmdErr
+		}
+		return readErr
+	}
+
+	go func() {
+		f.Stdout.Write(probeByte)
+		io.Copy(f.Stdout, probeR)
 	}()
 
 	return nil
