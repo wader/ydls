@@ -1,6 +1,7 @@
 package youtubedl
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -10,6 +11,13 @@ import (
 	"path"
 	"strings"
 )
+
+// Error youtubedl specific error
+type Error string
+
+func (e Error) Error() string {
+	return string(e)
+}
 
 // Info youtubedl json, thumbnail bytes and raw JSON
 type Info struct {
@@ -135,7 +143,7 @@ func parseInfo(r io.Reader) (i *Info, err error) {
 
 // NewFromURL new Info downloaded from URL
 func NewFromURL(url string, stdout io.Writer) (i *Info, err error) {
-	tempPath, _ := ioutil.TempDir("", "youtubedl")
+	tempPath, _ := ioutil.TempDir("", "ydls-youtubedl")
 	defer os.RemoveAll(tempPath)
 
 	cmd := exec.Command(
@@ -150,16 +158,32 @@ func NewFromURL(url string, stdout io.Writer) (i *Info, err error) {
 	)
 	cmd.Dir = tempPath
 	cmd.Stdout = stdout
-	// TODO: remove?
-	cmd.Stderr = stdout
-	cmdStdin, _ := cmd.StdinPipe()
+	cmdStderr, cmdStderrErr := cmd.StderrPipe()
+	if cmdStderrErr != nil {
+		return nil, cmdStderrErr
+	}
+	cmdStdin, cmdStdinErr := cmd.StdinPipe()
+	if cmdStdinErr != nil {
+		return nil, cmdStdinErr
+	}
 
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
 
+	// TODO: check for ERROR: on stderr
+
 	fmt.Fprintln(cmdStdin, url)
 	cmdStdin.Close()
+
+	stderrLineScanner := bufio.NewScanner(cmdStderr)
+	for stderrLineScanner.Scan() {
+		const errorPrefix = "ERROR: "
+		line := stderrLineScanner.Text()
+		if strings.HasPrefix(line, errorPrefix) {
+			return nil, Error(line[len(errorPrefix):])
+		}
+	}
 
 	if err := cmd.Wait(); err != nil {
 		return nil, err
@@ -211,9 +235,9 @@ func NewFromPath(infoPath string) (i *Info, err error) {
 
 // Download format matched by filter
 func (i *Info) Download(filter string, stderr io.Writer) (r io.ReadCloser, err error) {
-	tempPath, err := ioutil.TempDir("", "youtubedl")
-	if err != nil {
-		return nil, err
+	tempPath, tempErr := ioutil.TempDir("", "ydls-youtubedl")
+	if tempErr != nil {
+		return nil, tempErr
 	}
 	jsonTempPath := path.Join(tempPath, "info.json")
 	if err := ioutil.WriteFile(jsonTempPath, i.rawJSON, 0644); err != nil {
@@ -229,7 +253,10 @@ func (i *Info) Download(filter string, stderr io.Writer) (r io.ReadCloser, err e
 		"-o", "-",
 	)
 	cmd.Dir = tempPath
-	stdout, err := cmd.StdoutPipe()
+	stdout, stderrErr := cmd.StdoutPipe()
+	if stderrErr != nil {
+		return nil, stderrErr
+	}
 	cmd.Stderr = stderr
 
 	if err := cmd.Start(); err != nil {

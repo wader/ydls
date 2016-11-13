@@ -197,7 +197,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 	ydl, err := youtubedl.NewFromURL(url, ydlStdout)
 	if err != nil {
 		log.Printf("Failed to download: %s", err)
-		return nil, "", "", fmt.Errorf("failed to download")
+		return nil, "", "", err
 	}
 
 	log.Printf("Title: %s", ydl.Title)
