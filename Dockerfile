@@ -38,10 +38,11 @@ RUN \
       --enable-encoder=libmp3lame \
       --enable-libvorbis \
       --enable-encoder=libvorbis \
-      --enable-libvpx \
-      --enable-encoder=libvpx_vp9 \
       --enable-libopus \
       --enable-encoder=libopus \
+      --enable-libvpx \
+      --enable-encoder=libvpx_vp8 \
+      --enable-encoder=libvpx_vp9 \
       --enable-libfdk-aac \
       --enable-encoder=libfdk_aac \
       --enable-libx264 \

@@ -42,12 +42,12 @@
     "Name": "webm",
     "Formats": ["webm", "matroska"],
     "ACodecs": [
-      {"Codec": "opus"},
-      {"Codec": "vorbis"}
+      {"Codec": "vorbis"},
+      {"Codec": "opus"}
     ],
     "VCodecs": [
-      {"Codec": "vp9"},
-      {"Codec": "vp8"}
+      {"Codec": "vp8"},
+      {"Codec": "vp9"}
     ],
     "Ext": "webm",
     "MIMEType": "video/webm"
@@ -71,8 +71,8 @@
     ],
     "VCodecs": [
       {"Codec": "h264"},
-      {"Codec": "vp9"},
-      {"Codec": "vp8"}
+      {"Codec": "vp8"},
+      {"Codec": "vp9"}
     ],
     "Ext": "mkv",
     "MIMEType": "video/x-matroska"
