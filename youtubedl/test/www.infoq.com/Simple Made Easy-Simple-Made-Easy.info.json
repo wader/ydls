@@ -36,7 +36,7 @@
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
         "Accept-Language": "en-us,en;q=0.5",
         "Accept-Encoding": "gzip, deflate",
-        "Cookie": "CloudFront-Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6IioiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0Nzg0MzkyNTV9LCJJcEFkZHJlc3MiOnsiQVdTOlNvdXJjZUlwIjoiMC4wLjAuMC8wIn19fV19; CloudFront-Signature=Ir3EdJ0lfC8WnMmXDPKfJH9~zFd2NHajinwW9k516W1OdayOfPpPbeBmjzqJ8HD3gVCgviwYNmYmOVpoC6C7KGV2cEFXyh6JtcbmKuKZjfTrdyoJqJSx--yRUQc8Q9a275BCBzlH6gS4EnHE1QDe1JVGUlym0xcQV2pTY5eTi8w_; CloudFront-Key-Pair-Id=APKAIMZVI7QH4C5YKH6Q",
+        "Cookie": "CloudFront-Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6IioiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0NzkxNDI3NzN9LCJJcEFkZHJlc3MiOnsiQVdTOlNvdXJjZUlwIjoiMC4wLjAuMC8wIn19fV19; CloudFront-Signature=AsJ8ng~0GjF3c7cUCfFU9KUPOjC~wBGMaIvxzadpbmeP2g3yXamrx~LDyI7h2y8blgI0ZxKD6nt-9EKftv8FnOsSx~2RKBnftcP4dDu63kv~jIHYQsgP8DieVNUee8YT5stR8cZF0nFMjUQBo3owQMjNTCBEvE5ZAb7D9M3jhnQ_; CloudFront-Key-Pair-Id=APKAIMZVI7QH4C5YKH6Q",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)"
       },
@@ -52,7 +52,7 @@
     "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
     "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
     "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-    "Cookie": "CloudFront-Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6IioiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0Nzg0MzkyNTV9LCJJcEFkZHJlc3MiOnsiQVdTOlNvdXJjZUlwIjoiMC4wLjAuMC8wIn19fV19; CloudFront-Signature=Ir3EdJ0lfC8WnMmXDPKfJH9~zFd2NHajinwW9k516W1OdayOfPpPbeBmjzqJ8HD3gVCgviwYNmYmOVpoC6C7KGV2cEFXyh6JtcbmKuKZjfTrdyoJqJSx--yRUQc8Q9a275BCBzlH6gS4EnHE1QDe1JVGUlym0xcQV2pTY5eTi8w_; CloudFront-Key-Pair-Id=APKAIMZVI7QH4C5YKH6Q"
+    "Cookie": "CloudFront-Policy=eyJTdGF0ZW1lbnQiOiBbeyJSZXNvdXJjZSI6IioiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0NzkxNDI3NzN9LCJJcEFkZHJlc3MiOnsiQVdTOlNvdXJjZUlwIjoiMC4wLjAuMC8wIn19fV19; CloudFront-Signature=AsJ8ng~0GjF3c7cUCfFU9KUPOjC~wBGMaIvxzadpbmeP2g3yXamrx~LDyI7h2y8blgI0ZxKD6nt-9EKftv8FnOsSx~2RKBnftcP4dDu63kv~jIHYQsgP8DieVNUee8YT5stR8cZF0nFMjUQBo3owQMjNTCBEvE5ZAb7D9M3jhnQ_; CloudFront-Key-Pair-Id=APKAIMZVI7QH4C5YKH6Q"
   },
   "id": "Simple-Made-Easy",
   "webpage_url_basename": "Simple-Made-Easy"

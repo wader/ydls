@@ -1,11 +1,14 @@
 #!/bin/bash
 
 shopt -s nullglob
-set -e
+set -ex
 
-curl -L -o youtube-dl https://yt-dl.org/downloads/2016.11.04/youtube-dl
+curl -L -o youtube-dl https://yt-dl.org/downloads/2016.11.14.1/youtube-dl
 chmod a+x youtube-dl
 YOUTUBEDL="$PWD/youtube-dl"
+
+# test errors on stderr "ERROR: ..."
+"$YOUTUBEDL" --skip-download "https://www.youtube.com/watch?v=wAsBta25OGQ" 2>&1 1>/dev/null | grep ERROR:
 
 function dl() {
   n=$(echo "$1" | sed -E 's/^https?:\/\/([^/]*)\/.*$/\1/')

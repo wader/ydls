@@ -54,7 +54,7 @@ RUN \
 
 # keep in sync with youtubedl/test/sync version
 RUN \
-  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2016.11.04/youtube-dl && \
+  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2016.11.14.1/youtube-dl && \
   chmod a+x /usr/local/bin/youtube-dl
 
 RUN \
