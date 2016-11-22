@@ -171,8 +171,6 @@ func NewFromURL(url string, stdout io.Writer) (i *Info, err error) {
 		return nil, err
 	}
 
-	// TODO: check for ERROR: on stderr
-
 	fmt.Fprintln(cmdStdin, url)
 	cmdStdin.Close()
 
