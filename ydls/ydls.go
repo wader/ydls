@@ -11,28 +11,40 @@ import (
 	"sync"
 
 	"github.com/wader/ydls/ffmpeg"
+	"github.com/wader/ydls/id3v2"
+	"github.com/wader/ydls/rereadcloser"
+	"github.com/wader/ydls/writelogger"
 	"github.com/wader/ydls/youtubedl"
 )
 
+func firstNonEmpty(sl ...string) string {
+	for _, s := range sl {
+		if s != "" {
+			return s
+		}
+	}
+	return ""
+}
+
 func writeID3v2FromYoutueDLInfo(w io.Writer, i *youtubedl.Info) {
-	id3v2Frames := []id3v2Frame{
-		&textFrame{"TPE1", firstNonEmpty(i.Artist, i.Creator, i.Uploader)},
-		&textFrame{"TIT2", i.Title},
-		&commFrame{"XXX", "", i.Description},
+	frames := []id3v2.Frame{
+		&id3v2.TextFrame{ID: "TPE1", Text: firstNonEmpty(i.Artist, i.Creator, i.Uploader)},
+		&id3v2.TextFrame{ID: "TIT2", Text: i.Title},
+		&id3v2.COMMFrame{Language: "XXX", Description: "", Text: i.Description},
 	}
 	if i.Duration > 0 {
-		id3v2Frames = append(id3v2Frames, &textFrame{"TLEN", fmt.Sprintf("%d", uint32(i.Duration*1000))})
+		frames = append(frames, &id3v2.TextFrame{ID: "TLEN", Text: fmt.Sprintf("%d", uint32(i.Duration*1000))})
 	}
 	if len(i.ThumbnailBytes) > 0 {
-		id3v2Frames = append(id3v2Frames, &apicFrame{
-			http.DetectContentType(i.ThumbnailBytes),
-			id3v2PictureTypeOther,
-			"",
-			i.ThumbnailBytes,
+		frames = append(frames, &id3v2.APICFrame{
+			MIMEType:    http.DetectContentType(i.ThumbnailBytes),
+			PictureType: id3v2.PictureTypeOther,
+			Description: "",
+			Data:        i.ThumbnailBytes,
 		})
 	}
 
-	id3v2WriteHeader(w, id3v2Frames)
+	id3v2.Write(w, frames)
 }
 
 func findFormat(formats []*youtubedl.Format, protocol string, aCodecs *prioStringSet, vCodecs *prioStringSet) *youtubedl.Format {
@@ -123,18 +135,17 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 func downloadAndProbeFormat(ydl *youtubedl.Info, filter string, debugLog *log.Logger) (r io.ReadCloser, pi *ffmpeg.ProbeInfo, err error) {
 	var ydlStderr io.Writer
 	if debugLog != nil {
-		ydlStderr = &loggerWriter{Logger: debugLog, Prefix: "ydl 2> "}
+		ydlStderr = writelogger.New(debugLog, "ydl 2> ")
 	}
 	r, err = ydl.Download(filter, ydlStderr)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	rr := &reReadCloser{ReadCloser: r}
-
+	rr := rereadcloser.New(r)
 	var ffprobeStderr io.Writer
 	if debugLog != nil {
-		ffprobeStderr = &loggerWriter{Logger: debugLog, Prefix: fmt.Sprintf("ffprobe %s 2> ", filter)}
+		ffprobeStderr = writelogger.New(debugLog, fmt.Sprintf("ffprobe %s 2> ", filter))
 	}
 	const maxProbeByteSize = 10 * 1024 * 1024
 	pi, err = ffmpeg.FFprobe(io.LimitReader(rr, maxProbeByteSize), debugLog, ffprobeStderr)
@@ -192,7 +203,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 
 	var ydlStdout io.Writer
 	if debugLog != nil {
-		ydlStdout = &loggerWriter{Logger: debugLog, Prefix: "ydl 1> "}
+		ydlStdout = writelogger.New(debugLog, "ydl 1> ")
 	}
 	ydl, err := youtubedl.NewFromURL(url, ydlStdout)
 	if err != nil {
@@ -341,7 +352,7 @@ func (ydls *YDLs) Download(url string, formatName string, debugLog *log.Logger) 
 
 		var ffmpegStderr io.Writer
 		if debugLog != nil {
-			ffmpegStderr = &loggerWriter{Logger: debugLog, Prefix: "ffmpeg 2> "}
+			ffmpegStderr = writelogger.New(debugLog, "ffmpeg 2> ")
 		}
 		ffmpegR, ffmpegW := io.Pipe()
 		closeOnDone = append(closeOnDone, ffmpegR)
