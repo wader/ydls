@@ -46,7 +46,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8",
       "format": "hls-meta - multiple (Quality selection URL)",
@@ -64,11 +64,11 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8",
       "format": "hlswebvtt-meta - multiple (Quality selection URL)",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/master.m3u8?alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/master.m3u8?alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "format_note": "Quality selection URL",
       "ext": "mp4",
       "preference": -100,
@@ -4457,7 +4457,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=9nibwstsHjM8JvlAjVNaJw=="
+        "Cookie": "_alid_=FxNua5Q1u4HVmsVWHv6a/A=="
       },
       "url": "http://svtplay9r-f.akamaihd.net/z/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/manifest.f4m?hdcore=3.3.0",
       "vcodec": null,
@@ -4471,7 +4471,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hls-237 - 512x288",
@@ -4494,11 +4494,11 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hlswebvtt-237 - 512x288",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_1_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_1_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "vcodec": "avc1.66.30",
       "tbr": 237,
       "height": 288,
@@ -4506,7 +4506,7 @@
       "ext": "mp4",
       "preference": null,
       "fps": null,
-      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_1_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_1_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "format_id": "hlswebvtt-237",
       "acodec": "mp4a.40.2"
     },
@@ -4524,7 +4524,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=9nibwstsHjM8JvlAjVNaJw=="
+        "Cookie": "_alid_=FxNua5Q1u4HVmsVWHv6a/A=="
       },
       "url": "http://svtplay9r-f.akamaihd.net/z/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/manifest.f4m?hdcore=3.3.0",
       "vcodec": null,
@@ -4538,7 +4538,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hls-345 - 512x288",
@@ -4561,11 +4561,11 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hlswebvtt-345 - 512x288",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_2_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_2_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "vcodec": "avc1.66.30",
       "tbr": 345,
       "height": 288,
@@ -4573,7 +4573,7 @@
       "ext": "mp4",
       "preference": null,
       "fps": null,
-      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_2_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_2_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "format_id": "hlswebvtt-345",
       "acodec": "mp4a.40.2"
     },
@@ -4591,7 +4591,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=9nibwstsHjM8JvlAjVNaJw=="
+        "Cookie": "_alid_=FxNua5Q1u4HVmsVWHv6a/A=="
       },
       "url": "http://svtplay9r-f.akamaihd.net/z/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/manifest.f4m?hdcore=3.3.0",
       "vcodec": null,
@@ -4605,7 +4605,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hls-453 - 512x288",
@@ -4628,11 +4628,11 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hlswebvtt-453 - 512x288",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_3_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_3_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "vcodec": "avc1.66.30",
       "tbr": 453,
       "height": 288,
@@ -4640,7 +4640,7 @@
       "ext": "mp4",
       "preference": null,
       "fps": null,
-      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_3_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_3_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "format_id": "hlswebvtt-453",
       "acodec": "mp4a.40.2"
     },
@@ -4658,7 +4658,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=9nibwstsHjM8JvlAjVNaJw=="
+        "Cookie": "_alid_=FxNua5Q1u4HVmsVWHv6a/A=="
       },
       "url": "http://svtplay9r-f.akamaihd.net/z/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/manifest.f4m?hdcore=3.3.0",
       "vcodec": null,
@@ -4672,7 +4672,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hls-633 - 512x288",
@@ -4695,11 +4695,11 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hlswebvtt-633 - 512x288",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_4_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_4_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "vcodec": "avc1.66.30",
       "tbr": 633,
       "height": 288,
@@ -4707,7 +4707,7 @@
       "ext": "mp4",
       "preference": null,
       "fps": null,
-      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_4_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_4_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "format_id": "hlswebvtt-633",
       "acodec": "mp4a.40.2"
     },
@@ -4725,7 +4725,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=9nibwstsHjM8JvlAjVNaJw=="
+        "Cookie": "_alid_=FxNua5Q1u4HVmsVWHv6a/A=="
       },
       "url": "http://svtplay9r-f.akamaihd.net/z/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/manifest.f4m?hdcore=3.3.0",
       "vcodec": null,
@@ -4739,7 +4739,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hls-985 - 768x432",
@@ -4762,11 +4762,11 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hlswebvtt-985 - 768x432",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_0_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_0_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "vcodec": "avc1.77.30",
       "tbr": 985,
       "height": 432,
@@ -4774,7 +4774,7 @@
       "ext": "mp4",
       "preference": null,
       "fps": null,
-      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_0_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_0_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "format_id": "hlswebvtt-985",
       "acodec": "mp4a.40.2"
     },
@@ -4792,7 +4792,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=9nibwstsHjM8JvlAjVNaJw=="
+        "Cookie": "_alid_=FxNua5Q1u4HVmsVWHv6a/A=="
       },
       "url": "http://svtplay9r-f.akamaihd.net/z/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/manifest.f4m?hdcore=3.3.0",
       "vcodec": null,
@@ -4806,7 +4806,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hls-1677 - 1280x720",
@@ -4829,11 +4829,11 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hlswebvtt-1677 - 1280x720",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_5_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_5_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "vcodec": "avc1.77.30",
       "tbr": 1677,
       "height": 720,
@@ -4841,7 +4841,7 @@
       "ext": "mp4",
       "preference": null,
       "fps": null,
-      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_5_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_5_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "format_id": "hlswebvtt-1677",
       "acodec": "mp4a.40.2"
     },
@@ -4859,7 +4859,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=9nibwstsHjM8JvlAjVNaJw=="
+        "Cookie": "_alid_=FxNua5Q1u4HVmsVWHv6a/A=="
       },
       "url": "http://svtplay9r-f.akamaihd.net/z/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/manifest.f4m?hdcore=3.3.0",
       "vcodec": null,
@@ -4873,7 +4873,7 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hls-2793 - 1280x720",
@@ -4896,11 +4896,11 @@
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64; rv:10.0) Gecko/20150101 Firefox/47.0 (Chrome)",
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
-        "Cookie": "_alid_=dOaKW4YaoHj3QVJBd58d/w=="
+        "Cookie": "_alid_=fyYuuBfogNNRpWeNxYCPsQ=="
       },
       "protocol": "m3u8_native",
       "format": "hlswebvtt-2793 - 1280x720",
-      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_6_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_6_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "vcodec": "avc1.64001f",
       "tbr": 2793,
       "height": 720,
@@ -4908,7 +4908,7 @@
       "ext": "mp4",
       "preference": null,
       "fps": null,
-      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_6_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name=Svenska~default=yes~forced=no~uri=http://media.svt.se/download/mcc/test/core-prd/SUB-1365367-001A-PAJAKTMEDLOTTA-NY/index.m3u8~lang=sv",
+      "manifest_url": "http://svtplay9f-f.akamaihd.net/i/world/open/20160609/1365367-001A/PG-1365367-001A-PAJAKTMEDLOTT-03_,988,240,348,456,636,1680,2796,.mp4.csmil/index_6_av.m3u8?e=82d461566017da20&alt=http%3A%2F%2Fswitcher.cdn.svt.se%2F1365367-001A.m3u8&cc1=name%3DSvenska%7Edefault%3Dyes%7Eforced%3Dno%7Euri%3Dhttp%3A%2F%2Fmedia.svt.se%2Fdownload%2Fmcc%2Ftest%2Fcore-prd%2FSUB-1365367-001A-PAJAKTMEDLOTTA-NY%2Findex.m3u8%7Elang%3Dsv",
       "format_id": "hlswebvtt-2793",
       "acodec": "mp4a.40.2"
     }

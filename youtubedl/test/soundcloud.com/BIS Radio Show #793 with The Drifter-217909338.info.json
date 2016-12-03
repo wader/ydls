@@ -30,7 +30,7 @@
     }
   ],
   "license": "all-rights-reserved",
-  "url": "https://api.soundcloud.com/tracks/217909338/download?client_id=02gUJC0hH2ct1EGOcYXQIzRFU91c72Ea",
+  "url": "https://api.soundcloud.com/tracks/217909338/download?client_id=fDoItMDbsbZz8dY16ZzARCZmzgHBPotA",
   "extractor_key": "Soundcloud",
   "vcodec": "none",
   "title": "BIS Radio Show #793 with The Drifter",
@@ -40,7 +40,7 @@
     {
       "protocol": "http",
       "format": "http_mp3_128_url - audio only",
-      "url": "https://cf-media.sndcdn.com/VYPMhlXzfxCI.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vVllQTWhsWHpmeENJLjEyOC5tcDMiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0NzkxNDA4MjB9fX1dfQ__&Signature=SLubLvvsFJz1s~sdiW3VWFQsVzEYBEthPl3odDtfqMBqS4YZ6AkbXJsiq2hYQuyyxtBT4P9aSeOZRnjRJAiBk~D5OkW3mZbg6TCGi1yfZiYk5rAi7wy1760~HGeC55yymywJTbiTYVR-N6gMZpYPmbVnVLOb5OsyDIQoDJ7KNdvkpxzQmsioYPIZYnXTZsAaxllYc0l7qjvYtQ5djIjKg7MuyUeHpSNgAGVrBin-GGsMdWr2Cbhk3~jYrux29yXkvAoKnNCsCfl9kzp5PC0vwSP3XaevHGjCk1yf~HypJ8FtHxltL~1f3zeTR61bVWa9gSm~cIVlUlD9sZTNeZ4QYA__&Key-Pair-Id=APKAJAGZ7VMH2PFPW6UQ",
+      "url": "https://cf-media.sndcdn.com/VYPMhlXzfxCI.128.mp3?Policy=eyJTdGF0ZW1lbnQiOlt7IlJlc291cmNlIjoiKjovL2NmLW1lZGlhLnNuZGNkbi5jb20vVllQTWhsWHpmeENJLjEyOC5tcDMiLCJDb25kaXRpb24iOnsiRGF0ZUxlc3NUaGFuIjp7IkFXUzpFcG9jaFRpbWUiOjE0ODA3NjY2NzJ9fX1dfQ__&Signature=QbZBd1HRwhbl~6j6SNRNIFPyCFK2Q0FtzlwJ5qGMQ19gDe9LtGJiSsFGXlsLeB3gNHN13q-lUOO7SXJ3ZeOaygMHaVOk6WJLw-UG3cLniSqOHwnRplOWTOd3L5~lz4H3wW-wBQIw9GkR1F5Za5fx1r-mFIgYyy~lxD0gmSDkHhl4tSownvyfVRd2N-6e~97rXqpGCpiB4M0qS~sGebdZpQXBkImqPbCJ8z3SNl1AY30jrpmpK1jCBMUIWlVufDEq1R9nl5bkrdjLjp8RRJysgfq5XHzNuLwC5ySKHfzvmdkX4Zr9fjsvgjRA8MuDBkWX1OzOWwBeXw~irUGLgzO-uw__&Key-Pair-Id=APKAJAGZ7VMH2PFPW6UQ",
       "vcodec": "none",
       "http_headers": {
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
@@ -55,7 +55,7 @@
     {
       "protocol": "https",
       "format": "download - audio only",
-      "url": "https://api.soundcloud.com/tracks/217909338/download?client_id=02gUJC0hH2ct1EGOcYXQIzRFU91c72Ea",
+      "url": "https://api.soundcloud.com/tracks/217909338/download?client_id=fDoItMDbsbZz8dY16ZzARCZmzgHBPotA",
       "vcodec": "none",
       "http_headers": {
         "Accept-Charset": "ISO-8859-1,utf-8;q=0.7,*;q=0.7",
