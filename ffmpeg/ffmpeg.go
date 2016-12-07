@@ -226,11 +226,13 @@ func (f *FFmpeg) Start() error {
 func (f *FFmpeg) StartWaitForData() error {
 	probeR, probeW := io.Pipe()
 	if err := f.startAux(probeW); err != nil {
+		probeR.Close()
 		return err
 	}
 
 	probeByte := make([]byte, 1)
 	if _, readErr := io.ReadFull(probeR, probeByte); readErr != nil {
+		probeR.Close()
 		if cmdErr := f.cmd.Wait(); cmdErr != nil {
 			return cmdErr
 		}
@@ -240,6 +242,7 @@ func (f *FFmpeg) StartWaitForData() error {
 	go func() {
 		f.Stdout.Write(probeByte)
 		io.Copy(f.Stdout, probeR)
+		probeR.Close()
 	}()
 
 	return nil
