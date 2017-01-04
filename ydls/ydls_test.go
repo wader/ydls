@@ -110,10 +110,15 @@ func TestFail(t *testing.T) {
 
 	ydls := ydlsFromFormatsEnv(t)
 
-	geoBlockedURL := "https://www.youtube.com/watch?v=wAsBta25OGQ"
+	geoBlockedURL := "https://www.youtube.com/watch?v=aaaaaaaaaaa"
 	_, ydlsErr := ydls.Download(context.Background(), geoBlockedURL, "", nil)
 	if ydlsErr == nil {
 		t.Errorf("%s: should fail", geoBlockedURL)
+	}
+
+	expectedError := "aaaaaaaaaaa: YouTube said: This video does not exist."
+	if ydlsErr.Error() != expectedError {
+		t.Errorf("%s: expected '%s' got '%s'", geoBlockedURL, expectedError, ydlsErr.Error())
 	}
 }
 
