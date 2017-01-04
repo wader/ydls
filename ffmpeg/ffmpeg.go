@@ -61,28 +61,22 @@ func probeInfoParse(r io.Reader) (pi *ProbeInfo, err error) {
 	return pi, nil
 }
 
-// ProbeWithContext run ffprobe with context
-func ProbeWithContext(ctx context.Context, r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo, err error) {
+// Probe run ffprobe with context
+func Probe(ctx context.Context, r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo, err error) {
 	log := log.New(ioutil.Discard, "", 0)
 	if debugLog != nil {
 		log = debugLog
 	}
 
-	ffprobeName := "ffprobe"
-	ffprobeArgs := []string{
+	cmd := exec.CommandContext(
+		ctx,
+		"ffprobe",
 		"-hide_banner",
 		"-print_format", "json",
 		"-show_format",
 		"-show_streams",
 		"pipe:0",
-	}
-
-	var cmd *exec.Cmd
-	if ctx == nil {
-		cmd = exec.Command(ffprobeName, ffprobeArgs...)
-	} else {
-		cmd = exec.CommandContext(ctx, ffprobeName, ffprobeArgs...)
-	}
+	)
 	cmd.Stdin = r
 	cmd.Stderr = stderr
 	stdout, err := cmd.StdoutPipe()
@@ -106,11 +100,6 @@ func ProbeWithContext(ctx context.Context, r io.Reader, debugLog *log.Logger, st
 	}
 
 	return pi, nil
-}
-
-// Probe run ffprobe
-func Probe(r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo, err error) {
-	return ProbeWithContext(nil, r, debugLog, stderr)
 }
 
 // Map stream mapping
@@ -212,11 +201,7 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 	ffmpegArgs = append(ffmpegArgs, f.Format.Flags...)
 	ffmpegArgs = append(ffmpegArgs, "pipe:1")
 
-	if ctx == nil {
-		f.cmd = exec.Command(ffmpegName, ffmpegArgs...)
-	} else {
-		f.cmd = exec.CommandContext(ctx, ffmpegName, ffmpegArgs...)
-	}
+	f.cmd = exec.CommandContext(ctx, ffmpegName, ffmpegArgs...)
 	f.cmd.ExtraFiles = extraFiles
 	f.cmd.Stderr = f.Stderr
 	f.cmd.Stdout = stdout

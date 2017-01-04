@@ -147,8 +147,9 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 	tempPath, _ := ioutil.TempDir("", "ydls-youtubedl")
 	defer os.RemoveAll(tempPath)
 
-	ydlName := "youtube-dl"
-	ydlArgs := []string{
+	cmd := exec.CommandContext(
+		ctx,
+		"youtube-dl",
 		"--no-call-home",
 		"--no-cache-dir",
 		"--skip-download",
@@ -156,14 +157,7 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 		"--write-thumbnail",
 		// provide URL via stdin for security, youtube-dl has some run command args
 		"--batch-file", "-",
-	}
-
-	var cmd *exec.Cmd
-	if ctx == nil {
-		cmd = exec.Command(ydlName, ydlArgs...)
-	} else {
-		cmd = exec.CommandContext(ctx, ydlName, ydlArgs...)
-	}
+	)
 	cmd.Dir = tempPath
 	cmd.Stdout = stdout
 	cmdStderr, cmdStderrErr := cmd.StderrPipe()
@@ -251,21 +245,15 @@ func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (r
 		return nil, err
 	}
 
-	ydlName := "youtube-dl"
-	ydlArgs := []string{
+	cmd := exec.CommandContext(
+		ctx,
+		"youtube-dl",
 		"--no-call-home",
 		"--no-cache-dir",
 		"--load-info", jsonTempPath,
 		"-f", filter,
 		"-o", "-",
-	}
-
-	var cmd *exec.Cmd
-	if ctx == nil {
-		cmd = exec.Command(ydlName, ydlArgs...)
-	} else {
-		cmd = exec.CommandContext(ctx, ydlName, ydlArgs...)
-	}
+	)
 	cmd.Dir = tempPath
 	r, w := io.Pipe()
 	cmd.Stdout = w

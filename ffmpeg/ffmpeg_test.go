@@ -46,7 +46,7 @@ func TestProbe(t *testing.T) {
 		t.SkipNow()
 	}
 
-	pi, probeErr := Probe(dummyFile(t, "matroska", "mp3", "h264"), nil, nil)
+	pi, probeErr := Probe(context.Background(), dummyFile(t, "matroska", "mp3", "h264"), nil, nil)
 	if probeErr != nil {
 		t.Error(probeErr)
 	}
@@ -105,7 +105,7 @@ func TestStart(t *testing.T) {
 	}
 	ffmpegP.Wait()
 
-	pi, piErr := Probe(bytes.NewBuffer(output.Bytes()), nil, nil)
+	pi, piErr := Probe(context.Background(), bytes.NewBuffer(output.Bytes()), nil, nil)
 	if piErr != nil {
 		t.Fatal(piErr)
 	}

@@ -69,7 +69,7 @@ func TestFormats(t *testing.T) {
 				continue
 			}
 
-			pi, err := ffmpeg.Probe(io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+			pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
 			dr.Media.Close()
 			cancelFn()
 			if err != nil {

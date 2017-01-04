@@ -149,7 +149,7 @@ func downloadAndProbeFormat(ctx context.Context, ydl *youtubedl.Info, filter str
 		ffprobeStderr = writelogger.New(debugLog, fmt.Sprintf("ffprobe %s 2> ", filter))
 	}
 	const maxProbeByteSize = 10 * 1024 * 1024
-	pi, err = ffmpeg.Probe(io.LimitReader(rr, maxProbeByteSize), debugLog, ffprobeStderr)
+	pi, err = ffmpeg.Probe(ctx, io.LimitReader(rr, maxProbeByteSize), debugLog, ffprobeStderr)
 	if err != nil {
 		return nil, nil, err
 	}
