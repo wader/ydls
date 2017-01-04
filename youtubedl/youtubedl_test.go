@@ -1,78 +1,70 @@
 package youtubedl
 
 import (
+	"context"
 	"encoding/json"
-	"fmt"
-	"go/build"
-	"path/filepath"
-	"reflect"
+	"os"
 	"testing"
 )
 
-// this will only work if tests are run where they are built
-func mustPkgSourcePath() string {
-	type dummy struct{}
-	pkgPath := reflect.TypeOf(dummy{}).PkgPath()
-	srcDirs := build.Default.SrcDirs()
-	for i := len(srcDirs) - 1; i >= 0; i-- {
-		pkg, _ := build.Import(pkgPath, srcDirs[i], build.FindOnly)
-		if pkg != nil {
-			return pkg.Dir
-		}
-	}
-
-	panic(fmt.Sprintf("could not find source path for %s", pkgPath))
-}
+var testNetwork = os.Getenv("TEST_NETWORK") != ""
+var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
 
 func TestParseInfo(t *testing.T) {
-	pkgSourcePath := mustPkgSourcePath()
-	testPath := filepath.Join(pkgSourcePath, "test")
+	if !testNetwork || !testYoutubeldl {
+		t.SkipNow()
+	}
 
 	for _, c := range []struct {
-		name          string
+		url           string
 		expectedTitle string
 	}{
-		{"soundcloud.com", "BIS Radio Show #793 with The Drifter"},
-		{"vimeo.com", "Ben Nagy Fuzzing OSX At Scale"},
-		{"www.infoq.com", "Simple Made Easy"},
-		{"www.svtplay.se", "Avsnitt 1"},
-		{"www.youtube.com", "A Radiolab Producer on the Making of a Podcast"},
+		{"https://soundcloud.com/timsweeney/thedrifter", "BIS Radio Show #793 with The Drifter"},
+		{"https://vimeo.com/129701495", "Ben Nagy Fuzzing OSX At Scale"},
+		{"https://www.infoq.com/presentations/Simple-Made-Easy", "Simple Made Easy"},
+		{"https://www.youtube.com/watch?v=uVYWQJ5BB_w", "A Radiolab Producer on the Making of a Podcast"},
 	} {
-		yi, err := NewFromPath(filepath.Join(testPath, c.name))
+		ctx, cancelFn := context.WithCancel(context.Background())
+		yi, err := NewFromURL(ctx, c.url, nil)
 		if err != nil {
-			t.Errorf("failed to parse %s", c.name)
+			cancelFn()
+			t.Errorf("failed to parse %s", c.url)
+			continue
 		}
+		cancelFn()
 
 		if yi.Title != c.expectedTitle {
-			t.Errorf("%s expected title '%s' got '%s'", c.name, c.expectedTitle, yi.Title)
+			t.Errorf("%s: expected title '%s' got '%s'", c.url, c.expectedTitle, yi.Title)
 		}
 
 		if yi.Thumbnail != "" && len(yi.ThumbnailBytes) == 0 {
-			t.Errorf("%s expected thumbnail bytes", c.name)
+			t.Errorf("%s: expected thumbnail bytes", c.url)
 		}
 
 		var dummy map[string]interface{}
 		if err := json.Unmarshal(yi.rawJSON, &dummy); err != nil {
-			t.Errorf("%s failed to parse rawJSON", c.name)
+			t.Errorf("%s: failed to parse rawJSON", c.url)
 		}
 
 		if len(yi.Formats) == 0 {
-			t.Errorf("%s expected formats", c.name)
+			t.Errorf("%s: expected formats", c.url)
 		}
 
 		for _, f := range yi.Formats {
 			if f.FormatID == "" {
-				t.Errorf("%s %s expected FormatID not empty", c.name, f.FormatID)
+				t.Errorf("%s: %s expected FormatID not empty", c.url, f.FormatID)
 			}
 			if f.ACodec != "" && f.ACodec != "none" && f.Ext != "" && f.NormACodec == "" {
-				t.Errorf("%s %s expected NormACodec not empty for %s", c.name, f.FormatID, f.ACodec)
+				t.Errorf("%s: %s expected NormACodec not empty for %s", c.url, f.FormatID, f.ACodec)
 			}
 			if f.VCodec != "" && f.VCodec != "none" && f.Ext != "" && f.NormVCodec == "" {
-				t.Errorf("%s %s expected NormVCodec not empty for %s", c.name, f.FormatID, f.VCodec)
+				t.Errorf("%s: %s expected NormVCodec not empty for %s", c.url, f.FormatID, f.VCodec)
 			}
 			if f.ABR+f.VBR+f.TBR != 0 && f.NormBR == 0 {
-				t.Errorf("%s %s expected NormBR not zero", c.name, f.FormatID)
+				t.Errorf("%s: %s expected NormBR not zero", c.url, f.FormatID)
 			}
 		}
+
+		t.Logf("%s: OK\n", c.url)
 	}
 }
