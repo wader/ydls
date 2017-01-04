@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"io"
@@ -74,12 +75,15 @@ func main() {
 	}
 	formatName := flag.Arg(1)
 
-	mediaReader, filename, _, err := ydls.Download(url, formatName, debugLog)
+	ctx, cancelFn := context.WithCancel(context.Background())
+	defer cancelFn()
+
+	dr, err := ydls.Download(ctx, url, formatName, debugLog)
 	fatalIfErrorf(err, "download failed")
-	defer mediaReader.Close()
+	defer dr.Media.Close()
 	wd, err := os.Getwd()
 	fatalIfErrorf(err, "getwd")
-	path, err := absRootPath(wd, filename)
+	path, err := absRootPath(wd, dr.Filename)
 	fatalIfErrorf(err, "write path")
 
 	mediaFile, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
@@ -87,10 +91,10 @@ func main() {
 	defer mediaFile.Close()
 
 	pw := &progressWriter{fn: func(bytes uint64) {
-		fmt.Printf("\r%s %.2fMB", filename, float64(bytes)/(1024*1024))
+		fmt.Printf("\r%s %.2fMB", dr.Filename, float64(bytes)/(1024*1024))
 	}}
 	mw := io.MultiWriter(mediaFile, pw)
 
-	io.Copy(mw, mediaReader)
+	io.Copy(mw, dr.Media)
 	fmt.Print("\n")
 }

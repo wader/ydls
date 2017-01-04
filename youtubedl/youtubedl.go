@@ -2,6 +2,7 @@ package youtubedl
 
 import (
 	"bufio"
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -141,13 +142,13 @@ func parseInfo(r io.Reader) (i *Info, err error) {
 	return i, nil
 }
 
-// NewFromURL new Info downloaded from URL
-func NewFromURL(url string, stdout io.Writer) (i *Info, err error) {
+// NewFromURL new Info downloaded from URL using context
+func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err error) {
 	tempPath, _ := ioutil.TempDir("", "ydls-youtubedl")
 	defer os.RemoveAll(tempPath)
 
-	cmd := exec.Command(
-		"youtube-dl",
+	ydlName := "youtube-dl"
+	ydlArgs := []string{
 		"--no-call-home",
 		"--no-cache-dir",
 		"--skip-download",
@@ -155,7 +156,14 @@ func NewFromURL(url string, stdout io.Writer) (i *Info, err error) {
 		"--write-thumbnail",
 		// provide URL via stdin for security, youtube-dl has some run command args
 		"--batch-file", "-",
-	)
+	}
+
+	var cmd *exec.Cmd
+	if ctx == nil {
+		cmd = exec.Command(ydlName, ydlArgs...)
+	} else {
+		cmd = exec.CommandContext(ctx, ydlName, ydlArgs...)
+	}
 	cmd.Dir = tempPath
 	cmd.Stdout = stdout
 	cmdStderr, cmdStderrErr := cmd.StderrPipe()
@@ -190,7 +198,7 @@ func NewFromURL(url string, stdout io.Writer) (i *Info, err error) {
 	return NewFromPath(tempPath)
 }
 
-// NewFromPath new Info from path with json and optional image
+// NewFromPath new Info from path with JSON and optional image
 func NewFromPath(infoPath string) (i *Info, err error) {
 	files, err := ioutil.ReadDir(infoPath)
 	if err != nil {
@@ -232,29 +240,35 @@ func NewFromPath(infoPath string) (i *Info, err error) {
 }
 
 // Download format matched by filter
-func (i *Info) Download(filter string, stderr io.Writer) (r io.ReadCloser, err error) {
+func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (r io.ReadCloser, err error) {
 	tempPath, tempErr := ioutil.TempDir("", "ydls-youtubedl")
 	if tempErr != nil {
 		return nil, tempErr
 	}
 	jsonTempPath := path.Join(tempPath, "info.json")
 	if err := ioutil.WriteFile(jsonTempPath, i.rawJSON, 0644); err != nil {
+		os.RemoveAll(tempPath)
 		return nil, err
 	}
 
-	cmd := exec.Command(
-		"youtube-dl",
+	ydlName := "youtube-dl"
+	ydlArgs := []string{
 		"--no-call-home",
 		"--no-cache-dir",
 		"--load-info", jsonTempPath,
 		"-f", filter,
 		"-o", "-",
-	)
-	cmd.Dir = tempPath
-	stdout, stderrErr := cmd.StdoutPipe()
-	if stderrErr != nil {
-		return nil, stderrErr
 	}
+
+	var cmd *exec.Cmd
+	if ctx == nil {
+		cmd = exec.Command(ydlName, ydlArgs...)
+	} else {
+		cmd = exec.CommandContext(ctx, ydlName, ydlArgs...)
+	}
+	cmd.Dir = tempPath
+	r, w := io.Pipe()
+	cmd.Stdout = w
 	cmd.Stderr = stderr
 
 	if err := cmd.Start(); err != nil {
@@ -263,11 +277,9 @@ func (i *Info) Download(filter string, stderr io.Writer) (r io.ReadCloser, err e
 
 	go func() {
 		defer os.RemoveAll(tempPath)
-		if err := cmd.Wait(); err != nil {
-			//debugLog.Printf("Wait err=%v", err)
-			return
-		}
+		cmd.Wait()
+		r.Close()
 	}()
 
-	return stdout, nil
+	return r, nil
 }

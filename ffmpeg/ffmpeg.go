@@ -1,6 +1,7 @@
 package ffmpeg
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -60,21 +61,28 @@ func probeInfoParse(r io.Reader) (pi *ProbeInfo, err error) {
 	return pi, nil
 }
 
-// FFprobe run ffprobe
-func FFprobe(r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo, err error) {
+// ProbeWithContext run ffprobe with context
+func ProbeWithContext(ctx context.Context, r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo, err error) {
 	log := log.New(ioutil.Discard, "", 0)
 	if debugLog != nil {
 		log = debugLog
 	}
 
-	cmd := exec.Command(
-		"ffprobe",
+	ffprobeName := "ffprobe"
+	ffprobeArgs := []string{
 		"-hide_banner",
 		"-print_format", "json",
 		"-show_format",
 		"-show_streams",
 		"pipe:0",
-	)
+	}
+
+	var cmd *exec.Cmd
+	if ctx == nil {
+		cmd = exec.Command(ffprobeName, ffprobeArgs...)
+	} else {
+		cmd = exec.CommandContext(ctx, ffprobeName, ffprobeArgs...)
+	}
 	cmd.Stdin = r
 	cmd.Stderr = stderr
 	stdout, err := cmd.StdoutPipe()
@@ -100,6 +108,11 @@ func FFprobe(r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo
 	return pi, nil
 }
 
+// Probe run ffprobe
+func Probe(r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo, err error) {
+	return ProbeWithContext(nil, r, debugLog, stderr)
+}
+
 // Map stream mapping
 type Map struct {
 	Input           io.Reader
@@ -123,11 +136,13 @@ type FFmpeg struct {
 	Stdout   io.WriteCloser
 	DebugLog *log.Logger
 
-	cmd       *exec.Cmd
-	cmdWaitCh chan error
+	cmd         *exec.Cmd
+	cmdErr      error
+	cmdWaitCh   chan error
+	startWaitCh chan struct{}
 }
 
-func (f *FFmpeg) startAux(stdout io.WriteCloser) error {
+func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 	log := log.New(ioutil.Discard, "", 0)
 	if f.DebugLog != nil {
 		log = f.DebugLog
@@ -169,33 +184,39 @@ func (f *FFmpeg) startAux(stdout io.WriteCloser) error {
 		inputToFDMap[m.Input] = ifd
 	}
 
+	ffmpegName := "ffmpeg"
+	ffmpegArgs := []string{"-hide_banner"}
+
 	var extraFiles []*os.File
-	args := []string{"-hide_banner"}
 	for _, ifd := range inputToFDs {
 		extraFiles = append(extraFiles, ifd.r)
-		args = append(args, "-i", fmt.Sprintf("pipe:%d", ifd.childFD))
+		ffmpegArgs = append(ffmpegArgs, "-i", fmt.Sprintf("pipe:%d", ifd.childFD))
 	}
 
 	for _, m := range f.Maps {
 		ifd := inputToFDMap[m.Input]
 
-		args = append(args, "-map", fmt.Sprintf("%d:%s", ifd.inputFileID, m.StreamSpecifier))
+		ffmpegArgs = append(ffmpegArgs, "-map", fmt.Sprintf("%d:%s", ifd.inputFileID, m.StreamSpecifier))
 		if m.Kind == "audio" {
-			args = append(args, "-acodec")
+			ffmpegArgs = append(ffmpegArgs, "-acodec")
 		} else if m.Kind == "video" {
-			args = append(args, "-vcodec")
+			ffmpegArgs = append(ffmpegArgs, "-vcodec")
 		} else {
 			panic(fmt.Sprintf("kind can only be audio or video (was %s)", m.Kind))
 		}
-		args = append(args, m.Codec)
-		args = append(args, m.Flags...)
+		ffmpegArgs = append(ffmpegArgs, m.Codec)
+		ffmpegArgs = append(ffmpegArgs, m.Flags...)
 	}
 
-	args = append(args, "-f", f.Format.Name)
-	args = append(args, f.Format.Flags...)
-	args = append(args, "pipe:1")
+	ffmpegArgs = append(ffmpegArgs, "-f", f.Format.Name)
+	ffmpegArgs = append(ffmpegArgs, f.Format.Flags...)
+	ffmpegArgs = append(ffmpegArgs, "pipe:1")
 
-	f.cmd = exec.Command("ffmpeg", args...)
+	if ctx == nil {
+		f.cmd = exec.Command(ffmpegName, ffmpegArgs...)
+	} else {
+		f.cmd = exec.CommandContext(ctx, ffmpegName, ffmpegArgs...)
+	}
 	f.cmd.ExtraFiles = extraFiles
 	f.cmd.Stderr = f.Stderr
 	f.cmd.Stdout = stdout
@@ -206,26 +227,21 @@ func (f *FFmpeg) startAux(stdout io.WriteCloser) error {
 		return err
 	}
 
-	f.cmdWaitCh = make(chan error, 1)
-
 	go func() {
 		f.cmdWaitCh <- f.cmd.Wait()
-		f.Stdout.Close()
-		close(f.cmdWaitCh)
+		stdout.Close()
 	}()
 
 	return nil
 }
 
-// Start ffmpeg instance
-func (f *FFmpeg) Start() error {
-	return f.startAux(f.Stdout)
-}
+// Start start ffmpeg with context and return once there is data to be read
+func (f *FFmpeg) Start(ctx context.Context) error {
+	f.cmdWaitCh = make(chan error, 1)
+	f.startWaitCh = make(chan struct{}, 1)
 
-// StartWaitForData start ffmpeg instance and return once there is data to be read
-func (f *FFmpeg) StartWaitForData() error {
 	probeR, probeW := io.Pipe()
-	if err := f.startAux(probeW); err != nil {
+	if err := f.startAux(ctx, probeW); err != nil {
 		probeR.Close()
 		return err
 	}
@@ -233,8 +249,9 @@ func (f *FFmpeg) StartWaitForData() error {
 	probeByte := make([]byte, 1)
 	if _, readErr := io.ReadFull(probeR, probeByte); readErr != nil {
 		probeR.Close()
-		if cmdErr := f.cmd.Wait(); cmdErr != nil {
-			return cmdErr
+		f.cmdErr = <-f.cmdWaitCh
+		if f.cmdErr != nil {
+			return f.cmdErr
 		}
 		return readErr
 	}
@@ -243,12 +260,16 @@ func (f *FFmpeg) StartWaitForData() error {
 		f.Stdout.Write(probeByte)
 		io.Copy(f.Stdout, probeR)
 		probeR.Close()
+		f.Stdout.Close()
+		f.cmdErr = <-f.cmdWaitCh
+		close(f.startWaitCh)
 	}()
 
 	return nil
 }
 
-// Wait for ffmpeg to exit
+// Wait for ffmpeg to finish
 func (f *FFmpeg) Wait() error {
-	return <-f.cmdWaitCh
+	<-f.startWaitCh
+	return f.cmdErr
 }
