@@ -1,9 +1,20 @@
 package main
 
 import (
+	"io"
+	"io/ioutil"
+	"net/http"
+	"net/http/httptest"
 	"net/url"
+	"os"
 	"testing"
+
+	"github.com/wader/ydls/ydls"
 )
+
+var testNetwork = os.Getenv("TEST_NETWORK") != ""
+var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
+var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""
 
 func TestParseFormatDownloadURL(t *testing.T) {
 	for _, c := range []struct {
@@ -78,5 +89,52 @@ func TestContentDispositionFilename(t *testing.T) {
 		if actual != c.expect {
 			t.Errorf("%s, got %v expected %v", c.s, actual, c.expect)
 		}
+	}
+}
+
+func ydlsHandlerFromFormatsEnv(t *testing.T) *ydlsHandler {
+	yh := &ydlsHandler{}
+	var err error
+
+	yh.ydls, err = ydls.NewFromFile(os.Getenv("FORMATS"))
+	if err != nil {
+		t.Fatalf("failed to read formats: %s", err)
+	}
+
+	return yh
+}
+
+func TestYDLSHandler(t *testing.T) {
+	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+		t.SkipNow()
+	}
+
+	ts := httptest.NewServer(ydlsHandlerFromFormatsEnv(t))
+	defer ts.Close()
+
+	testMedia := "https://www.youtube.com/watch?v=uVYWQJ5BB_w"
+	testServerURL, _ := url.Parse(ts.URL)
+	ydlsTestURL := testServerURL.ResolveReference(&url.URL{
+		Path: "/mp3/" + testMedia,
+	})
+
+	res, err := http.Get(ydlsTestURL.String())
+	if err != nil {
+		t.Fatal(err)
+	}
+	mediaBytes, err := ioutil.ReadAll(io.LimitReader(res.Body, 1024))
+	res.Body.Close()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if len(mediaBytes) != 1024 {
+		t.Errorf("expected 1024 bytes, got %d", len(mediaBytes))
+	}
+	if res.Header.Get("Content-Disposition") == "" {
+		t.Error("expected a Content-Disposition header")
+	}
+	if res.Header.Get("Content-Type") == "mpeg/audio" {
+		t.Errorf("expected a Content-Type to be mpeg/audio, got %s", res.Header.Get("Content-Type"))
 	}
 }
