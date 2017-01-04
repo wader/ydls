@@ -65,8 +65,10 @@ RUN \
 COPY . /go/src/github.com/wader/ydls/
 COPY formats.json /etc/
 COPY entrypoint.sh /usr/local/bin
+
 RUN \
-  go test github.com/wader/ydls/... && \
+  TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 FORMATS=/etc/formats.json \
+    go test -v -cover -race -tags "network ffmpeg youtubedl" github.com/wader/ydls/... && \
   go install github.com/wader/ydls/... && \
   cp /go/bin/* /usr/local/bin && \
   go clean -r github.com/wader/ydls/... && \
