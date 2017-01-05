@@ -302,7 +302,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		}
 
 		log.Printf("Stream mapping:")
-		var maps []ffmpeg.Map
+		var streamMaps []ffmpeg.StreamMap
 		ffmpegFormatFlags := outFormat.FormatFlags
 
 		if len(outFormat.ACodecs) > 0 && aProbeInfo != nil && aProbeInfo.ACodec() != "" {
@@ -321,12 +321,12 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 				ydlACodec = aYDLFormat.NormACodec
 			}
 
-			maps = append(maps, ffmpeg.Map{
-				Input:           aReader,
-				Kind:            "audio",
+			streamMaps = append(streamMaps, ffmpeg.StreamMap{
+				Stream:          aReader,
 				StreamSpecifier: "a:0",
 				Codec:           ffmpegCodec,
-				Flags:           outputCodecFormat.CodecFlags,
+				CodecKind:       "audio",
+				CodecFlags:      outputCodecFormat.CodecFlags,
 			})
 			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
 
@@ -348,12 +348,12 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 				ydlVCodec = vYDLFormat.NormVCodec
 			}
 
-			maps = append(maps, ffmpeg.Map{
-				Input:           vReader,
-				Kind:            "video",
+			streamMaps = append(streamMaps, ffmpeg.StreamMap{
+				Stream:          vReader,
 				StreamSpecifier: "v:0",
 				Codec:           ffmpegCodec,
-				Flags:           outputCodecFormat.CodecFlags,
+				CodecKind:       "video",
+				CodecFlags:      outputCodecFormat.CodecFlags,
 			})
 			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
 
@@ -368,11 +368,11 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		closeOnDone = append(closeOnDone, ffmpegR)
 
 		ffmpegP := &ffmpeg.FFmpeg{
-			Maps:     maps,
-			Format:   ffmpeg.Format{Name: outFormat.Formats.first(), Flags: ffmpegFormatFlags},
-			DebugLog: debugLog,
-			Stdout:   ffmpegW,
-			Stderr:   ffmpegStderr,
+			StreamMaps: streamMaps,
+			Format:     ffmpeg.Format{Name: outFormat.Formats.first(), Flags: ffmpegFormatFlags},
+			DebugLog:   debugLog,
+			Stdout:     ffmpegW,
+			Stderr:     ffmpegStderr,
 		}
 
 		if err := ffmpegP.Start(ctx); err != nil {

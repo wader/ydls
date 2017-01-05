@@ -80,18 +80,18 @@ func TestStart(t *testing.T) {
 	output := &closeBuffer{}
 
 	ffmpegP := &FFmpeg{
-		Maps: []Map{
-			Map{
-				Input:           file,
-				Kind:            "audio",
+		StreamMaps: []StreamMap{
+			StreamMap{
+				Stream:          file,
 				StreamSpecifier: "a:0",
 				Codec:           "vorbis",
+				CodecKind:       "audio",
 			},
-			Map{
-				Input:           file,
-				Kind:            "video",
+			StreamMap{
+				Stream:          file,
 				StreamSpecifier: "v:0",
 				Codec:           "vp8",
+				CodecKind:       "video",
 			},
 		},
 		Format:   Format{Name: "matroska"},
@@ -100,7 +100,7 @@ func TestStart(t *testing.T) {
 		Stdout:   output,
 	}
 
-	if err := ffmpegP.Start(context.TODO()); err != nil {
+	if err := ffmpegP.Start(context.Background()); err != nil {
 		t.Fatal(err)
 	}
 	ffmpegP.Wait()

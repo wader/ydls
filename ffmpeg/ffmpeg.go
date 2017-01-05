@@ -102,13 +102,13 @@ func Probe(ctx context.Context, r io.Reader, debugLog *log.Logger, stderr io.Wri
 	return pi, nil
 }
 
-// Map stream mapping
-type Map struct {
-	Input           io.Reader
-	Kind            string // audio/video
-	StreamSpecifier string // 0, a:0, v:0
+// StreamMap stream mapping
+type StreamMap struct {
+	Stream          io.Reader
+	StreamSpecifier string // 0, a:0, v:0, etc
 	Codec           string
-	Flags           []string
+	CodecKind       string // audio/video
+	CodecFlags      []string
 }
 
 // Format output format
@@ -119,11 +119,11 @@ type Format struct {
 
 // FFmpeg instance
 type FFmpeg struct {
-	Maps     []Map
-	Format   Format
-	Stderr   io.Writer
-	Stdout   io.WriteCloser
-	DebugLog *log.Logger
+	StreamMaps []StreamMap
+	Format     Format
+	Stderr     io.Writer
+	Stdout     io.WriteCloser
+	DebugLog   *log.Logger
 
 	cmd         *exec.Cmd
 	cmdErr      error
@@ -150,9 +150,9 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 	// from os.Cmd "entry i becomes file descriptor 3+i"
 	childFD := 3
 	inputFileID := 0
-	for _, m := range f.Maps {
+	for _, m := range f.StreamMaps {
 		// skip if reader already created
-		if _, ok := inputToFDMap[m.Input]; ok {
+		if _, ok := inputToFDMap[m.Stream]; ok {
 			continue
 		}
 
@@ -167,10 +167,10 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 		go func(r io.Reader) {
 			defer ifd.w.Close()
 			io.Copy(ifd.w, r)
-		}(m.Input)
+		}(m.Stream)
 
 		inputToFDs = append(inputToFDs, ifd)
-		inputToFDMap[m.Input] = ifd
+		inputToFDMap[m.Stream] = ifd
 	}
 
 	ffmpegName := "ffmpeg"
@@ -182,19 +182,19 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 		ffmpegArgs = append(ffmpegArgs, "-i", fmt.Sprintf("pipe:%d", ifd.childFD))
 	}
 
-	for _, m := range f.Maps {
-		ifd := inputToFDMap[m.Input]
+	for _, m := range f.StreamMaps {
+		ifd := inputToFDMap[m.Stream]
 
 		ffmpegArgs = append(ffmpegArgs, "-map", fmt.Sprintf("%d:%s", ifd.inputFileID, m.StreamSpecifier))
-		if m.Kind == "audio" {
+		if m.CodecKind == "audio" {
 			ffmpegArgs = append(ffmpegArgs, "-acodec")
-		} else if m.Kind == "video" {
+		} else if m.CodecKind == "video" {
 			ffmpegArgs = append(ffmpegArgs, "-vcodec")
 		} else {
-			panic(fmt.Sprintf("kind can only be audio or video (was %s)", m.Kind))
+			panic(fmt.Sprintf("kind can only be audio or video (was %s)", m.CodecKind))
 		}
 		ffmpegArgs = append(ffmpegArgs, m.Codec)
-		ffmpegArgs = append(ffmpegArgs, m.Flags...)
+		ffmpegArgs = append(ffmpegArgs, m.CodecFlags...)
 	}
 
 	ffmpegArgs = append(ffmpegArgs, "-f", f.Format.Name)
