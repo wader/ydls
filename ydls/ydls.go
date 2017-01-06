@@ -323,7 +323,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 			streamMaps = append(streamMaps, ffmpeg.StreamMap{
 				Reader:     aReader,
 				Specifier:  "a:0",
-				Codec:      "acodec: " + ffmpegCodec,
+				Codec:      "acodec:" + ffmpegCodec,
 				CodecFlags: outputCodecFormat.CodecFlags,
 			})
 			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
