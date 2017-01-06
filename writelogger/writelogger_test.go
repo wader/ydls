@@ -21,6 +21,16 @@ func TestWriteLogger(t *testing.T) {
 		},
 		{
 			[][]byte{
+				[]byte("download\n"),
+				[]byte("\rprogress 1"),
+				[]byte("\rprogress 2"),
+				[]byte("\rprogress 3"),
+				[]byte("\n"),
+			},
+			[]byte(">download\n>\n>progress 1\n>progress 2\n>progress 3\n"),
+		},
+		{
+			[][]byte{
 				[]byte("a"),
 				[]byte("b\n"),
 			},
@@ -42,7 +52,7 @@ func TestWriteLogger(t *testing.T) {
 		{
 			[][]byte{
 				[]byte("a"),
-				[]byte("\r\n"),
+				[]byte("\b\n"),
 			},
 			[]byte(">a \n"),
 		},
@@ -64,7 +74,7 @@ func TestWriteLogger(t *testing.T) {
 		}
 
 		if !reflect.DeepEqual(actualBuf.Bytes(), c.expected) {
-			t.Errorf("writes %#v, expected %#v, actual %#v", c.writes, c.expected, actualBuf.Bytes())
+			t.Errorf("writes %#v, expected %#v, actual %#v", c.writes, string(c.expected), string(actualBuf.Bytes()))
 		}
 	}
 }
