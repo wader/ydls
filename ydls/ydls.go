@@ -27,6 +27,13 @@ func firstNonEmpty(sl ...string) string {
 	return ""
 }
 
+func boolStr(b bool, t string, f string) string {
+	if b {
+		return t
+	}
+	return f
+}
+
 func logOrDiscard(l *log.Logger) *log.Logger {
 	if l != nil {
 		return l
@@ -190,6 +197,17 @@ type DownloadResult struct {
 	MIMEType string
 }
 
+func chooseFormatCodec(formats prioFormatCodecSet, probedCodec string) *FormatCodec {
+	codecFormat := formats.findByCodecName(probedCodec)
+	if codecFormat != nil {
+		copyCodecFormat := *codecFormat
+		copyCodecFormat.Codec = "copy"
+		return &copyCodecFormat
+	}
+
+	return formats.first()
+}
+
 // Download downloads media from URL using context and makes sure output is in specified format
 func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, debugLog *log.Logger) (*DownloadResult, error) {
 	var closeOnDone []io.Closer
@@ -209,6 +227,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 	log := logOrDiscard(debugLog)
 
 	log.Printf("URL: %s", url)
+	log.Printf("Output format: %s", formatName)
 
 	var ydlStdout io.Writer
 	ydlStdout = writelogger.New(log, "ydl-new stdout> ")
@@ -226,8 +245,6 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 
 	dr := &DownloadResult{}
 
-	var outFormat *Format
-
 	if formatName == "" {
 		var probeInfo *ffmpeg.ProbeInfo
 		dr.Media, probeInfo, err = downloadAndProbeFormat(ctx, ydl, "best[protocol=https]/best[protocol=http]/best", log)
@@ -238,166 +255,144 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		log.Printf("Probed format %s", probeInfo)
 
 		// see if we know about the probed format, otherwise fallback to "raw"
-		outFormat = ydls.Formats.Find(probeInfo.FormatName(), probeInfo.ACodec(), probeInfo.VCodec())
-	} else {
-		outFormat = ydls.Formats.FindByName(formatName)
-		if outFormat == nil {
-			return nil, fmt.Errorf("could not find format")
-		}
+		outFormat := ydls.Formats.Find(probeInfo.FormatName(), probeInfo.ACodec(), probeInfo.VCodec())
+		dr.MIMEType = boolStr(outFormat == nil, "application/octet-stream", outFormat.MIMEType)
+		dr.Filename = ydl.Title + ".raw"
 
-		aYDLFormat, vYDLFormat := findBestFormats(ydl.Formats, outFormat)
+		return dr, nil
+	}
 
-		log.Printf("Best youtubedl match for %s a=%s v=%s", formatName, aYDLFormat, vYDLFormat)
+	outFormat := ydls.Formats.FindByName(formatName)
+	if outFormat == nil {
+		return nil, fmt.Errorf("could not find format")
+	}
 
-		var aProbeInfo *ffmpeg.ProbeInfo
-		var aReader io.ReadCloser
-		var aErr error
-		var vProbeInfo *ffmpeg.ProbeInfo
-		var vReader io.ReadCloser
-		var vErr error
+	dr.MIMEType = outFormat.MIMEType
+	dr.Filename = ydl.Title + "." + outFormat.Ext
 
-		// FIXME: messy
+	aYDLFormat, vYDLFormat := findBestFormats(ydl.Formats, outFormat)
 
-		if aYDLFormat != nil && vYDLFormat != nil {
-			if aYDLFormat != vYDLFormat {
-				var probeWG sync.WaitGroup
-				probeWG.Add(2)
-				go func() {
-					defer probeWG.Done()
-					aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
-				}()
-				go func() {
-					defer probeWG.Done()
-					vReader, vProbeInfo, vErr = downloadAndProbeFormat(ctx, ydl, vYDLFormat.FormatID, log)
-				}()
-				probeWG.Wait()
-				if aReader != nil {
-					closeOnDone = append(closeOnDone, aReader)
-				}
-				if vReader != nil {
-					closeOnDone = append(closeOnDone, vReader)
-				}
-			} else {
+	var aProbeInfo *ffmpeg.ProbeInfo
+	var aReader io.ReadCloser
+	var aErr error
+	var vProbeInfo *ffmpeg.ProbeInfo
+	var vReader io.ReadCloser
+	var vErr error
+
+	// FIXME: messy
+
+	if aYDLFormat != nil && vYDLFormat != nil {
+		if aYDLFormat != vYDLFormat {
+			var probeWG sync.WaitGroup
+			probeWG.Add(2)
+			go func() {
+				defer probeWG.Done()
 				aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
-				vReader, vProbeInfo, vErr = aReader, aProbeInfo, aErr
-				if aReader != nil {
-					closeOnDone = append(closeOnDone, aReader)
-				}
-			}
-		} else if aYDLFormat != nil && vYDLFormat == nil {
-			aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
+			}()
+			go func() {
+				defer probeWG.Done()
+				vReader, vProbeInfo, vErr = downloadAndProbeFormat(ctx, ydl, vYDLFormat.FormatID, log)
+			}()
+			probeWG.Wait()
 			if aReader != nil {
 				closeOnDone = append(closeOnDone, aReader)
 			}
+			if vReader != nil {
+				closeOnDone = append(closeOnDone, vReader)
+			}
 		} else {
-			aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, "best", log)
+			aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
 			vReader, vProbeInfo, vErr = aReader, aProbeInfo, aErr
 			if aReader != nil {
 				closeOnDone = append(closeOnDone, aReader)
 			}
 		}
-		if aErr != nil || vErr != nil {
-			return nil, fmt.Errorf("failed to probe")
+	} else if aYDLFormat != nil && vYDLFormat == nil {
+		aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
+		if aReader != nil {
+			closeOnDone = append(closeOnDone, aReader)
 		}
-
-		log.Printf("Stream mapping:")
-		var streamMaps []ffmpeg.StreamMap
-		ffmpegFormatFlags := outFormat.FormatFlags
-
-		if len(outFormat.ACodecs) > 0 && aProbeInfo != nil && aProbeInfo.ACodec() != "" {
-			var outputCodecFormat *FormatCodec
-			var ffmpegCodec string
-			outputCodecFormat = outFormat.ACodecs.findByCodecName(aProbeInfo.ACodec())
-			if outputCodecFormat == nil {
-				outputCodecFormat = outFormat.ACodecs.first()
-				ffmpegCodec = outputCodecFormat.Codec
-			} else {
-				ffmpegCodec = "copy"
-			}
-
-			ydlACodec := "n/a"
-			if aYDLFormat != nil {
-				ydlACodec = aYDLFormat.NormACodec
-			}
-
-			streamMaps = append(streamMaps, ffmpeg.StreamMap{
-				Reader:     aReader,
-				Specifier:  "a:0",
-				Codec:      "acodec:" + ffmpegCodec,
-				CodecFlags: outputCodecFormat.CodecFlags,
-			})
-			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
-
-			log.Printf("  audio probed:%s ydl:%s -> %s", aProbeInfo.ACodec(), ydlACodec, ffmpegCodec)
-		}
-		if len(outFormat.VCodecs) > 0 && vProbeInfo != nil && vProbeInfo.VCodec() != "" {
-			var outputCodecFormat *FormatCodec
-			var ffmpegCodec string
-			outputCodecFormat = outFormat.VCodecs.findByCodecName(vProbeInfo.VCodec())
-			if outputCodecFormat == nil {
-				outputCodecFormat = outFormat.VCodecs.first()
-				ffmpegCodec = outputCodecFormat.Codec
-			} else {
-				ffmpegCodec = "copy"
-			}
-
-			ydlVCodec := "n/a"
-			if vYDLFormat != nil {
-				ydlVCodec = vYDLFormat.NormVCodec
-			}
-
-			streamMaps = append(streamMaps, ffmpeg.StreamMap{
-				Reader:     vReader,
-				Specifier:  "v:0",
-				Codec:      "vcodec:" + ffmpegCodec,
-				CodecFlags: outputCodecFormat.CodecFlags,
-			})
-			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
-
-			log.Printf("  video probed:%s ydl:%s -> %s", vProbeInfo.VCodec(), ydlVCodec, ffmpegCodec)
-		}
-
-		var ffmpegStderr io.Writer
-		ffmpegStderr = writelogger.New(log, "ffmpeg stderr> ")
-		ffmpegR, ffmpegW := io.Pipe()
-		closeOnDone = append(closeOnDone, ffmpegR)
-
-		ffmpegP := &ffmpeg.FFmpeg{
-			StreamMaps: streamMaps,
-			Format:     ffmpeg.Format{Name: outFormat.Formats.first(), Flags: ffmpegFormatFlags},
-			DebugLog:   log,
-			Stdout:     ffmpegW,
-			Stderr:     ffmpegStderr,
-		}
-
-		if err := ffmpegP.Start(ctx); err != nil {
-			return nil, err
-		}
-
-		// goroutine will take care of closing
-		deferCloseFn = nil
-
-		var w io.WriteCloser
-		dr.Media, w = io.Pipe()
-		closeOnDone = append(closeOnDone, w)
-
-		go func() {
-			if outFormat.Prepend == "id3v2" {
-				writeID3v2FromYoutueDLInfo(w, ydl)
-			}
-			io.Copy(w, ffmpegR)
-			closeOnDoneFn()
-			ffmpegP.Wait()
-		}()
-	}
-
-	if outFormat == nil {
-		dr.MIMEType = "application/octet-stream"
-		dr.Filename = ydl.Title + ".raw"
 	} else {
-		dr.MIMEType = outFormat.MIMEType
-		dr.Filename = ydl.Title + "." + outFormat.Ext
+		aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, "best", log)
+		vReader, vProbeInfo, vErr = aReader, aProbeInfo, aErr
+		if aReader != nil {
+			closeOnDone = append(closeOnDone, aReader)
+		}
 	}
+	if aErr != nil || vErr != nil {
+		return nil, fmt.Errorf("failed to probe")
+	}
+
+	log.Printf("Stream mapping:")
+
+	var streamMaps []ffmpeg.StreamMap
+	ffmpegFormatFlags := outFormat.FormatFlags
+
+	if len(outFormat.ACodecs) > 0 && aProbeInfo != nil && aProbeInfo.ACodec() != "" {
+		codecFormat := chooseFormatCodec(outFormat.ACodecs, aProbeInfo.ACodec())
+		streamMaps = append(streamMaps, ffmpeg.StreamMap{
+			Reader:     aReader,
+			Specifier:  "a:0",
+			Codec:      "acodec:" + codecFormat.Codec,
+			CodecFlags: codecFormat.CodecFlags,
+		})
+		ffmpegFormatFlags = append(ffmpegFormatFlags, codecFormat.FormatFlags...)
+
+		log.Printf("  audio %s probed:%s -> %s",
+			boolStr(aYDLFormat != nil, aYDLFormat.String(), "n/a"),
+			aProbeInfo,
+			codecFormat.Codec,
+		)
+	}
+	if len(outFormat.VCodecs) > 0 && vProbeInfo != nil && vProbeInfo.VCodec() != "" {
+		codecFormat := chooseFormatCodec(outFormat.VCodecs, vProbeInfo.VCodec())
+		streamMaps = append(streamMaps, ffmpeg.StreamMap{
+			Reader:     vReader,
+			Specifier:  "v:0",
+			Codec:      "vcodec:" + codecFormat.Codec,
+			CodecFlags: codecFormat.CodecFlags,
+		})
+		ffmpegFormatFlags = append(ffmpegFormatFlags, codecFormat.FormatFlags...)
+
+		log.Printf("  video %s probed:%s -> %s",
+			boolStr(vYDLFormat != nil, vYDLFormat.String(), "n/a"),
+			vProbeInfo,
+			codecFormat.Codec,
+		)
+	}
+
+	var ffmpegStderr io.Writer
+	ffmpegStderr = writelogger.New(log, "ffmpeg stderr> ")
+	ffmpegR, ffmpegW := io.Pipe()
+	closeOnDone = append(closeOnDone, ffmpegR)
+
+	ffmpegP := &ffmpeg.FFmpeg{
+		StreamMaps: streamMaps,
+		Format:     ffmpeg.Format{Name: outFormat.Formats.first(), Flags: ffmpegFormatFlags},
+		DebugLog:   log,
+		Stdout:     ffmpegW,
+		Stderr:     ffmpegStderr,
+	}
+
+	if err := ffmpegP.Start(ctx); err != nil {
+		return nil, err
+	}
+
+	// goroutine will take care of closing
+	deferCloseFn = nil
+
+	var w io.WriteCloser
+	dr.Media, w = io.Pipe()
+	closeOnDone = append(closeOnDone, w)
+
+	go func() {
+		if outFormat.Prepend == "id3v2" {
+			writeID3v2FromYoutueDLInfo(w, ydl)
+		}
+		io.Copy(w, ffmpegR)
+		closeOnDoneFn()
+		ffmpegP.Wait()
+	}()
 
 	return dr, nil
 }
