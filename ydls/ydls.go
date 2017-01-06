@@ -322,11 +322,10 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 			}
 
 			streamMaps = append(streamMaps, ffmpeg.StreamMap{
-				Stream:          aReader,
-				StreamSpecifier: "a:0",
-				Codec:           ffmpegCodec,
-				CodecKind:       "audio",
-				CodecFlags:      outputCodecFormat.CodecFlags,
+				Reader:     aReader,
+				Specifier:  "a:0",
+				Codec:      "acodec: " + ffmpegCodec,
+				CodecFlags: outputCodecFormat.CodecFlags,
 			})
 			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
 
@@ -349,11 +348,10 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 			}
 
 			streamMaps = append(streamMaps, ffmpeg.StreamMap{
-				Stream:          vReader,
-				StreamSpecifier: "v:0",
-				Codec:           ffmpegCodec,
-				CodecKind:       "video",
-				CodecFlags:      outputCodecFormat.CodecFlags,
+				Reader:     vReader,
+				Specifier:  "v:0",
+				Codec:      "vcodec:" + ffmpegCodec,
+				CodecFlags: outputCodecFormat.CodecFlags,
 			})
 			ffmpegFormatFlags = append(ffmpegFormatFlags, outputCodecFormat.FormatFlags...)
 

@@ -82,16 +82,14 @@ func TestStart(t *testing.T) {
 	ffmpegP := &FFmpeg{
 		StreamMaps: []StreamMap{
 			StreamMap{
-				Stream:          file,
-				StreamSpecifier: "a:0",
-				Codec:           "vorbis",
-				CodecKind:       "audio",
+				Reader:    file,
+				Specifier: "a:0",
+				Codec:     "acodec:vorbis",
 			},
 			StreamMap{
-				Stream:          file,
-				StreamSpecifier: "v:0",
-				Codec:           "vp8",
-				CodecKind:       "video",
+				Reader:    file,
+				Specifier: "v:0",
+				Codec:     "vcodec:vp8",
 			},
 		},
 		Format:   Format{Name: "matroska"},

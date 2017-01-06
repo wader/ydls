@@ -102,13 +102,12 @@ func Probe(ctx context.Context, r io.Reader, debugLog *log.Logger, stderr io.Wri
 	return pi, nil
 }
 
-// StreamMap stream mapping
+// StreamMap map input to output
 type StreamMap struct {
-	Stream          io.Reader
-	StreamSpecifier string // 0, a:0, v:0, etc
-	Codec           string
-	CodecKind       string // audio/video
-	CodecFlags      []string
+	Reader     io.Reader
+	Specifier  string // 0, a:0, v:0, etc
+	Codec      string // acodec:mp3, vcodec:vp8, etc
+	CodecFlags []string
 }
 
 // Format output format
@@ -152,7 +151,7 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 	inputFileID := 0
 	for _, m := range f.StreamMaps {
 		// skip if reader already created
-		if _, ok := inputToFDMap[m.Stream]; ok {
+		if _, ok := inputToFDMap[m.Reader]; ok {
 			continue
 		}
 
@@ -167,10 +166,10 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 		go func(r io.Reader) {
 			defer ifd.w.Close()
 			io.Copy(ifd.w, r)
-		}(m.Stream)
+		}(m.Reader)
 
 		inputToFDs = append(inputToFDs, ifd)
-		inputToFDMap[m.Stream] = ifd
+		inputToFDMap[m.Reader] = ifd
 	}
 
 	ffmpegName := "ffmpeg"
@@ -183,17 +182,15 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 	}
 
 	for _, m := range f.StreamMaps {
-		ifd := inputToFDMap[m.Stream]
+		ifd := inputToFDMap[m.Reader]
 
-		ffmpegArgs = append(ffmpegArgs, "-map", fmt.Sprintf("%d:%s", ifd.inputFileID, m.StreamSpecifier))
-		if m.CodecKind == "audio" {
-			ffmpegArgs = append(ffmpegArgs, "-acodec")
-		} else if m.CodecKind == "video" {
-			ffmpegArgs = append(ffmpegArgs, "-vcodec")
+		ffmpegArgs = append(ffmpegArgs, "-map", fmt.Sprintf("%d:%s", ifd.inputFileID, m.Specifier))
+		codecParts := strings.SplitN(m.Codec, ":", 2)
+		if len(codecParts) == 2 && (codecParts[0] == "acodec" || codecParts[0] == "vcodec") {
+			ffmpegArgs = append(ffmpegArgs, "-"+codecParts[0], codecParts[1])
 		} else {
-			panic(fmt.Sprintf("kind can only be audio or video (was %s)", m.CodecKind))
+			panic(fmt.Sprintf("codec should be acodec/vcodec:name (was %s)", m.Codec))
 		}
-		ffmpegArgs = append(ffmpegArgs, m.Codec)
 		ffmpegArgs = append(ffmpegArgs, m.CodecFlags...)
 	}
 
