@@ -62,7 +62,7 @@ func TestFormats(t *testing.T) {
 
 			ctx, cancelFn := context.WithCancel(context.Background())
 
-			dr, err := ydls.Download(ctx, c.url, f.Name, nil /*log.New(os.Stderr, "", log.LstdFlags)*/)
+			dr, err := ydls.Download(ctx, c.url, f.Name, nil)
 			if err != nil {
 				cancelFn()
 				t.Errorf("%s: %s: download failed: %s", c.url, f.Name, err)
@@ -100,6 +100,28 @@ func TestFormats(t *testing.T) {
 
 			t.Logf("%s: %s: OK (probed %s)\n", c.url, f.Name, pi)
 		}
+
+		// test raw format
+		// TODO: what to check more?
+
+		ctx, cancelFn := context.WithCancel(context.Background())
+
+		dr, err := ydls.Download(ctx, c.url, "", nil)
+		if err != nil {
+			cancelFn()
+			t.Errorf("%s: %s: download failed: %s", c.url, "raw", err)
+			continue
+		}
+
+		pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+		dr.Media.Close()
+		cancelFn()
+		if err != nil {
+			t.Errorf("%s: %s: probe failed: %s", c.url, "raw", err)
+			continue
+		}
+
+		t.Logf("%s: %s: OK (probed %s)\n", c.url, "raw", pi)
 	}
 }
 
