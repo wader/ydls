@@ -27,13 +27,6 @@ func firstNonEmpty(sl ...string) string {
 	return ""
 }
 
-func boolStr(b bool, t string, f string) string {
-	if b {
-		return t
-	}
-	return f
-}
-
 func logOrDiscard(l *log.Logger) *log.Logger {
 	if l != nil {
 		return l
@@ -208,6 +201,13 @@ func chooseFormatCodec(formats prioFormatCodecSet, probedCodec string) *FormatCo
 	return formats.first()
 }
 
+func fancyYDLFormatName(ydlFormat *youtubedl.Format) string {
+	if ydlFormat == nil {
+		return "n/a"
+	}
+	return ydlFormat.String()
+}
+
 // Download downloads media from URL using context and makes sure output is in specified format
 func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, debugLog *log.Logger) (*DownloadResult, error) {
 	var closeOnDone []io.Closer
@@ -256,7 +256,10 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 
 		// see if we know about the probed format, otherwise fallback to "raw"
 		outFormat := ydls.Formats.Find(probeInfo.FormatName(), probeInfo.ACodec(), probeInfo.VCodec())
-		dr.MIMEType = boolStr(outFormat == nil, "application/octet-stream", outFormat.MIMEType)
+		dr.MIMEType = "application/octet-stream"
+		if outFormat != nil {
+			dr.MIMEType = outFormat.MIMEType
+		}
 		dr.Filename = ydl.Title + ".raw"
 
 		return dr, nil
@@ -339,7 +342,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		ffmpegFormatFlags = append(ffmpegFormatFlags, codecFormat.FormatFlags...)
 
 		log.Printf("  audio %s probed:%s -> %s",
-			boolStr(aYDLFormat != nil, aYDLFormat.String(), "n/a"),
+			fancyYDLFormatName(aYDLFormat),
 			aProbeInfo,
 			codecFormat.Codec,
 		)
@@ -355,7 +358,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		ffmpegFormatFlags = append(ffmpegFormatFlags, codecFormat.FormatFlags...)
 
 		log.Printf("  video %s probed:%s -> %s",
-			boolStr(vYDLFormat != nil, vYDLFormat.String(), "n/a"),
+			fancyYDLFormatName(vYDLFormat),
 			vProbeInfo,
 			codecFormat.Codec,
 		)
