@@ -1,18 +1,25 @@
 ### youtube-dl HTTP service
 
 HTTP service for [youtube-dl](https://yt-dl.org) that downloads media for
-the requested URL and transmuxes and transcodes to request format if needed.
+requested URL and transmux and transcode to request format if needed.
+
+I personally use this mostly to create audio only versions of videos from
+various site like youtube, vimeo etc.
 
 ### Usage
 
-#### Docker
+#### Run with docker
 
-Pull `mwader/ydls` or build image using Dockerfile and run a container. Depending on
-your setup you should publish port 8080 somehow.
+Pull `mwader/ydls` or build image using Dockerfile. Run a container that publishes container TCP port 8080 somehow.
 
-#### Installing
+`docker run --rm -p 8080:8080 mwader/ydls `
 
-Run `go get github.com/wader/ydls/...` this  will install `ydls-server` and
+Docker image supports mp3, m4a, ogg, mp4, webm and mkv. See
+[formats.json](formats.json) for details.
+
+#### Build and install yourself
+
+Run `go get github.com/wader/ydls/...` This  will install `ydls-server` and
 `ydls-get`. Make sure you have ffmpeg, youtube-dl, rtmpdump and mplayer
 installed and in path.
 
@@ -24,18 +31,18 @@ on port 8080.
 
 ### Endpoints
 
-Download in best format:  
-`GET /<URL>`  
-`GET /?url=<URL>`  
-
 Download and make sure media is in specified format:  
-`GET /<format>/<URL>`  
-`GET /?format=<format>&url=<URL>`
+`GET /<format>/<URL-not-encoded>`  
+`GET /?format=<format>&url=<URL-encoded>`
 
-`URL` is a URL that youtube-dl can handle (if schema is missing `http://` is assumed).
+Download in best format:  
+`GET /<URL-not-encoded>`  
+`GET /?url=<URL-encoded>`  
 
-`format` depends on [formats.json](formats.json) but docker image supports mp3, m4a,
-ogg, mp4, webm and mkv.
+`format` depends on [formats.json](formats.json).
+
+`URL` is any URL that [youtube-dl](https://yt-dl.org) can handle.
+If schema is missing `http://` is assumed.
 
 Examples:
 
@@ -47,25 +54,6 @@ Download and make sure media is in webm format:
 
 Download in best format:  
 `http://ydls-host/https://www.youtube.com/watch?v=cF1zJYkBW4A`
-
-### Can't youtube-dl already do this?
-
-Yes sort of. It can do some transmuxing and transcoding but it's done post-download
-so it can take a lot of time before you get any data. That did not work that great
-with the clients and usage I wanted. Also ydls have some extra logic for how to
-download, e.g. if you want media in mp3 format it will look for formats in this
-order:
-
-- mp3 audio and no video in bit rate order
-- mp3 audio and any video codec in bit rate order and use only mp3 audio
-- any audio and no video codec in bit rate order and transcode to mp3
-- any audio and video codec in bit rate order and transcode to mp3
-
-If requested format includes video same logic is used for video. In the most
-complex case that means two formats can be download concurrently and being
-transmuxed and transcoded while streaming.
-
-There is also ID3v2 support and logic to prefer formats suitable for streaming.
 
 ### Formats config
 
@@ -110,6 +98,13 @@ youtube-dl URL can point to a plain media file.
 
 If you run the service using some cloud services you might run into geo-restriction
 issues with some sites like youtube.
+
+### Development
+
+When fiddling with ffmpeg and youtube-dl related code i usually build the image:  
+`docker built -t ydls .`  
+and then test stuff from a docker instance:  
+`docker run --rm -ti --entrypoint bash -v $PWD:/go/src/github.com/wader/ydls -w /go/src/github.com/wader/ydls ydls`.
 
 ### TODO
 
