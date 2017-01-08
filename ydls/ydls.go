@@ -93,6 +93,8 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 		vYDLFormat **youtubedl.Format
 	}
 
+	// TODO: messy, needs rewrite
+
 	var neededFormats []*neededFormat
 
 	// match exactly, both audio/video codecs found or not found
@@ -285,10 +287,9 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 	var vReader io.ReadCloser
 	var vErr error
 
-	// FIXME: messy
-
 	if aYDLFormat != nil && vYDLFormat != nil {
 		if aYDLFormat != vYDLFormat {
+			// audio and video in different formats, download simultaneously
 			var probeWG sync.WaitGroup
 			probeWG.Add(2)
 			go func() {
@@ -307,6 +308,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 				closeOnDone = append(closeOnDone, vReader)
 			}
 		} else {
+			// audio and video in same format
 			aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
 			vReader, vProbeInfo, vErr = aReader, aProbeInfo, aErr
 			if aReader != nil {
@@ -314,11 +316,13 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 			}
 		}
 	} else if aYDLFormat != nil && vYDLFormat == nil {
+		// only audio format
 		aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
 		if aReader != nil {
 			closeOnDone = append(closeOnDone, aReader)
 		}
 	} else {
+		// don't know, download and probe
 		aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, "best", log)
 		vReader, vProbeInfo, vErr = aReader, aProbeInfo, aErr
 		if aReader != nil {
