@@ -261,11 +261,13 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 
 		// see if we know about the probed format, otherwise fallback to "raw"
 		outFormat := ydls.Formats.Find(probeInfo.FormatName(), probeInfo.ACodec(), probeInfo.VCodec())
-		dr.MIMEType = "application/octet-stream"
 		if outFormat != nil {
 			dr.MIMEType = outFormat.MIMEType
+			dr.Filename = ydl.Title + "." + outFormat.Ext
+		} else {
+			dr.MIMEType = "application/octet-stream"
+			dr.Filename = ydl.Title + ".raw"
 		}
-		dr.Filename = ydl.Title + ".raw"
 
 		return dr, nil
 	}
