@@ -35,14 +35,17 @@ func logOrDiscard(l *log.Logger) *log.Logger {
 	return log.New(ioutil.Discard, "", 0)
 }
 
-func writeID3v2FromYoutueDLInfo(w io.Writer, i *youtubedl.Info) {
+func id3v2FramesFromYoutueDLInfo(i *youtubedl.Info) []id3v2.Frame {
 	frames := []id3v2.Frame{
 		&id3v2.TextFrame{ID: "TPE1", Text: firstNonEmpty(i.Artist, i.Creator, i.Uploader)},
 		&id3v2.TextFrame{ID: "TIT2", Text: i.Title},
 		&id3v2.COMMFrame{Language: "XXX", Description: "", Text: i.Description},
 	}
 	if i.Duration > 0 {
-		frames = append(frames, &id3v2.TextFrame{ID: "TLEN", Text: fmt.Sprintf("%d", uint32(i.Duration*1000))})
+		frames = append(frames, &id3v2.TextFrame{
+			ID:   "TLEN",
+			Text: fmt.Sprintf("%d", uint32(i.Duration*1000)),
+		})
 	}
 	if len(i.ThumbnailBytes) > 0 {
 		frames = append(frames, &id3v2.APICFrame{
@@ -53,7 +56,7 @@ func writeID3v2FromYoutueDLInfo(w io.Writer, i *youtubedl.Info) {
 		})
 	}
 
-	id3v2.Write(w, frames)
+	return frames
 }
 
 func findFormat(formats []*youtubedl.Format, protocol string, aCodecs *prioStringSet, vCodecs *prioStringSet) *youtubedl.Format {
@@ -390,7 +393,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 
 	go func() {
 		if outFormat.Prepend == "id3v2" {
-			writeID3v2FromYoutueDLInfo(w, ydl)
+			id3v2.Write(w, id3v2FramesFromYoutueDLInfo(ydl))
 		}
 		io.Copy(w, ffmpegR)
 		closeOnDoneFn()
