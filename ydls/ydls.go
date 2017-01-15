@@ -401,9 +401,14 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		if outFormat.Prepend == "id3v2" {
 			id3v2.Write(w, id3v2FramesFromYoutueDLInfo(ydl))
 		}
-		io.Copy(w, ffmpegR)
+		n, err := io.Copy(w, ffmpegR)
+
+		log.Printf("Copy ffmpeg done (n=%v err=%v)", n, err)
+
 		closeOnDoneFn()
 		ffmpegP.Wait()
+
+		log.Printf("Done")
 	}()
 
 	return dr, nil
