@@ -102,7 +102,7 @@ issues with some sites like youtube.
 ### Development
 
 When fiddling with ffmpeg and youtube-dl related code i usually build the image:  
-`docker built -t ydls .`  
+`docker build -t ydls .`
 and then test stuff from a docker instance:  
 `docker run --rm -ti --entrypoint bash -v $PWD:/go/src/github.com/wader/ydls -w /go/src/github.com/wader/ydls ydls`.
 
