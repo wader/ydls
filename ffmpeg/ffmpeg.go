@@ -18,7 +18,7 @@ type ProbeInfo struct {
 	Streams []map[string]interface{} `json:"streams"`
 }
 
-func (pi *ProbeInfo) findStringFiledStream(findField, findValue, field string) string {
+func (pi *ProbeInfo) findStringFieldStream(findField, findValue, field string) string {
 	for _, fs := range pi.Streams {
 		if s, _ := fs[findField].(string); s == findValue {
 			v, _ := fs[field].(string)
@@ -30,12 +30,12 @@ func (pi *ProbeInfo) findStringFiledStream(findField, findValue, field string) s
 
 // VCodec probed video codec
 func (pi *ProbeInfo) VCodec() string {
-	return pi.findStringFiledStream("codec_type", "video", "codec_name")
+	return pi.findStringFieldStream("codec_type", "video", "codec_name")
 }
 
 // ACodec probed audio codec
 func (pi *ProbeInfo) ACodec() string {
-	return pi.findStringFiledStream("codec_type", "audio", "codec_name")
+	return pi.findStringFieldStream("codec_type", "audio", "codec_name")
 }
 
 // FormatName probed format
