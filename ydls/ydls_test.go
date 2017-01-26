@@ -41,7 +41,7 @@ func ydlsFromFormatsEnv(t *testing.T) *YDLS {
 
 func TestFormats(t *testing.T) {
 	if !testNetwork || !testFfmpeg || !testYoutubeldl {
-		t.SkipNow()
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
 	ydls := ydlsFromFormatsEnv(t)
@@ -127,7 +127,7 @@ func TestFormats(t *testing.T) {
 
 func TestFail(t *testing.T) {
 	if !testNetwork || !testFfmpeg || !testYoutubeldl {
-		t.SkipNow()
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
 	ydls := ydlsFromFormatsEnv(t)

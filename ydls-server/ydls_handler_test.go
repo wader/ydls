@@ -107,7 +107,7 @@ func ydlsHandlerFromFormatsEnv(t *testing.T) *ydlsHandler {
 
 func TestYDLSHandlerDownload(t *testing.T) {
 	if !testNetwork || !testFfmpeg || !testYoutubeldl {
-		t.SkipNow()
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
 	ts := httptest.NewServer(ydlsHandlerFromFormatsEnv(t))
@@ -142,7 +142,7 @@ func TestYDLSHandlerDownload(t *testing.T) {
 
 func TestYDLSHandlerBadURL(t *testing.T) {
 	if !testNetwork || !testFfmpeg || !testYoutubeldl {
-		t.SkipNow()
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
 	ts := httptest.NewServer(ydlsHandlerFromFormatsEnv(t))
@@ -165,7 +165,7 @@ func TestYDLSHandlerBadURL(t *testing.T) {
 
 func TestYDLSHandlerIndexTemplate(t *testing.T) {
 	if !testNetwork || !testFfmpeg || !testYoutubeldl {
-		t.SkipNow()
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
 	yh := ydlsHandlerFromFormatsEnv(t)

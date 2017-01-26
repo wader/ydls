@@ -12,7 +12,7 @@ var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
 
 func TestParseInfo(t *testing.T) {
 	if !testNetwork || !testYoutubeldl {
-		t.SkipNow()
+		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
 	}
 
 	for _, c := range []struct {

@@ -43,7 +43,7 @@ func dummyFile(t *testing.T, format string, acodec string, vcodec string) io.Rea
 
 func TestProbe(t *testing.T) {
 	if !testFfmpeg {
-		t.SkipNow()
+		t.Skip("TEST_FFMPEG env not set")
 	}
 
 	pi, probeErr := Probe(context.Background(), dummyFile(t, "matroska", "mp3", "h264"), nil, nil)
@@ -72,7 +72,7 @@ func (closeBuffer) Close() error {
 
 func TestStart(t *testing.T) {
 	if !testFfmpeg {
-		t.SkipNow()
+		t.Skip("TEST_FFMPEG env not set")
 	}
 
 	file := dummyFile(t, "matroska", "mp3", "h264")
