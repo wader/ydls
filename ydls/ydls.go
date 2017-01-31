@@ -13,7 +13,7 @@ import (
 
 	"github.com/wader/ydls/ffmpeg"
 	"github.com/wader/ydls/id3v2"
-	"github.com/wader/ydls/rereadcloser"
+	"github.com/wader/ydls/rereader"
 	"github.com/wader/ydls/writelogger"
 	"github.com/wader/ydls/youtubedl"
 )
@@ -155,7 +155,7 @@ func downloadAndProbeFormat(ctx context.Context, ydl *youtubedl.Info, filter str
 		return nil, nil, err
 	}
 
-	rr := rereadcloser.New(r)
+	rr := rereader.NewReReadCloser(r)
 	ffprobeStderr := writelogger.New(log, fmt.Sprintf("ffprobe %s stderr> ", filter))
 	const maxProbeByteSize = 10 * 1024 * 1024
 	pi, err = ffmpeg.Probe(ctx, io.LimitReader(rr, maxProbeByteSize), log, ffprobeStderr)
