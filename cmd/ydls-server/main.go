@@ -35,16 +35,16 @@ func init() {
 }
 
 func main() {
-	yh := &ydlsHandler{}
+	yh := &ydls.Handler{}
 	var err error
 
-	yh.ydls, err = ydls.NewFromFile(*formatsFlag)
+	yh.YDLS, err = ydls.NewFromFile(*formatsFlag)
 	if err != nil {
 		log.Fatalf("failed to read formats: %s", err)
 	}
 
 	if *indexFlag != "" {
-		yh.indexTmpl, err = template.ParseFiles(*indexFlag)
+		yh.IndexTmpl, err = template.ParseFiles(*indexFlag)
 		if err != nil {
 			log.Fatalf("failed to parse index template: %s", err)
 		}

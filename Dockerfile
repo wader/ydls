@@ -68,9 +68,9 @@ COPY entrypoint.sh /usr/local/bin
 RUN \
   TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 FORMATS=/etc/formats.json \
     go test -v -cover -race github.com/wader/ydls/... && \
-  go install github.com/wader/ydls/... && \
+  go install github.com/wader/ydls/cmd/... && \
   cp /go/bin/* /usr/local/bin && \
-  go clean -r github.com/wader/ydls/... && \
+  go clean -r github.com/wader/ydls/cmd/... && \
   rm -rf /go/*
 
 USER nobody
