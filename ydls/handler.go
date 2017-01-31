@@ -1,14 +1,13 @@
-package main
+package ydls
 
 import (
 	"fmt"
 	"html/template"
 	"io"
+	"log"
 	"net/http"
 	"net/url"
 	"strings"
-
-	"github.com/wader/ydls/ydls"
 )
 
 // URL encode with space encoded as "%20"
@@ -92,15 +91,18 @@ func parseFormatDownloadURL(URL *url.URL) (format string, downloadURL *url.URL) 
 	return format, downloadURL
 }
 
-type ydlsHandler struct {
-	ydls      *ydls.YDLS
-	indexTmpl *template.Template
+// Handler is a http.Handler using ydls
+type Handler struct {
+	YDLS      *YDLS
+	IndexTmpl *template.Template
+	InfoLog   *log.Logger
+	DebugLog  *log.Logger
 }
 
-func (yh *ydlsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 
-	debugLog.Printf("%s Request %s %s", r.RemoteAddr, r.Method, r.URL.String())
+	yh.DebugLog.Printf("%s Request %s %s", r.RemoteAddr, r.Method, r.URL.String())
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -108,9 +110,9 @@ func (yh *ydlsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if r.URL.Path == "/" && r.URL.RawQuery == "" {
-		if yh.indexTmpl != nil {
+		if yh.IndexTmpl != nil {
 			w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'unsafe-inline'; form-action 'self'; reflected-xss block")
-			yh.indexTmpl.Execute(w, yh.ydls.Formats)
+			yh.IndexTmpl.Execute(w, yh.YDLS.Formats)
 		} else {
 			http.Error(w, "Not found", http.StatusNotFound)
 		}
@@ -122,7 +124,7 @@ func (yh *ydlsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	formatName, downloadURL := parseFormatDownloadURL(r.URL)
 	if downloadURL == nil {
-		infoLog.Printf("%s Invalid request %s %s", r.RemoteAddr, r.Method, r.URL.Path)
+		yh.InfoLog.Printf("%s Invalid request %s %s", r.RemoteAddr, r.Method, r.URL.Path)
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
@@ -131,9 +133,9 @@ func (yh *ydlsHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if formatName != "" {
 		fancyFormatName = formatName
 	}
-	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, fancyFormatName, downloadURL)
+	yh.InfoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, fancyFormatName, downloadURL)
 
-	dr, err := yh.ydls.Download(r.Context(), downloadURL.String(), formatName, debugLog)
+	dr, err := yh.YDLS.Download(r.Context(), downloadURL.String(), formatName, yh.DebugLog)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

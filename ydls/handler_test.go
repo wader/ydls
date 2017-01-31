@@ -1,4 +1,4 @@
-package main
+package ydls
 
 import (
 	"html/template"
@@ -9,13 +9,7 @@ import (
 	"net/url"
 	"os"
 	"testing"
-
-	"github.com/wader/ydls/ydls"
 )
-
-var testNetwork = os.Getenv("TEST_NETWORK") != ""
-var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
-var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""
 
 func TestParseFormatDownloadURL(t *testing.T) {
 	for _, c := range []struct {
@@ -93,16 +87,16 @@ func TestContentDispositionFilename(t *testing.T) {
 	}
 }
 
-func ydlsHandlerFromFormatsEnv(t *testing.T) *ydlsHandler {
-	yh := &ydlsHandler{}
+func ydlsHandlerFromFormatsEnv(t *testing.T) *Handler {
+	h := &Handler{}
 	var err error
 
-	yh.ydls, err = ydls.NewFromFile(os.Getenv("FORMATS"))
+	h.YDLS, err = NewFromFile(os.Getenv("FORMATS"))
 	if err != nil {
 		t.Fatalf("failed to read formats: %s", err)
 	}
 
-	return yh
+	return h
 }
 
 func TestYDLSHandlerDownload(t *testing.T) {
@@ -168,9 +162,9 @@ func TestYDLSHandlerIndexTemplate(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	yh := ydlsHandlerFromFormatsEnv(t)
-	yh.indexTmpl, _ = template.New("index").Parse("hello")
-	ts := httptest.NewServer(yh)
+	h := ydlsHandlerFromFormatsEnv(t)
+	h.IndexTmpl, _ = template.New("index").Parse("hello")
+	ts := httptest.NewServer(h)
 	defer ts.Close()
 
 	testServerURL, _ := url.Parse(ts.URL)
