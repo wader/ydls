@@ -100,9 +100,12 @@ type Handler struct {
 }
 
 func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	infoLog := logOrDiscard(yh.InfoLog)
+	debugLog := logOrDiscard(yh.DebugLog)
+
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 
-	yh.DebugLog.Printf("%s Request %s %s", r.RemoteAddr, r.Method, r.URL.String())
+	debugLog.Printf("%s Request %s %s", r.RemoteAddr, r.Method, r.URL.String())
 
 	if r.Method != http.MethodGet {
 		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
@@ -124,7 +127,7 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	formatName, downloadURL := parseFormatDownloadURL(r.URL)
 	if downloadURL == nil {
-		yh.InfoLog.Printf("%s Invalid request %s %s", r.RemoteAddr, r.Method, r.URL.Path)
+		infoLog.Printf("%s Invalid request %s %s", r.RemoteAddr, r.Method, r.URL.Path)
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
 		return
 	}
@@ -133,9 +136,9 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if formatName != "" {
 		fancyFormatName = formatName
 	}
-	yh.InfoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, fancyFormatName, downloadURL)
+	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, fancyFormatName, downloadURL)
 
-	dr, err := yh.YDLS.Download(r.Context(), downloadURL.String(), formatName, yh.DebugLog)
+	dr, err := yh.YDLS.Download(r.Context(), downloadURL.String(), formatName, debugLog)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
