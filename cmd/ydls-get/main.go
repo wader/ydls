@@ -5,7 +5,6 @@ import (
 	"flag"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -16,7 +15,6 @@ import (
 
 var debugFlag = flag.Bool("debug", false, "debug output")
 var formatsFlag = flag.String("formats", "formats.json", "formats config file")
-var debugLog = log.New(ioutil.Discard, "DEBUG: ", log.Ltime)
 
 type progressWriter struct {
 	fn    func(bytes uint64)
@@ -38,9 +36,6 @@ func init() {
 
 	if os.Getenv("DEBUG") != "" {
 		*debugFlag = true
-	}
-	if *debugFlag {
-		debugLog.SetOutput(os.Stdout)
 	}
 }
 
@@ -67,6 +62,10 @@ func main() {
 	ydls, err := ydls.NewFromFile(*formatsFlag)
 	if err != nil {
 		log.Fatalf("failed to read formats: %s", err)
+	}
+	var debugLog *log.Logger
+	if *debugFlag {
+		debugLog = log.New(os.Stdout, "DEBUG: ", log.Ltime)
 	}
 
 	url := flag.Arg(0)
