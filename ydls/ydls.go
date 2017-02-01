@@ -338,7 +338,8 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 	log.Printf("Stream mapping:")
 
 	var streamMaps []ffmpeg.StreamMap
-	ffmpegFormatFlags := outFormat.FormatFlags
+	ffmpegFormatFlags := make([]string, len(outFormat.FormatFlags))
+	copy(ffmpegFormatFlags, outFormat.FormatFlags)
 
 	if len(outFormat.ACodecs) > 0 && aProbeInfo != nil && aProbeInfo.ACodec() != "" {
 		codecFormat := chooseFormatCodec(outFormat.ACodecs, aProbeInfo.ACodec())
