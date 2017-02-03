@@ -19,7 +19,7 @@ Docker image supports mp3, m4a, ogg, mp4, webm and mkv. See
 
 #### Build and install yourself
 
-Run `go get github.com/wader/ydls/...` This  will install `ydls-server` and
+Run `go get github.com/wader/ydls/cmd/...` This  will install `ydls-server` and
 `ydls-get`. Make sure you have ffmpeg, youtube-dl, rtmpdump and mplayer
 installed and in path.
 
