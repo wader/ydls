@@ -121,25 +121,23 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 
 	// TODO: if only audio => stream with lowest video br?
 
-	for _, proto := range []string{"https", "http", "*"} {
-		for _, f := range neededFormats {
-			m := findFormat(ydlFormats, proto, f.aCodecs, f.vCodecs)
+	for _, f := range neededFormats {
+		m := findFormat(ydlFormats, "*", f.aCodecs, f.vCodecs)
 
-			if m == nil {
-				continue
-			}
+		if m == nil {
+			continue
+		}
 
-			if f.aYDLFormat != nil && *f.aYDLFormat == nil && m.NormACodec != "" {
-				*f.aYDLFormat = m
-			}
-			if f.vYDLFormat != nil && *f.vYDLFormat == nil && m.NormVCodec != "" {
-				*f.vYDLFormat = m
-			}
+		if f.aYDLFormat != nil && *f.aYDLFormat == nil && m.NormACodec != "" {
+			*f.aYDLFormat = m
+		}
+		if f.vYDLFormat != nil && *f.vYDLFormat == nil && m.NormVCodec != "" {
+			*f.vYDLFormat = m
+		}
 
-			if (format.ACodecs.empty() || aFormat != nil) &&
-				(format.VCodecs.empty() || vFormat != nil) {
-				break
-			}
+		if (format.ACodecs.empty() || aFormat != nil) &&
+			(format.VCodecs.empty() || vFormat != nil) {
+			break
 		}
 	}
 
@@ -281,6 +279,8 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 	dr.Filename = ydl.Title + "." + outFormat.Ext
 
 	aYDLFormat, vYDLFormat := findBestFormats(ydl.Formats, outFormat)
+
+	log.Printf("Best format %s %s", aYDLFormat, vYDLFormat)
 
 	var aProbeInfo *ffmpeg.ProbeInfo
 	var aReader io.ReadCloser

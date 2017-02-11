@@ -144,50 +144,50 @@ func TestFail(t *testing.T) {
 	}
 }
 
-func TestFindBestFormats(t *testing.T) {
-	codecsToFormatCodecs := func(s string) prioFormatCodecSet {
-		if s == "" {
-			return prioFormatCodecSet{}
-		}
-
-		formatCodecs := []FormatCodec{}
-		for _, c := range strings.Split(s, ",") {
-			formatCodecs = append(formatCodecs, FormatCodec{Codec: c})
-		}
-		return prioFormatCodecSet(formatCodecs)
+func codecsToFormatCodecs(s string) prioFormatCodecSet {
+	if s == "" {
+		return prioFormatCodecSet{}
 	}
 
-	test := func(Formats []*youtubedl.Format, acodecs string, vcodecs string, aFormatID string, vFormatID string) error {
-		aFormat, vFormat := findBestFormats(
-			Formats,
-			&Format{
-				ACodecs: codecsToFormatCodecs(acodecs),
-				VCodecs: codecsToFormatCodecs(vcodecs),
-			},
+	formatCodecs := []FormatCodec{}
+	for _, c := range strings.Split(s, ",") {
+		formatCodecs = append(formatCodecs, FormatCodec{Codec: c})
+	}
+	return prioFormatCodecSet(formatCodecs)
+}
+
+func testBestFormatCase(Formats []*youtubedl.Format, acodecs string, vcodecs string, aFormatID string, vFormatID string) error {
+	aFormat, vFormat := findBestFormats(
+		Formats,
+		&Format{
+			ACodecs: codecsToFormatCodecs(acodecs),
+			VCodecs: codecsToFormatCodecs(vcodecs),
+		},
+	)
+
+	if (aFormat == nil && aFormatID != "") ||
+		(aFormat != nil && aFormat.FormatID != aFormatID) ||
+		(vFormat == nil && vFormatID != "") ||
+		(vFormat != nil && vFormat.FormatID != vFormatID) {
+		gotAFormatID := ""
+		if aFormat != nil {
+			gotAFormatID = aFormat.FormatID
+		}
+		gotVFormatID := ""
+		if vFormat != nil {
+			gotVFormatID = vFormat.FormatID
+		}
+		return fmt.Errorf(
+			"%v %v, expected aFormatID=%v vFormatID=%v, gotAFormatID=%v gotVFormatID=%v",
+			acodecs, vcodecs,
+			aFormatID, vFormatID, gotAFormatID, gotVFormatID,
 		)
-
-		if (aFormat == nil && aFormatID != "") ||
-			(aFormat != nil && aFormat.FormatID != aFormatID) ||
-			(vFormat == nil && vFormatID != "") ||
-			(vFormat != nil && vFormat.FormatID != vFormatID) {
-			gotAFormatID := ""
-			if aFormat != nil {
-				gotAFormatID = aFormat.FormatID
-			}
-			gotVFormatID := ""
-			if vFormat != nil {
-				gotVFormatID = vFormat.FormatID
-			}
-			return fmt.Errorf(
-				"%v %v, expected aFormatID=%v vFormatID=%v, gotAFormatID=%v gotVFormatID=%v",
-				acodecs, vcodecs,
-				aFormatID, vFormatID, gotAFormatID, gotVFormatID,
-			)
-		}
-
-		return nil
 	}
 
+	return nil
+}
+
+func TestFindBestFormats1(t *testing.T) {
 	ydlFormats := []*youtubedl.Format{
 		{FormatID: "1", Protocol: "http", NormACodec: "mp3", NormVCodec: "h264", NormBR: 1},
 		{FormatID: "2", Protocol: "http", NormACodec: "", NormVCodec: "h264", NormBR: 2},
@@ -209,9 +209,30 @@ func TestFindBestFormats(t *testing.T) {
 		{ydlFormats, "opus", "", "4", ""},
 		{ydlFormats, "opus", "v9", "4", "2"},
 	} {
-		if err := test(c.ydlFormats, c.aCodecs, c.vCodecs, c.aFormatID, c.vFormatID); err != nil {
+		if err := testBestFormatCase(c.ydlFormats, c.aCodecs, c.vCodecs, c.aFormatID, c.vFormatID); err != nil {
 			t.Error(err)
 		}
 	}
+}
 
+func TestFindBestFormats2(t *testing.T) {
+	ydlFormats2 := []*youtubedl.Format{
+		{FormatID: "1", Protocol: "http", NormACodec: "mp3", NormVCodec: "", NormBR: 0},
+		{FormatID: "2", Protocol: "rtmp", NormACodec: "aac", NormVCodec: "h264", NormBR: 0},
+		{FormatID: "3", Protocol: "https", NormACodec: "aac", NormVCodec: "h264", NormBR: 0},
+	}
+
+	for _, c := range []struct {
+		ydlFormats []*youtubedl.Format
+		aCodecs    string
+		vCodecs    string
+		aFormatID  string
+		vFormatID  string
+	}{
+		{ydlFormats2, "mp3", "", "1", ""},
+	} {
+		if err := testBestFormatCase(c.ydlFormats, c.aCodecs, c.vCodecs, c.aFormatID, c.vFormatID); err != nil {
+			t.Error(err)
+		}
+	}
 }
