@@ -158,6 +158,7 @@ func downloadAndProbeFormat(ctx context.Context, ydl *youtubedl.Info, filter str
 	const maxProbeByteSize = 10 * 1024 * 1024
 	pi, err = ffmpeg.Probe(ctx, io.LimitReader(rr, maxProbeByteSize), log, ffprobeStderr)
 	if err != nil {
+		r.Close()
 		return nil, nil, err
 	}
 	// restart and replay buffer data used when probing
