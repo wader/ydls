@@ -71,7 +71,7 @@ func TestURLEncode(t *testing.T) {
 	}
 }
 
-func TestContentDispositionFilename(t *testing.T) {
+func TestSafeContentDispositionFilename(t *testing.T) {
 	for _, c := range []struct {
 		s      string
 		expect string
@@ -80,7 +80,7 @@ func TestContentDispositionFilename(t *testing.T) {
 		{"SPÆCIAL", "SP_CIAL"},
 		{"\\\"/", "___"},
 	} {
-		actual := contentDispositionFilename(c.s)
+		actual := safeContentDispositionFilename(c.s)
 		if actual != c.expect {
 			t.Errorf("%s, got %v expected %v", c.s, actual, c.expect)
 		}

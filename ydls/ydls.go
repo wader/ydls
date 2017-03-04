@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"os"
 	"sort"
+	"strings"
 	"sync"
 
 	"github.com/wader/ydls/ffmpeg"
@@ -57,6 +58,11 @@ func id3v2FramesFromYoutueDLInfo(i *youtubedl.Info) []id3v2.Frame {
 	}
 
 	return frames
+}
+
+func safeFilename(filename string) string {
+	r := strings.NewReplacer("/", "_", "\\", "_")
+	return r.Replace(filename)
 }
 
 func findFormat(formats []*youtubedl.Format, protocol string, aCodecs *prioStringSet, vCodecs *prioStringSet) *youtubedl.Format {
@@ -262,10 +268,10 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		outFormat := ydls.Formats.Find(probeInfo.FormatName(), probeInfo.ACodec(), probeInfo.VCodec())
 		if outFormat != nil {
 			dr.MIMEType = outFormat.MIMEType
-			dr.Filename = ydl.Title + "." + outFormat.Ext
+			dr.Filename = safeFilename(ydl.Title + "." + outFormat.Ext)
 		} else {
 			dr.MIMEType = "application/octet-stream"
-			dr.Filename = ydl.Title + ".raw"
+			dr.Filename = safeFilename(ydl.Title + ".raw")
 		}
 
 		return dr, nil
@@ -277,7 +283,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 	}
 
 	dr.MIMEType = outFormat.MIMEType
-	dr.Filename = ydl.Title + "." + outFormat.Ext
+	dr.Filename = safeFilename(ydl.Title + "." + outFormat.Ext)
 
 	aYDLFormat, vYDLFormat := findBestFormats(ydl.Formats, outFormat)
 

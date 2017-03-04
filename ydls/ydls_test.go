@@ -39,6 +39,22 @@ func ydlsFromFormatsEnv(t *testing.T) *YDLS {
 	return ydls
 }
 
+func TestSafeFilename(t *testing.T) {
+	for _, c := range []struct {
+		s      string
+		expect string
+	}{
+		{"aba", "aba"},
+		{"a/a", "a_a"},
+		{"a\\a", "a_a"},
+	} {
+		actual := safeFilename(c.s)
+		if actual != c.expect {
+			t.Errorf("%s, got %v expected %v", c.s, actual, c.expect)
+		}
+	}
+}
+
 func TestFormats(t *testing.T) {
 	if !testNetwork || !testFfmpeg || !testYoutubeldl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")

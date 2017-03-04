@@ -16,7 +16,7 @@ func urlEncode(s string) string {
 }
 
 // make string safe to use in non-encoded content disposition filename
-func contentDispositionFilename(s string) string {
+func safeContentDispositionFilename(s string) string {
 	rs := []rune(s)
 	for i, r := range rs {
 		if r < 0x20 || r > 0x7e || r == '"' || r == '/' || r == '\\' {
@@ -149,7 +149,7 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", dr.MIMEType)
 	w.Header().Set("Content-Disposition",
 		fmt.Sprintf("attachment; filename*=UTF-8''%s; filename=\"%s\"",
-			urlEncode(dr.Filename), contentDispositionFilename(dr.Filename)),
+			urlEncode(dr.Filename), safeContentDispositionFilename(dr.Filename)),
 	)
 
 	io.Copy(w, dr.Media)
