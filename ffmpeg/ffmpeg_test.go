@@ -8,6 +8,8 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+
+	"github.com/wader/ydls/leaktest"
 )
 
 var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""
@@ -46,6 +48,8 @@ func TestProbe(t *testing.T) {
 		t.Skip("TEST_FFMPEG env not set")
 	}
 
+	defer leaktest.Check(t)()
+
 	pi, probeErr := Probe(context.Background(), dummyFile(t, "matroska", "mp3", "h264"), nil, nil)
 	if probeErr != nil {
 		t.Error(probeErr)
@@ -75,8 +79,9 @@ func TestStart(t *testing.T) {
 		t.Skip("TEST_FFMPEG env not set")
 	}
 
-	file := dummyFile(t, "matroska", "mp3", "h264")
+	defer leaktest.Check(t)()
 
+	file := dummyFile(t, "matroska", "mp3", "h264")
 	output := &closeBuffer{}
 
 	ffmpegP := &FFmpeg{

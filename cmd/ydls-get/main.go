@@ -80,6 +80,7 @@ func main() {
 	dr, err := ydls.Download(ctx, url, formatName, debugLog)
 	fatalIfErrorf(err, "download failed")
 	defer dr.Media.Close()
+	defer dr.Wait()
 	wd, err := os.Getwd()
 	fatalIfErrorf(err, "getwd")
 	path, err := absRootPath(wd, dr.Filename)

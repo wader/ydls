@@ -1,5 +1,7 @@
 package ydls
 
+// TODO: messy, needs rewrite
+
 import (
 	"context"
 	"fmt"
@@ -99,8 +101,6 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 		vYDLFormat **youtubedl.Format
 	}
 
-	// TODO: messy, needs rewrite
-
 	var neededFormats []*neededFormat
 
 	// match exactly, both audio/video codecs found or not found
@@ -150,27 +150,50 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 	return aFormat, vFormat
 }
 
-func downloadAndProbeFormat(ctx context.Context, ydl *youtubedl.Info, filter string, debugLog *log.Logger) (r io.ReadCloser, pi *ffmpeg.ProbeInfo, err error) {
+type downloadProbeReadCloser struct {
+	downloadResult *youtubedl.DownloadResult
+	probeInfo      *ffmpeg.ProbeInfo
+	reader         io.ReadCloser
+}
+
+func (d *downloadProbeReadCloser) Read(p []byte) (n int, err error) {
+	return d.reader.Read(p)
+}
+
+func (d *downloadProbeReadCloser) Close() error {
+	d.reader.Close()
+	d.downloadResult.Wait()
+	return nil
+}
+
+func downloadAndProbeFormat(ctx context.Context, ydl *youtubedl.Info, filter string, debugLog *log.Logger) (*downloadProbeReadCloser, error) {
 	log := logOrDiscard(debugLog)
 
 	ydlStderr := writelogger.New(log, fmt.Sprintf("ydl-dl %s stderr> ", filter))
-	r, err = ydl.Download(ctx, filter, ydlStderr)
+	dr, err := ydl.Download(ctx, filter, ydlStderr)
 	if err != nil {
-		return nil, nil, err
+		return nil, err
 	}
 
-	rr := rereader.NewReReadCloser(r)
+	rr := rereader.NewReReadCloser(dr.Reader)
+
+	dprc := &downloadProbeReadCloser{
+		downloadResult: dr,
+		reader:         rr,
+	}
+
 	ffprobeStderr := writelogger.New(log, fmt.Sprintf("ffprobe %s stderr> ", filter))
 	const maxProbeByteSize = 10 * 1024 * 1024
-	pi, err = ffmpeg.Probe(ctx, io.LimitReader(rr, maxProbeByteSize), log, ffprobeStderr)
+	dprc.probeInfo, err = ffmpeg.Probe(ctx, io.LimitReader(rr, maxProbeByteSize), log, ffprobeStderr)
 	if err != nil {
-		r.Close()
-		return nil, nil, err
+		dr.Reader.Close()
+		dr.Wait()
+		return nil, err
 	}
 	// restart and replay buffer data used when probing
 	rr.Restarted = true
 
-	return rr, pi, nil
+	return dprc, nil
 }
 
 // YDLS youtubedl downloader with some extras
@@ -198,6 +221,12 @@ type DownloadResult struct {
 	Media    io.ReadCloser
 	Filename string
 	MIMEType string
+	waitCh   chan struct{}
+}
+
+// Wait for download resources to cleanup
+func (dr *DownloadResult) Wait() {
+	<-dr.waitCh
 }
 
 func chooseFormatCodec(formats prioFormatCodecSet, probedCodec string) *FormatCodec {
@@ -220,20 +249,6 @@ func fancyYDLFormatName(ydlFormat *youtubedl.Format) string {
 
 // Download downloads media from URL using context and makes sure output is in specified format
 func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, debugLog *log.Logger) (*DownloadResult, error) {
-	var closeOnDone []io.Closer
-	closeOnDoneFn := func() {
-		for _, c := range closeOnDone {
-			c.Close()
-		}
-	}
-	deferCloseFn := closeOnDoneFn
-	defer func() {
-		// will be nil if cmd starts and goroutine takes care of closing instead
-		if deferCloseFn != nil {
-			deferCloseFn()
-		}
-	}()
-
 	log := logOrDiscard(debugLog)
 
 	log.Printf("URL: %s", url)
@@ -253,19 +268,20 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		log.Printf("  %s", f)
 	}
 
-	dr := &DownloadResult{}
+	dr := &DownloadResult{
+		waitCh: make(chan struct{}, 1),
+	}
 
 	if formatName == "" {
-		var probeInfo *ffmpeg.ProbeInfo
-		dr.Media, probeInfo, err = downloadAndProbeFormat(ctx, ydl, "best[protocol=https]/best[protocol=http]/best", log)
+		dprc, err := downloadAndProbeFormat(ctx, ydl, "best[protocol=https]/best[protocol=http]/best", log)
 		if err != nil {
 			return nil, err
 		}
 
-		log.Printf("Probed format %s", probeInfo)
+		log.Printf("Probed format %s", dprc.probeInfo)
 
 		// see if we know about the probed format, otherwise fallback to "raw"
-		outFormat := ydls.Formats.Find(probeInfo.FormatName(), probeInfo.ACodec(), probeInfo.VCodec())
+		outFormat := ydls.Formats.Find(dprc.probeInfo.FormatName(), dprc.probeInfo.ACodec(), dprc.probeInfo.VCodec())
 		if outFormat != nil {
 			dr.MIMEType = outFormat.MIMEType
 			dr.Filename = safeFilename(ydl.Title + "." + outFormat.Ext)
@@ -274,8 +290,32 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 			dr.Filename = safeFilename(ydl.Title + ".raw")
 		}
 
+		var w io.WriteCloser
+		dr.Media, w = io.Pipe()
+
+		go func() {
+			n, err := io.Copy(w, dprc)
+			dprc.Close()
+			log.Printf("Copy done (n=%v err=%v)", n, err)
+			close(dr.waitCh)
+		}()
+
 		return dr, nil
 	}
+
+	var closeOnDone []io.Closer
+	closeOnDoneFn := func() {
+		for _, c := range closeOnDone {
+			c.Close()
+		}
+	}
+	deferCloseFn := closeOnDoneFn
+	defer func() {
+		// will be nil if cmd starts and goroutine takes care of closing instead
+		if deferCloseFn != nil {
+			deferCloseFn()
+		}
+	}()
 
 	outFormat := ydls.Formats.FindByName(formatName)
 	if outFormat == nil {
@@ -289,11 +329,9 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 
 	log.Printf("Best format %s %s", aYDLFormat, vYDLFormat)
 
-	var aProbeInfo *ffmpeg.ProbeInfo
-	var aReader io.ReadCloser
+	var aDprc *downloadProbeReadCloser
 	var aErr error
-	var vProbeInfo *ffmpeg.ProbeInfo
-	var vReader io.ReadCloser
+	var vDprc *downloadProbeReadCloser
 	var vErr error
 
 	if aYDLFormat != nil && vYDLFormat != nil {
@@ -303,39 +341,39 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 			probeWG.Add(2)
 			go func() {
 				defer probeWG.Done()
-				aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
+				aDprc, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
 			}()
 			go func() {
 				defer probeWG.Done()
-				vReader, vProbeInfo, vErr = downloadAndProbeFormat(ctx, ydl, vYDLFormat.FormatID, log)
+				vDprc, vErr = downloadAndProbeFormat(ctx, ydl, vYDLFormat.FormatID, log)
 			}()
 			probeWG.Wait()
-			if aReader != nil {
-				closeOnDone = append(closeOnDone, aReader)
+			if aDprc != nil {
+				closeOnDone = append(closeOnDone, aDprc)
 			}
-			if vReader != nil {
-				closeOnDone = append(closeOnDone, vReader)
+			if vDprc != nil {
+				closeOnDone = append(closeOnDone, vDprc)
 			}
 		} else {
 			// audio and video in same format
-			aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
-			vReader, vProbeInfo, vErr = aReader, aProbeInfo, aErr
-			if aReader != nil {
-				closeOnDone = append(closeOnDone, aReader)
+			aDprc, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
+			vDprc, vErr = aDprc, aErr
+			if aDprc != nil {
+				closeOnDone = append(closeOnDone, aDprc)
 			}
 		}
 	} else if aYDLFormat != nil && vYDLFormat == nil {
 		// only audio format
-		aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
-		if aReader != nil {
-			closeOnDone = append(closeOnDone, aReader)
+		aDprc, aErr = downloadAndProbeFormat(ctx, ydl, aYDLFormat.FormatID, log)
+		if aDprc != nil {
+			closeOnDone = append(closeOnDone, aDprc)
 		}
 	} else {
 		// don't know, download and probe
-		aReader, aProbeInfo, aErr = downloadAndProbeFormat(ctx, ydl, "best", log)
-		vReader, vProbeInfo, vErr = aReader, aProbeInfo, aErr
-		if aReader != nil {
-			closeOnDone = append(closeOnDone, aReader)
+		aDprc, aErr = downloadAndProbeFormat(ctx, ydl, "best", log)
+		vDprc, vErr = aDprc, aErr
+		if aDprc != nil {
+			closeOnDone = append(closeOnDone, aDprc)
 		}
 	}
 	if aErr != nil || vErr != nil {
@@ -348,10 +386,10 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 	ffmpegFormatFlags := make([]string, len(outFormat.FormatFlags))
 	copy(ffmpegFormatFlags, outFormat.FormatFlags)
 
-	if len(outFormat.ACodecs) > 0 && aProbeInfo != nil && aProbeInfo.ACodec() != "" {
-		codecFormat := chooseFormatCodec(outFormat.ACodecs, aProbeInfo.ACodec())
+	if len(outFormat.ACodecs) > 0 && aDprc.probeInfo != nil && aDprc.probeInfo.ACodec() != "" {
+		codecFormat := chooseFormatCodec(outFormat.ACodecs, aDprc.probeInfo.ACodec())
 		streamMaps = append(streamMaps, ffmpeg.StreamMap{
-			Reader:     aReader,
+			Reader:     aDprc,
 			Specifier:  "a:0",
 			Codec:      "acodec:" + codecFormat.Codec,
 			CodecFlags: codecFormat.CodecFlags,
@@ -360,14 +398,14 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 
 		log.Printf("  audio %s probed:%s -> %s",
 			fancyYDLFormatName(aYDLFormat),
-			aProbeInfo,
+			aDprc.probeInfo,
 			codecFormat.Codec,
 		)
 	}
-	if len(outFormat.VCodecs) > 0 && vProbeInfo != nil && vProbeInfo.VCodec() != "" {
-		codecFormat := chooseFormatCodec(outFormat.VCodecs, vProbeInfo.VCodec())
+	if len(outFormat.VCodecs) > 0 && vDprc.probeInfo != nil && vDprc.probeInfo.VCodec() != "" {
+		codecFormat := chooseFormatCodec(outFormat.VCodecs, vDprc.probeInfo.VCodec())
 		streamMaps = append(streamMaps, ffmpeg.StreamMap{
-			Reader:     vReader,
+			Reader:     vDprc,
 			Specifier:  "v:0",
 			Codec:      "vcodec:" + codecFormat.Codec,
 			CodecFlags: codecFormat.CodecFlags,
@@ -376,7 +414,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 
 		log.Printf("  video %s probed:%s -> %s",
 			fancyYDLFormatName(vYDLFormat),
-			vProbeInfo,
+			vDprc.probeInfo,
 			codecFormat.Codec,
 		)
 	}
@@ -417,6 +455,8 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		ffmpegP.Wait()
 
 		log.Printf("Done")
+
+		close(dr.waitCh)
 	}()
 
 	return dr, nil

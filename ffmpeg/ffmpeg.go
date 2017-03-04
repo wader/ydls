@@ -89,14 +89,11 @@ func Probe(ctx context.Context, r io.Reader, debugLog *log.Logger, stderr io.Wri
 	if cmdErr := cmd.Start(); cmdErr != nil {
 		return nil, cmdErr
 	}
+	defer cmd.Wait()
 
 	var piErr error
 	if pi, piErr = probeInfoParse(stdout); err != nil {
 		return nil, piErr
-	}
-
-	if cmdErr := cmd.Wait(); cmdErr != nil {
-		return nil, cmdErr
 	}
 
 	return pi, nil
@@ -159,13 +156,14 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 		ifd := &inputFD{childFD: childFD, inputFileID: inputFileID}
 		childFD++
 		inputFileID++
+
 		ifd.r, ifd.w, err = os.Pipe()
 		if err != nil {
 			return err
 		}
 		go func(r io.Reader) {
-			defer ifd.w.Close()
 			io.Copy(ifd.w, r)
+			ifd.w.Close()
 		}(m.Reader)
 
 		inputToFDs = append(inputToFDs, ifd)
@@ -205,19 +203,27 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 
 	log.Printf("cmd %v", f.cmd.Args)
 
+	closeFilesFn := func() {
+		for _, ifd := range inputToFDs {
+			ifd.r.Close()
+		}
+		stdout.Close()
+	}
+
 	if err := f.cmd.Start(); err != nil {
+		closeFilesFn()
 		return err
 	}
 
 	go func() {
 		f.cmdWaitCh <- f.cmd.Wait()
-		stdout.Close()
+		closeFilesFn()
 	}()
 
 	return nil
 }
 
-// Start start ffmpeg with context and return once there is data to be read
+// Start ffmpeg with context and return once there is data to be read
 func (f *FFmpeg) Start(ctx context.Context) error {
 	f.cmdWaitCh = make(chan error, 1)
 	f.startWaitCh = make(chan struct{}, 1)

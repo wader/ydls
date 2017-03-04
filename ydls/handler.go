@@ -143,7 +143,6 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	defer dr.Media.Close()
 
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; reflected-xss block")
 	w.Header().Set("Content-Type", dr.MIMEType)
@@ -153,4 +152,6 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	)
 
 	io.Copy(w, dr.Media)
+	dr.Media.Close()
+	dr.Wait()
 }

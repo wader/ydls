@@ -1,8 +1,6 @@
-// TODO: count child processes
-// TODO: ulimit proc and fds?
-// TODO: test close reader prematurely
-
 package ydls
+
+// TODO: test close reader prematurely
 
 import (
 	"context"
@@ -13,6 +11,7 @@ import (
 	"testing"
 
 	"github.com/wader/ydls/ffmpeg"
+	"github.com/wader/ydls/leaktest"
 	"github.com/wader/ydls/youtubedl"
 )
 
@@ -68,95 +67,91 @@ func TestFormats(t *testing.T) {
 		expectedFilename string
 	}{
 		{"https://soundcloud.com/timsweeney/thedrifter", true, "BIS Radio Show #793 with The Drifter"},
-		{"https://www.youtube.com/watch?v=uVYWQJ5BB_w", false, "A Radiolab Producer on the Making of a Podcast"},
+		{"https://www.youtube.com/watch?v=C0DPdy98e4c", false, "TEST VIDEO"},
 	} {
 		for _, f := range *ydls.Formats {
-			if c.audioOnly && len(f.VCodecs) > 0 {
-				t.Logf("%s: %s: skip, audio only\n", c.url, f.Name)
-				continue
-			}
+			func() {
+				defer leaktest.Check(t)()
 
-			ctx, cancelFn := context.WithCancel(context.Background())
+				if c.audioOnly && len(f.VCodecs) > 0 {
+					t.Logf("%s: %s: skip, audio only\n", c.url, f.Name)
+					return
+				}
 
-			dr, err := ydls.Download(ctx, c.url, f.Name, nil)
-			if err != nil {
+				ctx, cancelFn := context.WithCancel(context.Background())
+
+				dr, err := ydls.Download(ctx, c.url, f.Name, nil)
+				if err != nil {
+					cancelFn()
+					t.Errorf("%s: %s: download failed: %s", c.url, f.Name, err)
+					return
+				}
+
+				pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+				dr.Media.Close()
+				dr.Wait()
 				cancelFn()
-				t.Errorf("%s: %s: download failed: %s", c.url, f.Name, err)
-				continue
-			}
+				if err != nil {
+					t.Errorf("%s: %s: probe failed: %s", c.url, f.Name, err)
+					return
+				}
 
-			pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
-			dr.Media.Close()
-			cancelFn()
-			if err != nil {
-				t.Errorf("%s: %s: probe failed: %s", c.url, f.Name, err)
-				continue
-			}
+				if !strings.HasPrefix(dr.Filename, c.expectedFilename) {
+					t.Errorf("%s: %s: expected filename '%s' found '%s'", c.url, f.Name, c.expectedFilename, dr.Filename)
+					return
+				}
+				if f.MIMEType != dr.MIMEType {
+					t.Errorf("%s: %s: expected MIME type '%s' found '%s'", c.url, f.Name, f.MIMEType, dr.MIMEType)
+					return
+				}
+				if !stringsContains([]string(f.Formats), pi.FormatName()) {
+					t.Errorf("%s: %s: expected format %s found %s", c.url, f.Name, f.Formats, pi.FormatName())
+					return
+				}
+				if len(f.ACodecs.CodecNames()) != 0 && !stringsContains(f.ACodecs.CodecNames(), pi.ACodec()) {
+					t.Errorf("%s: %s: expected acodec %s found %s", c.url, f.Name, f.ACodecs.CodecNames(), pi.ACodec())
+					return
+				}
+				if len(f.VCodecs.CodecNames()) != 0 && !stringsContains(f.VCodecs.CodecNames(), pi.VCodec()) {
+					t.Errorf("%s: %s: expected vcodec %s found %s", c.url, f.Name, f.VCodecs.CodecNames(), pi.VCodec())
+					return
+				}
+				if f.Prepend == "id3v2" {
+					if _, ok := pi.Format["tags"]; !ok {
+						t.Errorf("%s: %s: expected id3v2 tag", c.url, f.Name)
+					}
+				}
 
-			if !strings.HasPrefix(dr.Filename, c.expectedFilename) {
-				t.Errorf("%s: %s: expected filename '%s' found '%s'", c.url, f.Name, c.expectedFilename, dr.Filename)
-				continue
-			}
-			if f.MIMEType != dr.MIMEType {
-				t.Errorf("%s: %s: expected MIME type '%s' found '%s'", c.url, f.Name, f.MIMEType, dr.MIMEType)
-				continue
-			}
-			if !stringsContains([]string(f.Formats), pi.FormatName()) {
-				t.Errorf("%s: %s: expected format %s found %s", c.url, f.Name, f.Formats, pi.FormatName())
-				continue
-			}
-			if len(f.ACodecs.CodecNames()) != 0 && !stringsContains(f.ACodecs.CodecNames(), pi.ACodec()) {
-				t.Errorf("%s: %s: expected acodec %s found %s", c.url, f.Name, f.ACodecs.CodecNames(), pi.ACodec())
-				continue
-			}
-			if len(f.VCodecs.CodecNames()) != 0 && !stringsContains(f.VCodecs.CodecNames(), pi.VCodec()) {
-				t.Errorf("%s: %s: expected vcodec %s found %s", c.url, f.Name, f.VCodecs.CodecNames(), pi.VCodec())
-				continue
-			}
-
-			t.Logf("%s: %s: OK (probed %s)\n", c.url, f.Name, pi)
+				t.Logf("%s: %s: OK (probed %s)\n", c.url, f.Name, pi)
+			}()
 		}
 
 		// test raw format
 		// TODO: what to check more?
 
-		ctx, cancelFn := context.WithCancel(context.Background())
+		func() {
+			defer leaktest.Check(t)()
 
-		dr, err := ydls.Download(ctx, c.url, "", nil)
-		if err != nil {
+			ctx, cancelFn := context.WithCancel(context.Background())
+
+			dr, err := ydls.Download(ctx, c.url, "", nil)
+			if err != nil {
+				cancelFn()
+				t.Errorf("%s: %s: download failed: %s", c.url, "raw", err)
+				return
+			}
+
+			pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+			dr.Media.Close()
+			dr.Wait()
 			cancelFn()
-			t.Errorf("%s: %s: download failed: %s", c.url, "raw", err)
-			continue
-		}
+			if err != nil {
+				t.Errorf("%s: %s: probe failed: %s", c.url, "raw", err)
+				return
+			}
 
-		pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
-		dr.Media.Close()
-		cancelFn()
-		if err != nil {
-			t.Errorf("%s: %s: probe failed: %s", c.url, "raw", err)
-			continue
-		}
-
-		t.Logf("%s: %s: OK (probed %s)\n", c.url, "raw", pi)
-	}
-}
-
-func TestFail(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
-	}
-
-	ydls := ydlsFromFormatsEnv(t)
-
-	geoBlockedURL := "https://www.youtube.com/watch?v=aaaaaaaaaaa"
-	_, ydlsErr := ydls.Download(context.Background(), geoBlockedURL, "", nil)
-	if ydlsErr == nil {
-		t.Errorf("%s: should fail", geoBlockedURL)
-	}
-
-	expectedError := "aaaaaaaaaaa: YouTube said: This video does not exist."
-	if ydlsErr.Error() != expectedError {
-		t.Errorf("%s: expected '%s' got '%s'", geoBlockedURL, expectedError, ydlsErr.Error())
+			t.Logf("%s: %s: OK (probed %s)\n", c.url, "raw", pi)
+		}()
 	}
 }
 

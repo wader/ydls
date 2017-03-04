@@ -172,6 +172,7 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 	if err := cmd.Start(); err != nil {
 		return nil, err
 	}
+	defer cmd.Wait()
 
 	fmt.Fprintln(cmdStdin, url)
 	cmdStdin.Close()
@@ -183,10 +184,6 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 		if strings.HasPrefix(line, errorPrefix) {
 			return nil, Error(line[len(errorPrefix):])
 		}
-	}
-
-	if err := cmd.Wait(); err != nil {
-		return nil, err
 	}
 
 	return NewFromPath(tempPath)
@@ -218,6 +215,7 @@ func NewFromPath(infoPath string) (i *Info, err error) {
 	if err != nil {
 		return nil, err
 	}
+	defer file.Close()
 	i, err = parseInfo(file)
 	if err != nil {
 		return nil, err
@@ -233,8 +231,19 @@ func NewFromPath(infoPath string) (i *Info, err error) {
 	return i, nil
 }
 
+// DownloadResult download result
+type DownloadResult struct {
+	Reader io.ReadCloser
+	waitCh chan struct{}
+}
+
+// Wait for resource cleanup
+func (dr *DownloadResult) Wait() {
+	<-dr.waitCh
+}
+
 // Download format matched by filter
-func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (r io.ReadCloser, err error) {
+func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (*DownloadResult, error) {
 	tempPath, tempErr := ioutil.TempDir("", "ydls-youtubedl")
 	if tempErr != nil {
 		return nil, tempErr
@@ -243,6 +252,10 @@ func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (r
 	if err := ioutil.WriteFile(jsonTempPath, i.rawJSON, 0644); err != nil {
 		os.RemoveAll(tempPath)
 		return nil, err
+	}
+
+	dr := &DownloadResult{
+		waitCh: make(chan struct{}, 1),
 	}
 
 	cmd := exec.CommandContext(
@@ -255,7 +268,8 @@ func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (r
 		"-o", "-",
 	)
 	cmd.Dir = tempPath
-	r, w := io.Pipe()
+	var w io.Writer
+	dr.Reader, w = io.Pipe()
 	cmd.Stdout = w
 	cmd.Stderr = stderr
 
@@ -264,10 +278,11 @@ func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (r
 	}
 
 	go func() {
-		defer os.RemoveAll(tempPath)
 		cmd.Wait()
-		r.Close()
+		dr.Reader.Close()
+		os.RemoveAll(tempPath)
+		close(dr.waitCh)
 	}()
 
-	return r, nil
+	return dr, nil
 }
