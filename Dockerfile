@@ -58,7 +58,7 @@ RUN \
   chmod a+x /usr/local/bin/youtube-dl
 
 RUN \
-  curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v0.13.2/tini && \
+  curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v0.14.0/tini && \
   chmod a+x /usr/local/bin/tini
 
 COPY . /go/src/github.com/wader/ydls/
