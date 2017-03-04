@@ -268,7 +268,7 @@ func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (*
 		"-o", "-",
 	)
 	cmd.Dir = tempPath
-	var w io.Writer
+	var w io.WriteCloser
 	dr.Reader, w = io.Pipe()
 	cmd.Stdout = w
 	cmd.Stderr = stderr
@@ -279,7 +279,7 @@ func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (*
 
 	go func() {
 		cmd.Wait()
-		dr.Reader.Close()
+		w.Close()
 		os.RemoveAll(tempPath)
 		close(dr.waitCh)
 	}()
