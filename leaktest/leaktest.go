@@ -16,6 +16,7 @@ package leaktest
 
 // TODO: make it work on osx
 // TODO: possible to use procfs fd inode, ctime etc?
+// TODO: more info about leaked fd? socket/pipe etc?
 
 // goroutine leaktest code from:
 // https://github.com/fortytw2/leaktest
@@ -190,6 +191,28 @@ type ErrorReporter interface {
 	Fatal(...interface{})
 }
 
+func checkLeak(
+	t ErrorReporter,
+	timeout time.Duration,
+	resource string,
+	check func() (leaked interface{}, ok bool)) {
+	deadline := time.Now().Add(timeout)
+	for {
+		leaked, ok := check()
+		if ok {
+			break
+		}
+
+		if time.Now().Before(deadline) {
+			time.Sleep(50 * time.Millisecond)
+			continue
+		}
+
+		t.Errorf("Leaked %s: %v", resource, leaked)
+		break
+	}
+}
+
 // Check check for leaked fds and child processes
 // use defer osleaktest.Check(t)() first in test function
 func Check(t ErrorReporter) func() {
@@ -215,23 +238,25 @@ func Check(t ErrorReporter) func() {
 		defer os.Setenv("TMPDIR", origTMPDIR)
 		defer os.RemoveAll(testTempDir)
 
-		fdsAfter, fdsAfterErr := fdsForCurrentProcess()
-		if fdsAfterErr != nil {
-			t.Fatal(fdsAfterErr)
-		}
-		childsAfter, childsAfterErr := childsForPid(os.Getpid())
-		if childsAfterErr != nil {
-			t.Fatal(childsAfterErr)
-		}
-		fdsLeaked := intSetMinus(fdsAfter, fdsBefore)
-		if len(fdsLeaked) != 0 {
-			t.Errorf("Leaked fds: %v", fdsLeaked)
-		}
+		checkLeak(t, 1*time.Second, "file descriptors", func() (interface{}, bool) {
+			fdsAfter, fdsAfterErr := fdsForCurrentProcess()
+			if fdsAfterErr != nil {
+				t.Fatal(fdsAfterErr)
+			}
 
-		childsLeaked := intSetMinus(childsAfter, childsBefore)
-		if len(childsLeaked) != 0 {
+			leaked := intSetMinus(fdsAfter, fdsBefore)
+			return leaked, len(leaked) == 0
+		})
+
+		checkLeak(t, 1*time.Second, "child processes", func() (interface{}, bool) {
+			childsAfter, childsAfterErr := childsForPid(os.Getpid())
+			if childsAfterErr != nil {
+				t.Fatal(childsAfterErr)
+			}
+
+			leaked := intSetMinus(childsAfter, childsBefore)
 			fancyPids := []string{}
-			for _, pid := range childsLeaked {
+			for _, pid := range leaked {
 				stat, err := readProcStatForPid(pid)
 				if err == nil {
 					fancyPids = append(fancyPids, fmt.Sprintf("%d %s", pid, stat.name))
@@ -239,35 +264,26 @@ func Check(t ErrorReporter) func() {
 					fancyPids = append(fancyPids, strconv.Itoa(pid))
 				}
 			}
-			t.Errorf("Leaked child processes: %v", fancyPids)
-		}
 
-		// Loop, waiting for goroutines to shut down.
-		// Wait up to 5 seconds, but finish as quickly as possible.
-		deadline := time.Now().Add(5 * time.Second)
-		for {
-			goroutinesLeaked := stringSetMinus(interestingGoroutines(), goroutinesBefore)
-			if len(goroutinesLeaked) == 0 {
-				break
-			}
-			if time.Now().Before(deadline) {
-				time.Sleep(50 * time.Millisecond)
-				continue
-			}
-			t.Errorf("Leaked goroutines: %v", goroutinesLeaked)
-			break
-		}
-
-		leakedTempFiles := []string{}
-		filepath.Walk(testTempDir, func(path string, info os.FileInfo, err error) error {
-			if path == testTempDir {
-				return nil
-			}
-			leakedTempFiles = append(leakedTempFiles, path)
-			return nil
+			return fancyPids, len(fancyPids) == 0
 		})
-		if len(leakedTempFiles) != 0 {
-			t.Errorf("Leaked temp files: %v", leakedTempFiles)
-		}
+
+		checkLeak(t, 5*time.Second, "goroutines", func() (interface{}, bool) {
+			leaked := stringSetMinus(interestingGoroutines(), goroutinesBefore)
+			return leaked, len(leaked) == 0
+		})
+
+		checkLeak(t, 1*time.Second, "temp files", func() (interface{}, bool) {
+			leaked := []string{}
+			filepath.Walk(testTempDir, func(path string, info os.FileInfo, err error) error {
+				if path == testTempDir {
+					return nil
+				}
+				leaked = append(leaked, path)
+				return nil
+			})
+
+			return leaked, len(leaked) == 0
+		})
 	}
 }
