@@ -22,9 +22,8 @@ RUN \
   apt-get clean
 
 RUN \
-  git clone https://github.com/FFmpeg/FFmpeg.git && \
+  git clone --branch n3.2.4 --depth 1 https://github.com/FFmpeg/FFmpeg.git && \
   (cd FFmpeg && \
-    git checkout release/3.2 && \
     ./configure \
       --toolchain=hardened \
       --enable-gpl \
