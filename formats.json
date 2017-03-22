@@ -28,7 +28,7 @@
   {
     "Name": "mp4",
     "Formats": ["mov", "m4a", "3gp", "mj2"],
-    "FormatFlags": ["-frag_size", "1000000"],
+    "FormatFlags": ["-movflags", "isml+frag_keyframe"],
     "ACodecs": [
       {"Codec": "aac", "FormatFlags": ["-bsf:a", "aac_adtstoasc"]},
       {"Codec": "mp3"},
