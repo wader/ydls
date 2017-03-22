@@ -296,6 +296,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 		go func() {
 			n, err := io.Copy(w, dprc)
 			dprc.Close()
+			w.Close()
 			log.Printf("Copy done (n=%v err=%v)", n, err)
 			close(dr.waitCh)
 		}()
