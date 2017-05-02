@@ -53,7 +53,7 @@ RUN \
   ldconfig
 
 RUN \
-  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2017.04.26/youtube-dl && \
+  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2017.05.01/youtube-dl && \
   chmod a+x /usr/local/bin/youtube-dl
 
 RUN \
