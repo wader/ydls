@@ -33,7 +33,7 @@ func TestParseInfo(t *testing.T) {
 			yi, err := NewFromURL(ctx, c.url, nil)
 			if err != nil {
 				cancelFn()
-				t.Errorf("failed to parse %s", c.url)
+				t.Errorf("failed to parse %s: %v", c.url, err)
 				return
 			}
 			cancelFn()
