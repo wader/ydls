@@ -4,6 +4,8 @@ MAINTAINER Mattias Wadman mattias.wadman@gmail.com
 ENV FFMPEG_VERSION=n3.3
 ENV YDL_VERSION=2017.05.01
 ENV TINI_VERSION=v0.14.0
+ENV LISTEN=:8080
+ENV FORMATS=/etc/formats.json
 
 RUN \
   sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list && \
@@ -69,12 +71,12 @@ COPY formats.json /etc/
 COPY entrypoint.sh /usr/local/bin
 
 RUN \
-  cd /go/src/github.com/wader/ydls/ && \
-  TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 FORMATS=/etc/formats.json \
+  cd /go/src/github.com/wader/ydls && \
+  TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 \
     go test -v -cover -race ./... && \
   go install ./cmd/... && \
-  FORMATS=/etc/formats.json test_cmd/ydls-get.sh && \
-  FORMATS=/etc/formats.json test_cmd/ydls-server.sh && \
+  test_cmd/ydls-get.sh && \
+  test_cmd/ydls-server.sh && \
   cp /go/bin/* /usr/local/bin && \
   go clean -r ./cmd/... && \
   rm -rf /go/*
