@@ -273,7 +273,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 	}
 
 	if formatName == "" {
-		dprc, err := downloadAndProbeFormat(ctx, ydl, "best[protocol=https]/best[protocol=http]/best", log)
+		dprc, err := downloadAndProbeFormat(ctx, ydl, "best", log)
 		if err != nil {
 			return nil, err
 		}
