@@ -1,6 +1,10 @@
 FROM golang:1.8
 MAINTAINER Mattias Wadman mattias.wadman@gmail.com
 
+ENV FFMPEG_VERSION=n3.3
+ENV YDL_VERSION=2017.05.01
+ENV TINI_VERSION=v0.14.0
+
 RUN \
   sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list && \
   apt-get update && \
@@ -22,7 +26,7 @@ RUN \
   apt-get clean
 
 RUN \
-  git clone --branch n3.3 --depth 1 https://github.com/FFmpeg/FFmpeg.git && \
+  git clone --branch $FFMPEG_VERSION --depth 1 https://github.com/FFmpeg/FFmpeg.git && \
   (cd FFmpeg && \
     ./configure \
       --toolchain=hardened \
@@ -53,11 +57,11 @@ RUN \
   ldconfig
 
 RUN \
-  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/2017.05.01/youtube-dl && \
+  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
   chmod a+x /usr/local/bin/youtube-dl
 
 RUN \
-  curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/v0.14.0/tini && \
+  curl -L -o /usr/local/bin/tini https://github.com/krallin/tini/releases/download/$TINI_VERSION/tini && \
   chmod a+x /usr/local/bin/tini
 
 COPY . /go/src/github.com/wader/ydls/
