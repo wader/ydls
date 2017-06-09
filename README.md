@@ -1,7 +1,7 @@
 ### youtube-dl HTTP service
 
 HTTP service for [youtube-dl](https://yt-dl.org) that downloads media for
-requested URL and transmux and transcode to request format if needed.
+requested URL and transmuxes and transcodes to requested format if needed.
 
 I personally use this mostly to create audio only versions of videos from
 various site like youtube, vimeo etc.
@@ -44,10 +44,17 @@ Download in best format:
 `URL` is any URL that [youtube-dl](https://yt-dl.org) can handle.
 If schema is missing `http://` is assumed.
 
+The idea with endpoints supporting `URL-not-encoded` is to be able to simply
+prepend the URL with the ydls URL without doing any encoding (for example in
+ the browser location bar).
+
 Examples:
 
 Download and make sure media is in mp3 format:  
 `http://ydls-host/mp3/https://www.youtube.com/watch?v=cF1zJYkBW4A`
+
+Download using query parameters and make sure media is in mp3 format:  
+`http://ydls-host/?format=mp3&url=https%3A%2F%2Fwww.youtube.com%2Fwatch%3Fv%3DcF1zJYkBW4A`
 
 Download and make sure media is in webm format:  
 `http://ydls-host/webm/https://www.youtube.com/watch?v=cF1zJYkBW4A`
