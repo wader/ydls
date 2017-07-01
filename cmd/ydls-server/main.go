@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"html/template"
 	"log"
 	"net/http"
@@ -10,6 +11,9 @@ import (
 	"github.com/wader/ydls/ydls"
 )
 
+var commit string = "dev"
+
+var versionFlag = flag.Bool("version", false, "version")
 var infoFlag = flag.Bool("info", false, "info output")
 var debugFlag = flag.Bool("debug", false, "debug output")
 var formatsFlag = flag.String("formats", "formats.json", "formats config file")
@@ -19,6 +23,10 @@ var listenFlag = flag.String("listen", ":8080", "listen address")
 func init() {
 	flag.Parse()
 
+	if *versionFlag {
+		fmt.Println(commit)
+		os.Exit(0)
+	}
 	if os.Getenv("DEBUG") != "" {
 		*debugFlag = true
 	}

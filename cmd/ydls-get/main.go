@@ -13,6 +13,9 @@ import (
 	"github.com/wader/ydls/ydls"
 )
 
+var commit string = "dev"
+
+var versionFlag = flag.Bool("version", false, "version")
 var debugFlag = flag.Bool("debug", false, "debug output")
 var formatsFlag = flag.String("formats", "formats.json", "formats config file")
 
@@ -34,6 +37,10 @@ func init() {
 	}
 	flag.Parse()
 
+	if *versionFlag {
+		fmt.Println(commit)
+		os.Exit(0)
+	}
 	if os.Getenv("DEBUG") != "" {
 		*debugFlag = true
 	}
