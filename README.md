@@ -3,8 +3,8 @@
 HTTP service for [youtube-dl](https://yt-dl.org) that downloads media for
 requested URL and transmuxes and transcodes to requested format if needed.
 
-I personally use this mostly to create audio only versions of videos from
-various site like youtube, vimeo etc.
+I personally use it to create audio only versions of videos from various
+site like youtube, vimeo etc.
 
 Docker image supports:
 
@@ -115,7 +115,7 @@ Download with curl and save to filename provided by response header:
 Docker image can download from command line. This will download in mp3 format
 to current directory:
 
-`docker run --rm -v "$PWD:/go" --user=root <ydls-image> https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
+`docker run --rm -v "$PWD:/root" -w /root --user=root mwader/ydls https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
 
 youtube-dl URL can point to a plain media file.
 
