@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 if [ "$1" = "" ] ; then
   exec tini -- ydls-server -info -formats "$FORMATS" -listen "$LISTEN"
