@@ -51,8 +51,8 @@ func absRootPath(root string, path string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if !strings.HasPrefix(abs, root+string(filepath.Separator)) {
-		return "", fmt.Errorf("%s is outside root path %s", path, root)
+	if !strings.HasPrefix(abs, filepath.Clean(root+string(filepath.Separator))) {
+		return "", fmt.Errorf("%s is outside root path %s", abs, root)
 	}
 
 	return abs, nil
