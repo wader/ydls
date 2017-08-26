@@ -73,16 +73,13 @@ COPY formats.json /etc
 
 WORKDIR /go/src/github.com/wader/ydls
 
-RUN \
-  TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 \
-    go test -v -cover -race ./...
+RUN TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 go test -v -cover -race ./...
 RUN go install -installsuffix netgo -tags netgo -ldflags "-X main.commit=$(git describe --always)" ./cmd/...
 RUN \
   ldd /go/bin/ydls-get | grep -q "not a dynamic executable" && \
   ldd /go/bin/ydls-server | grep -q "not a dynamic executable" && \
   test_cmd/ydls-get.sh && \
   test_cmd/ydls-server.sh
-RUN cp /go/bin/* /usr/local/bin
 
 FROM alpine:3.6
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
@@ -100,14 +97,14 @@ COPY --from=ffmpeg-builder \
   /usr/local/bin/ffprobe \
   /usr/local/bin/
 COPY --from=ydls-builder \
-  /usr/local/bin/ydls-server \
-  /usr/local/bin/ydls-get \
+  /go/bin/ydls-server \
+  /go/bin/ydls-get \
   /usr/local/bin/youtube-dl \
   /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin
 COPY formats.json /etc
 
-# make sure all binaries can run
+# make sure all binaries work
 RUN \
   youtube-dl --version && \
   ffmpeg -version && \
