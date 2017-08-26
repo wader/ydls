@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-
 	ydls, _ := ydls.NewFromFile(os.Args[1])
 
 	fmt.Print("|Name|Formats|Audio codecs|Video codecs|\n")

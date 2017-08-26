@@ -71,16 +71,16 @@ func main() {
 	}
 
 	loggerWG := sync.WaitGroup{}
+	loggerWG.Add(1)
 	go func() {
-		loggerWG.Add(1)
 		logger()
 		loggerWG.Done()
 	}()
 
 	workerWG := sync.WaitGroup{}
+	workerWG.Add(*parallelismFlag)
 	for i := 0; i < *parallelismFlag; i++ {
 		go func() {
-			workerWG.Add(1)
 			worker()
 			workerWG.Done()
 		}()
