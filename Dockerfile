@@ -57,7 +57,7 @@ RUN \
   ldconfig
 
 FROM golang:1.9-stretch as ydls-builder
-ENV YDL_VERSION=2017.08.23
+ENV YDL_VERSION=2017.08.27.1
 ENV FORMATS=/etc/formats.json
 
 RUN \
