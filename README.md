@@ -8,7 +8,7 @@ site like youtube, vimeo etc.
 
 Docker image supports:
 
-|Name|Formats|Audio codecs|Video codecs|
+|Format name|Container|Audio codecs|Video codecs|
 |-|-|-|-|
 |mp3|mp3|mp3||
 |m4a|mov, m4a, 3gp, mj2|aac||
