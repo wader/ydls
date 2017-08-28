@@ -128,7 +128,7 @@ When fiddling with ffmpeg and youtube-dl related code I usually do this:
 
 ```sh
 docker build -t ydls .
-docker build -f _dev/Dockerfile.dev -t ydls-dev
+docker build -f _dev/Dockerfile.dev -t ydls-dev .
 docker run --rm -ti --entrypoint bash -v "$PWD:/go/src/github.com/wader/ydls" -w /go/src/github.com/wader/ydls ydls-dev
 ```
 
