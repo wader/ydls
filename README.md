@@ -56,6 +56,9 @@ Download in best format:
 `URL` is any URL that [youtube-dl](https://yt-dl.org) can handle.
 If schema is missing `http://` is assumed.
 
+When passing `url` as query parameter it is possible to use `acodec` and `vcodec` to
+force which codec to use.
+
 The idea with endpoints supporting `URL-not-encoded` is to be able to simply
 prepend the URL with the ydls URL by hand without doing any encoding (for example in
  the browser location bar).
