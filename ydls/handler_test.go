@@ -14,43 +14,51 @@ import (
 
 func TestParseFormatDownloadURL(t *testing.T) {
 	for _, c := range []struct {
-		url            *url.URL
-		expectedFormat string
-		expectedURL    string
+		url                 *url.URL
+		expectedFormat      string
+		expectedURL         string
+		expectedForceACodec string
+		expectedForceVCodec string
 	}{
 		{&url.URL{Path: "/format/http://domain/path", RawQuery: "query"},
-			"format", "http://domain/path?query"},
+			"format", "http://domain/path?query", "", ""},
 		{&url.URL{Path: "/format/http://domain/a/b"},
-			"format", "http://domain/a/b"},
+			"format", "http://domain/a/b", "", ""},
 		{&url.URL{Path: "/format/domain.com/a/b"},
-			"format", "http://domain.com/a/b"},
+			"format", "http://domain.com/a/b", "", ""},
 		{&url.URL{Path: "/http://domain/path", RawQuery: "query"},
-			"", "http://domain/path?query"},
+			"", "http://domain/path?query", "", ""},
 		{&url.URL{Path: "/domain.com/path", RawQuery: "query"},
-			"", "http://domain.com/path?query"},
+			"", "http://domain.com/path?query", "", ""},
 		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=format"},
-			"format", "http://domain.com"},
+			"format", "http://domain.com", "", ""},
 		{&url.URL{Path: "/", RawQuery: "url=http://domain.com"},
-			"", "http://domain.com"},
+			"", "http://domain.com", "", ""},
 		{&url.URL{Path: "/", RawQuery: "url=domain.com&format=format"},
-			"format", "http://domain.com"},
+			"format", "http://domain.com", "", ""},
 		{&url.URL{Path: "/", RawQuery: "url=domain.com"},
-			"", "http://domain.com"},
+			"", "http://domain.com", "", ""},
 		{&url.URL{Path: "/b", RawQuery: "query"},
-			"", ""},
+			"", "", "", ""},
 		{&url.URL{Path: "/", RawQuery: "query"},
-			"", ""},
+			"", "", "", ""},
+		{&url.URL{Path: "/", RawQuery: "url=domain.com&format=format&acodec=a&vcodec=v"},
+			"format", "http://domain.com", "a", "v"},
 	} {
-		format, URL := parseFormatDownloadURL(c.url)
+		format, URL, forceACodec, forceVCodec := parseFormatDownloadURL(c.url)
 		if URL == nil {
 			if c.expectedURL != "" {
 				t.Errorf("url=%+v, got fail, expected format=%v url=%v",
 					c.url, c.expectedFormat, c.expectedURL)
 			}
 		} else {
-			if format != c.expectedFormat || URL.String() != c.expectedURL {
-				t.Errorf("url=%+v, got format=%v url=%v expected format=%v url=%v",
-					c.url, format, URL, c.expectedFormat, c.expectedURL)
+			if format != c.expectedFormat || URL.String() != c.expectedURL ||
+				forceACodec != c.expectedForceACodec || forceVCodec != c.expectedForceVCodec {
+				t.Errorf("url=%+v, got format=%v url=%v forceACodec=%v forceVCodec=%s, expected format=%v url=%v forceACodec=%v forceVCodec=%s",
+					c.url, format, URL,
+					forceACodec, forceVCodec,
+					c.expectedFormat, c.expectedURL,
+					c.expectedForceACodec, c.expectedForceVCodec)
 			}
 		}
 	}

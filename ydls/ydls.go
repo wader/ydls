@@ -67,7 +67,7 @@ func safeFilename(filename string) string {
 	return r.Replace(filename)
 }
 
-func findFormat(formats []*youtubedl.Format, protocol string, aCodecs *prioStringSet, vCodecs *prioStringSet) *youtubedl.Format {
+func findFormat(formats []*youtubedl.Format, protocol string, aCodecs prioStringSet, vCodecs prioStringSet) *youtubedl.Format {
 	var matched []*youtubedl.Format
 
 	for _, f := range formats {
@@ -93,10 +93,10 @@ func findFormat(formats []*youtubedl.Format, protocol string, aCodecs *prioStrin
 	return nil
 }
 
-func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *youtubedl.Format, vFormat *youtubedl.Format) {
+func findBestFormats(ydlFormats []*youtubedl.Format, aCodecs prioStringSet, vCodecs prioStringSet) (aFormat *youtubedl.Format, vFormat *youtubedl.Format) {
 	type neededFormat struct {
-		aCodecs    *prioStringSet
-		vCodecs    *prioStringSet
+		aCodecs    prioStringSet
+		vCodecs    prioStringSet
 		aYDLFormat **youtubedl.Format
 		vYDLFormat **youtubedl.Format
 	}
@@ -105,23 +105,23 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 
 	// match exactly, both audio/video codecs found or not found
 	neededFormats = append(neededFormats, &neededFormat{
-		format.ACodecs.PrioStringSet(),
-		format.VCodecs.PrioStringSet(),
+		aCodecs,
+		vCodecs,
 		&aFormat, &vFormat,
 	})
 
-	if !format.ACodecs.empty() {
+	if !aCodecs.empty() {
 		// matching audio codec with any video codec
-		neededFormats = append(neededFormats, &neededFormat{format.ACodecs.PrioStringSet(), nil, &aFormat, nil})
+		neededFormats = append(neededFormats, &neededFormat{aCodecs, nil, &aFormat, nil})
 		// match any audio codec and no video
-		neededFormats = append(neededFormats, &neededFormat{nil, &prioStringSet{}, &aFormat, nil})
+		neededFormats = append(neededFormats, &neededFormat{nil, prioStringSet{}, &aFormat, nil})
 		// match any audio and video codec
 		neededFormats = append(neededFormats, &neededFormat{nil, nil, &aFormat, nil})
 	}
-	if !format.VCodecs.empty() {
+	if !vCodecs.empty() {
 		// same logic as above
-		neededFormats = append(neededFormats, &neededFormat{nil, format.VCodecs.PrioStringSet(), nil, &vFormat})
-		neededFormats = append(neededFormats, &neededFormat{&prioStringSet{}, nil, nil, &vFormat})
+		neededFormats = append(neededFormats, &neededFormat{nil, vCodecs, nil, &vFormat})
+		neededFormats = append(neededFormats, &neededFormat{prioStringSet{}, nil, nil, &vFormat})
 		neededFormats = append(neededFormats, &neededFormat{nil, nil, nil, &vFormat})
 	}
 
@@ -141,8 +141,8 @@ func findBestFormats(ydlFormats []*youtubedl.Format, format *Format) (aFormat *y
 			*f.vYDLFormat = m
 		}
 
-		if (format.ACodecs.empty() || aFormat != nil) &&
-			(format.VCodecs.empty() || vFormat != nil) {
+		if (aCodecs.empty() || aFormat != nil) &&
+			(vCodecs.empty() || vFormat != nil) {
 			break
 		}
 	}
@@ -216,6 +216,13 @@ func NewFromFile(formatsPath string) (*YDLS, error) {
 	return &YDLS{Formats: formats}, nil
 }
 
+// DownloadOptions optional download options
+type DownloadOptions struct {
+	DebugLog    *log.Logger
+	ForceACodec string
+	ForceVCodec string
+}
+
 // DownloadResult download result
 type DownloadResult struct {
 	Media    io.ReadCloser
@@ -229,15 +236,15 @@ func (dr *DownloadResult) Wait() {
 	<-dr.waitCh
 }
 
-func chooseFormatCodec(formats prioFormatCodecSet, probedCodec string) *FormatCodec {
-	codecFormat := formats.findByCodecName(probedCodec)
-	if codecFormat != nil {
-		copyCodecFormat := *codecFormat
-		copyCodecFormat.Codec = "copy"
-		return &copyCodecFormat
+func chooseFormatCodec(formats prioFormatCodecSet, probedCodec string) FormatCodec {
+	if codecFormat, ok := formats.findByCodec(probedCodec); ok {
+		codecFormat.Codec = "copy"
+		return codecFormat
 	}
 
-	return formats.first()
+	// TODO: could return false if there is no formats but means very weird format.json
+	codecFormat, _ := formats.first()
+	return codecFormat
 }
 
 func fancyYDLFormatName(ydlFormat *youtubedl.Format) string {
@@ -248,8 +255,8 @@ func fancyYDLFormatName(ydlFormat *youtubedl.Format) string {
 }
 
 // Download downloads media from URL using context and makes sure output is in specified format
-func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, debugLog *log.Logger) (*DownloadResult, error) {
-	log := logOrDiscard(debugLog)
+func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, options DownloadOptions) (*DownloadResult, error) {
+	log := logOrDiscard(options.DebugLog)
 
 	log.Printf("URL: %s", url)
 	log.Printf("Output format: %s", formatName)
@@ -326,9 +333,25 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, d
 	dr.MIMEType = outFormat.MIMEType
 	dr.Filename = safeFilename(ydl.Title + "." + outFormat.Ext)
 
-	aYDLFormat, vYDLFormat := findBestFormats(ydl.Formats, outFormat)
+	aCodecs := outFormat.ACodecs.PrioStringSet()
+	vCodecs := outFormat.VCodecs.PrioStringSet()
 
-	log.Printf("Best format %s %s", aYDLFormat, vYDLFormat)
+	if options.ForceACodec != "" {
+		aCodecs = aCodecs.NewAndMoveFirst(options.ForceACodec)
+		if aCodecs == nil {
+			return nil, fmt.Errorf("could not find audio codec \"%s\" for format %s", options.ForceACodec, outFormat.Name)
+		}
+	}
+	if options.ForceVCodec != "" {
+		vCodecs = vCodecs.NewAndMoveFirst(options.ForceVCodec)
+		if vCodecs == nil {
+			return nil, fmt.Errorf("could not find video codec \"%s\" for format %s", options.ForceVCodec, outFormat.Name)
+		}
+	}
+
+	aYDLFormat, vYDLFormat := findBestFormats(ydl.Formats, aCodecs, vCodecs)
+
+	log.Printf("Best format %s (%s) %s (%s)", aYDLFormat, aCodecs, vYDLFormat, vCodecs)
 
 	var aDprc *downloadProbeReadCloser
 	var aErr error

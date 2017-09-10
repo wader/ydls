@@ -6,7 +6,7 @@ requested URL and transmuxes and transcodes to requested format if needed.
 I personally use it to create audio only versions of videos from various
 site like youtube, vimeo etc.
 
-Docker image supports:
+Docker image supports all default native ffmpeg decoders and can encoding to:
 
 |Format name|Container|Audio codecs|Video codecs|
 |-|-|-|-|
@@ -17,8 +17,7 @@ Docker image supports:
 |wav|wav|pcm_s16le||
 |mp4|mov, m4a, 3gp, mj2|aac, mp3, vorbis|h264|
 |webm|webm, matroska|vorbis, opus|vp8, vp9|
-|webmhigh|webm, matroska|opus|vp9|
-|mkv|matroska|aac, mp3, opus, vorbis|h264, vp8, vp9|
+|mkv|matroska|aac, mp3, vorbis, opus|h264, vp8, vp9|
 
 See [formats.json](formats.json) for more details.
 

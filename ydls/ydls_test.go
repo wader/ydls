@@ -54,6 +54,8 @@ func TestSafeFilename(t *testing.T) {
 	}
 }
 
+const youtbeuTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
+
 func TestFormats(t *testing.T) {
 	if !testNetwork || !testFfmpeg || !testYoutubeldl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
@@ -67,7 +69,7 @@ func TestFormats(t *testing.T) {
 		expectedFilename string
 	}{
 		{"https://soundcloud.com/timsweeney/thedrifter", true, "BIS Radio Show #793 with The Drifter"},
-		{"https://www.youtube.com/watch?v=C0DPdy98e4c", false, "TEST VIDEO"},
+		{youtbeuTestVideoURL, false, "TEST VIDEO"},
 	} {
 		for _, f := range *ydls.Formats {
 			func() {
@@ -80,7 +82,7 @@ func TestFormats(t *testing.T) {
 
 				ctx, cancelFn := context.WithCancel(context.Background())
 
-				dr, err := ydls.Download(ctx, c.url, f.Name, nil)
+				dr, err := ydls.Download(ctx, c.url, f.Name, DownloadOptions{})
 				if err != nil {
 					cancelFn()
 					t.Errorf("%s: %s: download failed: %s", c.url, f.Name, err)
@@ -125,56 +127,90 @@ func TestFormats(t *testing.T) {
 				t.Logf("%s: %s: OK (probed %s)\n", c.url, f.Name, pi)
 			}()
 		}
-
-		// test raw format
-		// TODO: what to check more?
-
-		func() {
-			defer leaktest.Check(t)()
-
-			ctx, cancelFn := context.WithCancel(context.Background())
-
-			dr, err := ydls.Download(ctx, c.url, "", nil)
-			if err != nil {
-				cancelFn()
-				t.Errorf("%s: %s: download failed: %s", c.url, "raw", err)
-				return
-			}
-
-			pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
-			dr.Media.Close()
-			dr.Wait()
-			cancelFn()
-			if err != nil {
-				t.Errorf("%s: %s: probe failed: %s", c.url, "raw", err)
-				return
-			}
-
-			t.Logf("%s: %s: OK (probed %s)\n", c.url, "raw", pi)
-		}()
 	}
 }
 
-func codecsToFormatCodecs(s string) prioFormatCodecSet {
-	if s == "" {
-		return prioFormatCodecSet{}
+func TestRawFormat(t *testing.T) {
+	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	formatCodecs := []FormatCodec{}
-	for _, c := range strings.Split(s, ",") {
-		formatCodecs = append(formatCodecs, FormatCodec{Codec: c})
+	ydls := ydlsFromFormatsEnv(t)
+
+	defer leaktest.Check(t)()
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	dr, err := ydls.Download(ctx, youtbeuTestVideoURL, "", DownloadOptions{})
+	if err != nil {
+		cancelFn()
+		t.Errorf("%s: %s: download failed: %s", youtbeuTestVideoURL, "raw", err)
+		return
 	}
-	return prioFormatCodecSet(formatCodecs)
+
+	pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+	dr.Media.Close()
+	dr.Wait()
+	cancelFn()
+	if err != nil {
+		t.Errorf("%s: %s: probe failed: %s", youtbeuTestVideoURL, "raw", err)
+		return
+	}
+
+	t.Logf("%s: %s: OK (probed %s)\n", youtbeuTestVideoURL, "raw", pi)
 }
 
-func testBestFormatCase(Formats []*youtubedl.Format, acodecs string, vcodecs string, aFormatID string, vFormatID string) error {
-	aFormat, vFormat := findBestFormats(
-		Formats,
-		&Format{
-			ACodecs: codecsToFormatCodecs(acodecs),
-			VCodecs: codecsToFormatCodecs(vcodecs),
-		},
-	)
+func TestForceCodec(t *testing.T) {
+	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	}
+
+	ydls := ydlsFromFormatsEnv(t)
+
+	defer leaktest.Check(t)()
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	mkvFormat := ydls.Formats.FindByName("mkv")
+	forceACodec := "opus"
+	forceVCodec := "vp9"
+
+	// make sure codecs are not the perfered ones
+	if f, _ := mkvFormat.ACodecs.first(); f.Codec == forceACodec {
+		t.Errorf("test sanity check failed: audio codec already the prefered one")
+		return
+	}
+	if f, _ := mkvFormat.VCodecs.first(); f.Codec == forceVCodec {
+		t.Errorf("test sanity check failed: video codec already the prefered one")
+		return
+	}
+
+	dr, err := ydls.Download(ctx, youtbeuTestVideoURL, mkvFormat.Name, DownloadOptions{ForceACodec: forceACodec, ForceVCodec: forceVCodec})
+	if err != nil {
+		cancelFn()
+		t.Errorf("%s: %s: download failed: %s", youtbeuTestVideoURL, "raw", err)
+		return
+	}
+
+	pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+	dr.Media.Close()
+	dr.Wait()
+	cancelFn()
+	if err != nil {
+		t.Errorf("%s: probe failed: %s", youtbeuTestVideoURL, err)
+		return
+	}
+
+	if pi.FormatName() != "matroska" || pi.ACodec() != forceACodec || pi.VCodec() != forceVCodec {
+		t.Errorf("%s: force codec failed: found %s", youtbeuTestVideoURL, pi)
+		return
+	}
+
+	t.Logf("%s: OK (probed %s)\n", youtbeuTestVideoURL, pi)
+}
+
+func testBestFormatCase(formats []*youtubedl.Format, aCodecs prioStringSet, vCodecs prioStringSet, aFormatID string, vFormatID string) error {
+	aFormat, vFormat := findBestFormats(formats, aCodecs, vCodecs)
 
 	if (aFormat == nil && aFormatID != "") ||
 		(aFormat != nil && aFormat.FormatID != aFormatID) ||
@@ -190,7 +226,7 @@ func testBestFormatCase(Formats []*youtubedl.Format, acodecs string, vcodecs str
 		}
 		return fmt.Errorf(
 			"%v %v, expected aFormatID=%v vFormatID=%v, gotAFormatID=%v gotVFormatID=%v",
-			acodecs, vcodecs,
+			aCodecs, vCodecs,
 			aFormatID, vFormatID, gotAFormatID, gotVFormatID,
 		)
 	}
@@ -208,17 +244,17 @@ func TestFindBestFormats1(t *testing.T) {
 
 	for _, c := range []struct {
 		ydlFormats []*youtubedl.Format
-		aCodecs    string
-		vCodecs    string
+		aCodecs    prioStringSet
+		vCodecs    prioStringSet
 		aFormatID  string
 		vFormatID  string
 	}{
-		{ydlFormats, "mp3", "h264", "1", "1"},
-		{ydlFormats, "mp3", "", "1", ""},
-		{ydlFormats, "aac", "", "3", ""},
-		{ydlFormats, "aac", "h264", "3", "2"},
-		{ydlFormats, "opus", "", "4", ""},
-		{ydlFormats, "opus", "v9", "4", "2"},
+		{ydlFormats, prioStringSet([]string{"mp3"}), prioStringSet([]string{"h264"}), "1", "1"},
+		{ydlFormats, prioStringSet([]string{"mp3"}), prioStringSet{}, "1", ""},
+		{ydlFormats, prioStringSet([]string{"aac"}), prioStringSet{}, "3", ""},
+		{ydlFormats, prioStringSet([]string{"aac"}), prioStringSet([]string{"h264"}), "3", "2"},
+		{ydlFormats, prioStringSet([]string{"opus"}), prioStringSet{}, "4", ""},
+		{ydlFormats, prioStringSet([]string{"opus"}), prioStringSet([]string{"vp9"}), "4", "2"},
 	} {
 		if err := testBestFormatCase(c.ydlFormats, c.aCodecs, c.vCodecs, c.aFormatID, c.vFormatID); err != nil {
 			t.Error(err)
@@ -235,12 +271,12 @@ func TestFindBestFormats2(t *testing.T) {
 
 	for _, c := range []struct {
 		ydlFormats []*youtubedl.Format
-		aCodecs    string
-		vCodecs    string
+		aCodecs    prioStringSet
+		vCodecs    prioStringSet
 		aFormatID  string
 		vFormatID  string
 	}{
-		{ydlFormats2, "mp3", "", "1", ""},
+		{ydlFormats2, prioStringSet([]string{"mp3"}), prioStringSet{}, "1", ""},
 	} {
 		if err := testBestFormatCase(c.ydlFormats, c.aCodecs, c.vCodecs, c.aFormatID, c.vFormatID); err != nil {
 			t.Error(err)

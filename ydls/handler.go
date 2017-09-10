@@ -27,10 +27,10 @@ func safeContentDispositionFilename(s string) string {
 	return string(rs)
 }
 
-func splitRequestURL(URL *url.URL) (format string, urlStr string) {
+func splitRequestURL(URL *url.URL) (format string, urlStr string, forceACodec string, forceVCodec string) {
 	if URL.Query().Get("url") != "" {
-		// ?url=url&format=format
-		return URL.Query().Get("format"), URL.Query().Get("url")
+		// ?url=url&format=format&acodec=&vcodec=
+		return URL.Query().Get("format"), URL.Query().Get("url"), URL.Query().Get("acodec"), URL.Query().Get("vcodec")
 	}
 
 	// /format/schema://host.domin/path?query
@@ -49,7 +49,7 @@ func splitRequestURL(URL *url.URL) (format string, urlStr string) {
 	}
 
 	if len(parts) == 0 {
-		return "", ""
+		return "", "", "", ""
 	}
 
 	if len(parts) == 2 {
@@ -58,7 +58,7 @@ func splitRequestURL(URL *url.URL) (format string, urlStr string) {
 		if URL.RawQuery != "" {
 			s += "?" + URL.RawQuery
 		}
-		return format, s
+		return format, s, "", ""
 
 	}
 
@@ -67,12 +67,12 @@ func splitRequestURL(URL *url.URL) (format string, urlStr string) {
 		s += "?" + URL.RawQuery
 	}
 
-	return format, s
+	return format, s, "", ""
 }
 
-func parseFormatDownloadURL(URL *url.URL) (format string, downloadURL *url.URL) {
+func parseFormatDownloadURL(URL *url.URL) (format string, downloadURL *url.URL, forceACodec string, forceVCodec string) {
 	var urlStr string
-	format, urlStr = splitRequestURL(URL)
+	format, urlStr, forceACodec, forceVCodec = splitRequestURL(URL)
 
 	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
 		urlStr = "http://" + urlStr
@@ -80,15 +80,15 @@ func parseFormatDownloadURL(URL *url.URL) (format string, downloadURL *url.URL) 
 
 	downloadURL, err := url.Parse(urlStr)
 	if err != nil {
-		return "", nil
+		return "", nil, "", ""
 	}
 
 	if downloadURL.Host == "" ||
 		(downloadURL.Scheme != "http" && downloadURL.Scheme != "https") {
-		return "", nil
+		return "", nil, "", ""
 	}
 
-	return format, downloadURL
+	return format, downloadURL, forceACodec, forceVCodec
 }
 
 // Handler is a http.Handler using ydls
@@ -126,7 +126,7 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	formatName, downloadURL := parseFormatDownloadURL(r.URL)
+	formatName, downloadURL, forceACodec, forceVCodec := parseFormatDownloadURL(r.URL)
 	if downloadURL == nil {
 		infoLog.Printf("%s Invalid request %s %s", r.RemoteAddr, r.Method, r.URL.Path)
 		http.Error(w, "Invalid URL", http.StatusBadRequest)
@@ -139,7 +139,13 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, fancyFormatName, downloadURL)
 
-	dr, err := yh.YDLS.Download(r.Context(), downloadURL.String(), formatName, debugLog)
+	dr, err := yh.YDLS.Download(r.Context(), downloadURL.String(), formatName,
+		DownloadOptions{
+			DebugLog:    debugLog,
+			ForceACodec: forceACodec,
+			ForceVCodec: forceVCodec,
+		},
+	)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

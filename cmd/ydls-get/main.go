@@ -18,6 +18,8 @@ var gitCommit = "dev"
 var versionFlag = flag.Bool("version", false, "version")
 var debugFlag = flag.Bool("debug", false, "debug output")
 var formatsFlag = flag.String("formats", "formats.json", "formats config file")
+var aCodecFlag = flag.String("acodec", "", "force audio codec")
+var vCodecFlag = flag.String("vcodec", "", "force video codec")
 
 type progressWriter struct {
 	fn    func(bytes uint64)
@@ -66,7 +68,7 @@ func fatalIfErrorf(err error, format string, a ...interface{}) {
 }
 
 func main() {
-	ydls, err := ydls.NewFromFile(*formatsFlag)
+	y, err := ydls.NewFromFile(*formatsFlag)
 	if err != nil {
 		log.Fatalf("failed to read formats: %s", err)
 	}
@@ -84,7 +86,12 @@ func main() {
 	ctx, cancelFn := context.WithCancel(context.Background())
 	defer cancelFn()
 
-	dr, err := ydls.Download(ctx, url, formatName, debugLog)
+	dr, err := y.Download(ctx, url, formatName, ydls.DownloadOptions{
+		DebugLog:    debugLog,
+		ForceACodec: *aCodecFlag,
+		ForceVCodec: *vCodecFlag,
+	})
+
 	fatalIfErrorf(err, "download failed")
 	defer dr.Media.Close()
 	defer dr.Wait()
