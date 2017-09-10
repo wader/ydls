@@ -42,12 +42,10 @@
       "ogg"
     ],
     "ACodecs": [{
-        "Codec": "vorbis"
-      },
-      {
-        "Codec": "opus"
-      }
-    ],
+      "Codec": "vorbis"
+    }, {
+      "Codec": "opus"
+    }],
     "Ext": "ogg",
     "MIMEType": "audio/ogg"
   },
@@ -86,21 +84,20 @@
       "isml+frag_keyframe"
     ],
     "ACodecs": [{
-        "Codec": "aac",
-        "FormatFlags": [
-          "-bsf:a",
-          "aac_adtstoasc"
-        ]
-      },
-      {
-        "Codec": "mp3"
-      },
-      {
-        "Codec": "vorbis"
-      }
-    ],
+      "Codec": "aac",
+      "FormatFlags": [
+        "-bsf:a",
+        "aac_adtstoasc"
+      ]
+    }, {
+      "Codec": "mp3"
+    }, {
+      "Codec": "vorbis"
+    }],
     "VCodecs": [{
       "Codec": "h264"
+    }, {
+      "Codec": "h265"
     }],
     "Ext": "mp4",
     "MIMEType": "video/mp4"
@@ -112,19 +109,15 @@
       "matroska"
     ],
     "ACodecs": [{
-        "Codec": "vorbis"
-      },
-      {
-        "Codec": "opus"
-      }
-    ],
+      "Codec": "vorbis"
+    }, {
+      "Codec": "opus"
+    }],
     "VCodecs": [{
-        "Codec": "vp8"
-      },
-      {
-        "Codec": "vp9"
-      }
-    ],
+      "Codec": "vp8"
+    }, {
+      "Codec": "vp9"
+    }],
     "Ext": "webm",
     "MIMEType": "video/webm"
   },
@@ -134,29 +127,23 @@
       "matroska"
     ],
     "ACodecs": [{
-        "Codec": "aac"
-      },
-      {
-        "Codec": "mp3"
-      },
-
-      {
-        "Codec": "vorbis"
-      },
-      {
-        "Codec": "opus"
-      }
-    ],
+      "Codec": "aac"
+    }, {
+      "Codec": "mp3"
+    }, {
+      "Codec": "vorbis"
+    }, {
+      "Codec": "opus"
+    }],
     "VCodecs": [{
-        "Codec": "h264"
-      },
-      {
-        "Codec": "vp8"
-      },
-      {
-        "Codec": "vp9"
-      }
-    ],
+      "Codec": "h264"
+    }, {
+      "Codec": "vp8"
+    }, {
+      "Codec": "h265"
+    }, {
+      "Codec": "vp9"
+    }],
     "Ext": "mkv",
     "MIMEType": "video/x-matroska"
   }

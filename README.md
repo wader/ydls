@@ -15,9 +15,9 @@ Docker image supports all default native ffmpeg decoders and can encoding to:
 |ogg|ogg|vorbis, opus||
 |flac|flac|flac||
 |wav|wav|pcm_s16le||
-|mp4|mov, m4a, 3gp, mj2|aac, mp3, vorbis|h264|
+|mp4|mov, m4a, 3gp, mj2|aac, mp3, vorbis|h264, h265|
 |webm|webm, matroska|vorbis, opus|vp8, vp9|
-|mkv|matroska|aac, mp3, vorbis, opus|h264, vp8, vp9|
+|mkv|matroska|aac, mp3, vorbis, opus|h264, vp8, h265, vp9|
 
 See [formats.json](formats.json) for more details.
 

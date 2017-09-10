@@ -1,5 +1,6 @@
 FROM debian:stretch as ffmpeg-builder
 ENV FFMPEG_VERSION=n3.3.3
+ENV X265_VERSION=upstream/2.5
 
 RUN \
   sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list && \
@@ -15,8 +16,20 @@ RUN \
     libvpx-dev \
     libopus-dev \
     libx264-dev \
+    libnuma-dev \
+    cmake \
     && \
   apt-get clean
+
+# libx265 in debian seems to not work with new versions of ffmpeg
+RUN \
+  git clone --branch $X265_VERSION https://anonscm.debian.org/git/pkg-multimedia/x265.git && \
+  (cd x265 && \
+    cd source && \
+    cmake . && \
+    make -j4 && \
+    make install \
+  )
 
 RUN \
   git clone --branch $FFMPEG_VERSION --depth 1 https://github.com/FFmpeg/FFmpeg.git && \
@@ -48,6 +61,8 @@ RUN \
       --enable-encoder=libvpx_vp9 \
       --enable-libx264 \
       --enable-encoder=libx264 \
+      --enable-libx265 \
+      --enable-encoder=libx265 \
       && \
     make && \
     make install) && \
