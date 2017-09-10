@@ -11,7 +11,7 @@ import (
 	"github.com/wader/ydls/ydls"
 )
 
-var commit string = "dev"
+var gitCommit = "dev"
 
 var versionFlag = flag.Bool("version", false, "version")
 var infoFlag = flag.Bool("info", false, "info output")
@@ -24,7 +24,7 @@ func init() {
 	flag.Parse()
 
 	if *versionFlag {
-		fmt.Println(commit)
+		fmt.Println(gitCommit)
 		os.Exit(0)
 	}
 	if os.Getenv("DEBUG") != "" {
