@@ -1,5 +1,5 @@
 FROM debian:stretch as ffmpeg-builder
-ENV FFMPEG_VERSION=n3.3.3
+ENV FFMPEG_VERSION=n3.3.4
 ENV X265_VERSION=upstream/2.5
 
 RUN \
