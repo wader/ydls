@@ -143,6 +143,13 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 	inputToFDs := []*inputFD{}
 	inputToFDMap := map[io.Reader]*inputFD{}
 
+	closeFilesFn := func() {
+		for _, ifd := range inputToFDs {
+			ifd.r.Close()
+		}
+		stdout.Close()
+	}
+
 	// from os.Cmd "entry i becomes file descriptor 3+i"
 	childFD := 3
 	inputFileID := 0
@@ -187,7 +194,8 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 		if len(codecParts) == 2 && (codecParts[0] == "acodec" || codecParts[0] == "vcodec") {
 			ffmpegArgs = append(ffmpegArgs, "-"+codecParts[0], codecParts[1])
 		} else {
-			panic(fmt.Sprintf("codec should be acodec/vcodec:name (was %s)", m.Codec))
+			closeFilesFn()
+			return fmt.Errorf("codec must be acodec/vcodec:name (was %s)", m.Codec)
 		}
 		ffmpegArgs = append(ffmpegArgs, m.CodecFlags...)
 	}
@@ -202,13 +210,6 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 	f.cmd.Stdout = stdout
 
 	log.Printf("cmd %v", f.cmd.Args)
-
-	closeFilesFn := func() {
-		for _, ifd := range inputToFDs {
-			ifd.r.Close()
-		}
-		stdout.Close()
-	}
 
 	if err := f.cmd.Start(); err != nil {
 		closeFilesFn()
