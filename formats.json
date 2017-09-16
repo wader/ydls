@@ -134,6 +134,8 @@
       "Codec": "vorbis"
     }, {
       "Codec": "opus"
+    }, {
+      "Codec": "flac"
     }],
     "VCodecs": [{
       "Codec": "h264"
@@ -143,6 +145,8 @@
       "Codec": "h265"
     }, {
       "Codec": "vp9"
+    }, {
+      "Codec": "theora"
     }],
     "Ext": "mkv",
     "MIMEType": "video/x-matroska"

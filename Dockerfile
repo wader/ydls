@@ -1,75 +1,82 @@
-FROM debian:stretch as ffmpeg-builder
+FROM alpine:3.6 as ffmpeg-builder
+
+RUN apk add --no-cache \
+  coreutils \
+  openssl \
+  bash \
+  build-base \
+  git \
+  yasm \
+  zlib-dev \
+  openssl-dev \
+  lame-dev \
+  libogg-dev \
+  libvpx-dev \
+  x265-dev
+
+# some -dev alpine packages lack .a files
+ENV VORBIS_VERSION=1.3.5
+RUN \
+  wget -O - https://downloads.xiph.org/releases/vorbis/libvorbis-$VORBIS_VERSION.tar.gz | tar xz && \
+  cd libvorbis-$VORBIS_VERSION && ./configure --enable-static && make -j4 install
+
+ENV OPUS_VERSION=1.2.1
+RUN \
+  wget -O - https://archive.mozilla.org/pub/opus/opus-$OPUS_VERSION.tar.gz | tar xz && \
+  cd opus-$OPUS_VERSION && ./configure --enable-static && make -j4 install
+
+# require libogg to build
+ENV THEORA_VERSION=1.1.1
+RUN \
+  wget -O - https://downloads.xiph.org/releases/theora/libtheora-$THEORA_VERSION.tar.bz2 | tar xj && \
+  cd libtheora-$THEORA_VERSION && ./configure --enable-pic --enable-static && make -j4 install
+
+ENV X264_VERSION=aaa9aa83a111ed6f1db253d5afa91c5fc844583f
+RUN \
+  git clone git://git.videolan.org/x264.git && \
+  cd x264 && git checkout $X264_VERSION && ./configure --enable-pic --enable-static && make -j4 install
+
+# note that this will produce a "static" PIE binary with no dynamic lib deps
 ENV FFMPEG_VERSION=n3.3.4
-ENV X265_VERSION=upstream/2.5
-
-RUN \
-  sed -i 's/main/main contrib non-free/g' /etc/apt/sources.list && \
-  apt-get update && \
-  apt-get -y install \
-    build-essential \
-    git-core \
-    yasm \
-    pkg-config \
-    libssl-dev \
-    libmp3lame-dev \
-    libvorbis-dev \
-    libvpx-dev \
-    libopus-dev \
-    libx264-dev \
-    libnuma-dev \
-    cmake \
-    && \
-  apt-get clean
-
-# libx265 in debian seems to not work with new versions of ffmpeg
-RUN \
-  git clone --branch $X265_VERSION https://anonscm.debian.org/git/pkg-multimedia/x265.git && \
-  (cd x265 && \
-    cd source && \
-    cmake . && \
-    make -j4 && \
-    make install \
-  )
-
 RUN \
   git clone --branch $FFMPEG_VERSION --depth 1 https://github.com/FFmpeg/FFmpeg.git && \
-  (cd FFmpeg && \
-    ./configure \
-      --disable-shared \
-      --enable-static \
-      --pkg-config-flags=--static \
-      --extra-ldflags=-static \
-      --extra-cflags=-static \
-      --enable-gpl \
-      --enable-nonfree \
-      --enable-openssl \
-      --disable-ffserver \
-      --disable-doc \
-      --disable-ffplay \
-      --disable-encoders \
-      --enable-encoder=aac \
-      --enable-encoder=flac \
-      --enable-encoder=pcm_s16le \
-      --enable-libmp3lame \
-      --enable-encoder=libmp3lame \
-      --enable-libvorbis \
-      --enable-encoder=libvorbis \
-      --enable-libopus \
-      --enable-encoder=libopus \
-      --enable-libvpx \
-      --enable-encoder=libvpx_vp8 \
-      --enable-encoder=libvpx_vp9 \
-      --enable-libx264 \
-      --enable-encoder=libx264 \
-      --enable-libx265 \
-      --enable-encoder=libx265 \
-      && \
-    make && \
-    make install) && \
-  rm -rf FFmpeg && \
-  ldd /usr/local/bin/ffmpeg | grep -q "not a dynamic executable" && \
-  ldd /usr/local/bin/ffprobe | grep -q "not a dynamic executable" && \
-  ldconfig
+  cd FFmpeg && \
+  ./configure \
+    --toolchain=hardened \
+    --disable-shared \
+    --enable-static \
+    --pkg-config-flags=--static \
+    --extra-ldflags=-static \
+    --extra-cflags=-static \
+    --enable-gpl \
+    --enable-nonfree \
+    --enable-openssl \
+    --disable-ffserver \
+    --disable-doc \
+    --disable-ffplay \
+    --disable-encoders \
+    --enable-encoder=aac \
+    --enable-encoder=flac \
+    --enable-encoder=pcm_s16le \
+    --enable-libmp3lame \
+    --enable-encoder=libmp3lame \
+    --enable-libvorbis \
+    --enable-encoder=libvorbis \
+    --enable-libopus \
+    --enable-encoder=libopus \
+    --enable-libtheora \
+    --enable-encoder=libtheora \
+    --enable-libvpx \
+    --enable-encoder=libvpx_vp8 \
+    --enable-encoder=libvpx_vp9 \
+    --enable-libx264 \
+    --enable-encoder=libx264 \
+    --enable-libx265 \
+    --enable-encoder=libx265 \
+    && \
+  make -j4 install && \
+  ldd /usr/local/bin/ffmpeg | grep -vq lib && \
+  ldd /usr/local/bin/ffprobe | grep -vq lib
 
 FROM golang:1.9-stretch as ydls-builder
 ENV YDL_VERSION=2017.09.15
@@ -126,6 +133,10 @@ RUN \
   ffprobe -version && \
   ydls-get -version && \
   ydls-server -version
+
+# regression testing: make sure https and dns works
+RUN \
+  ffmpeg -i https://www.google.com 2>&1 | grep -q "Invalid data found when processing input"
 
 USER nobody
 EXPOSE 8080/tcp

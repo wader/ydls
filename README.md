@@ -17,7 +17,7 @@ Docker image supports all default native ffmpeg decoders and can encoding to:
 |wav|wav|pcm_s16le||
 |mp4|mov, m4a, 3gp, mj2|aac, mp3, vorbis|h264, h265|
 |webm|webm, matroska|vorbis, opus|vp8, vp9|
-|mkv|matroska|aac, mp3, vorbis, opus|h264, vp8, h265, vp9|
+|mkv|matroska|aac, mp3, vorbis, opus, flac|h264, vp8, h265, vp9, theora|
 
 See [formats.json](formats.json) for more details.
 
@@ -145,7 +145,6 @@ go run cmd/ydls-get/main.go -formats ./formats.json ...
 - youtubedl info, just url no formats?
 - X-Remote IP header?
 - seccomp and chroot things
-- ffmpeg hardened build (seems to not work for static build)
 
 ## License
 
