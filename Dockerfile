@@ -18,23 +18,35 @@ RUN apk add --no-cache \
 ENV VORBIS_VERSION=1.3.5
 RUN \
   wget -O - https://downloads.xiph.org/releases/vorbis/libvorbis-$VORBIS_VERSION.tar.gz | tar xz && \
-  cd libvorbis-$VORBIS_VERSION && ./configure --enable-static && make -j4 install
+  cd libvorbis-$VORBIS_VERSION && \
+  CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
+    ./configure --enable-static && \
+  make -j4 install
 
 ENV OPUS_VERSION=1.2.1
 RUN \
   wget -O - https://archive.mozilla.org/pub/opus/opus-$OPUS_VERSION.tar.gz | tar xz && \
-  cd opus-$OPUS_VERSION && ./configure --enable-static && make -j4 install
+  cd opus-$OPUS_VERSION && \
+  CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
+    ./configure --enable-static && \
+  make -j4 install
 
 # require libogg to build
 ENV THEORA_VERSION=1.1.1
 RUN \
   wget -O - https://downloads.xiph.org/releases/theora/libtheora-$THEORA_VERSION.tar.bz2 | tar xj && \
-  cd libtheora-$THEORA_VERSION && ./configure --enable-pic --enable-static && make -j4 install
+  cd libtheora-$THEORA_VERSION && \
+  CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
+    ./configure --enable-pic --enable-static && \
+  make -j4 install
 
 ENV X264_VERSION=aaa9aa83a111ed6f1db253d5afa91c5fc844583f
 RUN \
   git clone git://git.videolan.org/x264.git && \
-  cd x264 && git checkout $X264_VERSION && ./configure --enable-pic --enable-static && make -j4 install
+  cd x264 && \
+  git checkout $X264_VERSION && \
+  CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
+    ./configure --enable-pic --enable-static && make -j4 install
 
 # note that this will produce a "static" PIE binary with no dynamic lib deps
 ENV FFMPEG_VERSION=n3.3.4
