@@ -117,7 +117,7 @@ docker run --rm -ti --entrypoint bash -v "$PWD:/go/src/github.com/wader/ydls" -w
 Then inside dev container:
 
 ```sh
-go run cmd/ydls-get/main.go -ydls ./ydls.json ...
+go run cmd/ydls-get/main.go -connfig ./ydls.json ...
 ```
 
 ## TODO
