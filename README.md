@@ -80,7 +80,7 @@ Download and make sure media is in webm format:
 `http://ydls/webm/https://www.youtube.com/watch?v=cF1zJYkBW4A`
 
 Download and make sure media is in mkv format using mp3 and h264 codecs:  
-`http://ydls/webm+mp3+h264/https://www.youtube.com/watch?v=cF1zJYkBW4A`
+`http://ydls/mkv+mp3+h264/https://www.youtube.com/watch?v=cF1zJYkBW4A`
 
 Download in best format:  
 `http://ydls/https://www.youtube.com/watch?v=cF1zJYkBW4A`
