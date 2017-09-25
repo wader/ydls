@@ -32,7 +32,7 @@ func (pw *progressWriter) Write(p []byte) (n int, err error) {
 
 func init() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s [options] URL [format]:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage of %s [options] URL [format] [codec] [codec]:\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
