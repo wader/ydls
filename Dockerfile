@@ -138,16 +138,13 @@ COPY --from=ydls-builder \
 COPY entrypoint.sh /usr/local/bin
 COPY formats.json /etc
 
-# make sure all binaries work
+# make sure all binaries work and do some sanity checks (https, DNS)
 RUN \
   youtube-dl --version && \
   ffmpeg -version && \
   ffprobe -version && \
   ydls-get -version && \
-  ydls-server -version
-
-# regression testing: make sure https and dns works
-RUN \
+  ydls-server -version && \
   ffmpeg -i https://www.google.com 2>&1 | grep -q "Invalid data found when processing input"
 
 USER nobody
