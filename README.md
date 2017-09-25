@@ -45,7 +45,7 @@ on port 8080.
 ## Endpoints
 
 Download and make sure media is in specified format:  
-`GET /<forma[+codec...]>/<URL-not-encoded>`  
+`GET /<format[+codec...]>/<URL-not-encoded>`  
 `GET /?format=<format>&url=<URL-encoded>[&vcodec=...&acodec=...]`
 
 Download in best format:  
@@ -117,7 +117,7 @@ docker run --rm -ti --entrypoint bash -v "$PWD:/go/src/github.com/wader/ydls" -w
 Then inside dev container:
 
 ```sh
-go run cmd/ydls-get/main.go -connfig ./ydls.json ...
+go run cmd/ydls-get/main.go -config ./ydls.json ...
 ```
 
 ## TODO
