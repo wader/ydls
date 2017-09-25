@@ -138,10 +138,14 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if _, urlErr := url.Parse(downloadOptions.URL); err != nil {
+
+	if url, urlErr := url.Parse(downloadOptions.URL); err != nil {
 		infoLog.Printf("%s Invalid download URL %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, urlErr.Error())
 		http.Error(w, urlErr.Error(), http.StatusBadRequest)
 		return
+	} else if url.Scheme != "http" && url.Scheme != "https" {
+		infoLog.Printf("%s Invalid URL scheme %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Scheme, urlErr.Error())
+		http.Error(w, urlErr.Error(), http.StatusBadRequest)
 	}
 
 	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, firstNonEmpty(downloadOptions.Format, "best"), downloadOptions.URL)
