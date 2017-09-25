@@ -15,10 +15,8 @@ import (
 
 var gitCommit = "dev"
 
-var versionFlag = flag.Bool("version", false, "version")
-var debugFlag = flag.Bool("debug", false, "debug output")
-var aCodecFlag = flag.String("acodec", "", "force audio codec")
-var vCodecFlag = flag.String("vcodec", "", "force video codec")
+var versionFlag = flag.Bool("version", false, "Print version ("+gitCommit+")")
+var debugFlag = flag.Bool("debug", false, "Debug output")
 var configFlag = flag.String("config", "ydls.json", "Config file")
 
 type progressWriter struct {
@@ -81,22 +79,26 @@ func main() {
 	if url == "" {
 		log.Fatalf("no URL specified")
 	}
-	formatName := flag.Arg(1)
+
+	var downloadOptions ydls.DownloadOptions
+	if flag.NArg() == 1 {
+		downloadOptions = ydls.DownloadOptions{URL: url}
+	} else {
+		downloadOptions, err = y.ParseDownloadOptions(url, flag.Arg(1), flag.Args()[2:])
+		fatalIfErrorf(err, "format and options")
+	}
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 	defer cancelFn()
 
-	dr, err := y.Download(ctx, url, formatName, ydls.DownloadOptions{
-		DebugLog:    debugLog,
-		ForceACodec: *aCodecFlag,
-		ForceVCodec: *vCodecFlag,
-	})
-
+	dr, err := y.Download(ctx, downloadOptions, debugLog)
 	fatalIfErrorf(err, "download failed")
 	defer dr.Media.Close()
 	defer dr.Wait()
+
 	wd, err := os.Getwd()
 	fatalIfErrorf(err, "getwd")
+
 	path, err := absRootPath(wd, dr.Filename)
 	fatalIfErrorf(err, "write path")
 

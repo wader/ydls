@@ -216,11 +216,12 @@ func NewFromFile(configPath string) (YDLS, error) {
 	return YDLS{Config: config}, nil
 }
 
-// DownloadOptions optional download options
+// DownloadOptions download options
 type DownloadOptions struct {
-	DebugLog    *log.Logger
-	ForceACodec string
-	ForceVCodec string
+	URL    string
+	Format string
+	ACodec string // force audio codec
+	VCodec string // force video codec
 }
 
 // DownloadResult download result
@@ -242,7 +243,7 @@ func chooseFormatCodec(formats prioFormatCodecSet, probedCodec string) FormatCod
 		return codecFormat
 	}
 
-	// TODO: could return false if there is no formats but means very weird format.json
+	// TODO: could return false if there is no formats but only happens with very weird config
 	codecFormat, _ := formats.first()
 	return codecFormat
 }
@@ -254,16 +255,51 @@ func fancyYDLFormatName(ydlFormat *youtubedl.Format) string {
 	return ydlFormat.String()
 }
 
-// Download downloads media from URL using context and makes sure output is in specified format
-func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, options DownloadOptions) (*DownloadResult, error) {
-	log := logOrDiscard(options.DebugLog)
+func (ydls *YDLS) ParseDownloadOptions(url string, format string, optStrings []string) (DownloadOptions, error) {
+	codecHints := map[string]string{}
+	for _, f := range ydls.Config.Formats {
+		for _, c := range f.ACodecs {
+			codecHints[c.Codec] = "acodec"
+		}
+		for _, c := range f.VCodecs {
+			codecHints[c.Codec] = "vcodec"
+		}
+	}
 
-	log.Printf("URL: %s", url)
-	log.Printf("Output format: %s", formatName)
+	opts := DownloadOptions{
+		URL:    url,
+		Format: format,
+	}
+
+	for _, opt := range optStrings {
+		if hint, ok := codecHints[opt]; ok {
+			switch hint {
+			case "acodec":
+				opts.ACodec = opt
+			case "vcodec":
+				opts.VCodec = opt
+			default:
+				// should not happen
+				return DownloadOptions{}, fmt.Errorf("unknown hint type %s for %s", hint, opt)
+			}
+		} else {
+			return DownloadOptions{}, fmt.Errorf("unknown opt %s", opt)
+		}
+	}
+
+	return opts, nil
+}
+
+// Download downloads media from URL using context and makes sure output is in specified format
+func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLog *log.Logger) (*DownloadResult, error) {
+	log := logOrDiscard(debugLog)
+
+	log.Printf("URL: %s", options.URL)
+	log.Printf("Output format: %s", options.Format)
 
 	var ydlStdout io.Writer
 	ydlStdout = writelogger.New(log, "ydl-new stdout> ")
-	ydl, err := youtubedl.NewFromURL(ctx, url, ydlStdout)
+	ydl, err := youtubedl.NewFromURL(ctx, options.URL, ydlStdout)
 	if err != nil {
 		log.Printf("Failed to download: %s", err)
 		return nil, err
@@ -279,7 +315,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, o
 		waitCh: make(chan struct{}, 1),
 	}
 
-	if formatName == "" {
+	if options.Format == "" {
 		dprc, err := downloadAndProbeFormat(ctx, ydl, "best", log)
 		if err != nil {
 			return nil, err
@@ -333,25 +369,36 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, o
 	dr.MIMEType = outFormat.MIMEType
 	dr.Filename = safeFilename(ydl.Title + "." + outFormat.Ext)
 
-	aCodecs := outFormat.ACodecs.PrioStringSet()
-	vCodecs := outFormat.VCodecs.PrioStringSet()
+	aCodecFormats := outFormat.ACodecs
+	vCodecFormats := outFormat.VCodecs
 
-	if options.ForceACodec != "" {
-		aCodecs = aCodecs.NewAndMoveFirst(options.ForceACodec)
-		if aCodecs == nil {
-			return nil, fmt.Errorf("could not find audio codec \"%s\" for format %s", options.ForceACodec, outFormat.Name)
+	if options.ACodec != "" {
+		if aCodecFormat, ok := aCodecFormats.findByCodec(options.ACodec); ok {
+			aCodecFormats = prioFormatCodecSet{aCodecFormat}
+		} else {
+			return nil, fmt.Errorf("could not find audio codec \"%s\" for format %s", options.ACodec, outFormat.Name)
 		}
 	}
-	if options.ForceVCodec != "" {
-		vCodecs = vCodecs.NewAndMoveFirst(options.ForceVCodec)
-		if vCodecs == nil {
-			return nil, fmt.Errorf("could not find video codec \"%s\" for format %s", options.ForceVCodec, outFormat.Name)
+	if options.VCodec != "" {
+		if vCodecFormat, ok := vCodecFormats.findByCodec(options.VCodec); ok {
+			vCodecFormats = prioFormatCodecSet{vCodecFormat}
+		} else {
+			return nil, fmt.Errorf("could not find video codec \"%s\" for format %s", options.VCodec, outFormat.Name)
 		}
 	}
 
-	aYDLFormat, vYDLFormat := findBestFormats(ydl.Formats, aCodecs, vCodecs)
+	aYDLFormat, vYDLFormat := findBestFormats(
+		ydl.Formats,
+		aCodecFormats.PrioStringSet(),
+		vCodecFormats.PrioStringSet(),
+	)
 
-	log.Printf("Best format %s (%s) %s (%s)", aYDLFormat, aCodecs, vYDLFormat, vCodecs)
+	log.Printf("Best format %s (%s) %s (%s)",
+		aYDLFormat,
+		aCodecFormats.CodecNames(),
+		vYDLFormat,
+		vCodecFormats.CodecNames(),
+	)
 
 	var aDprc *downloadProbeReadCloser
 	var aErr error
@@ -410,8 +457,8 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, o
 	ffmpegFormatFlags := make([]string, len(outFormat.FormatFlags))
 	copy(ffmpegFormatFlags, outFormat.FormatFlags)
 
-	if len(outFormat.ACodecs) > 0 && aDprc.probeInfo != nil && aDprc.probeInfo.ACodec() != "" {
-		codecFormat := chooseFormatCodec(outFormat.ACodecs, aDprc.probeInfo.ACodec())
+	if len(aCodecFormats) > 0 && aDprc.probeInfo != nil && aDprc.probeInfo.ACodec() != "" {
+		codecFormat := chooseFormatCodec(aCodecFormats, aDprc.probeInfo.ACodec())
 		streamMaps = append(streamMaps, ffmpeg.StreamMap{
 			Reader:     aDprc,
 			Specifier:  "a:0",
@@ -426,8 +473,8 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, o
 			codecFormat.Codec,
 		)
 	}
-	if len(outFormat.VCodecs) > 0 && vDprc.probeInfo != nil && vDprc.probeInfo.VCodec() != "" {
-		codecFormat := chooseFormatCodec(outFormat.VCodecs, vDprc.probeInfo.VCodec())
+	if len(vCodecFormats) > 0 && vDprc.probeInfo != nil && vDprc.probeInfo.VCodec() != "" {
+		codecFormat := chooseFormatCodec(vCodecFormats, vDprc.probeInfo.VCodec())
 		streamMaps = append(streamMaps, ffmpeg.StreamMap{
 			Reader:     vDprc,
 			Specifier:  "v:0",

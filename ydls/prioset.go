@@ -39,22 +39,6 @@ func (p *prioStringSet) UnmarshalJSON(b []byte) (err error) {
 	return
 }
 
-func (p prioStringSet) NewAndMoveFirst(s string) prioStringSet {
-	if !p.member(s) {
-		return nil
-	}
-
-	ns := []string{s}
-	for _, c := range p {
-		if c != s {
-			continue
-		}
-		ns = append(ns, c)
-	}
-
-	return prioStringSet(ns)
-}
-
 type prioFormatCodecSet []FormatCodec
 
 func (p prioFormatCodecSet) findByCodec(codec string) (FormatCodec, bool) {

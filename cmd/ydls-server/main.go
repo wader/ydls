@@ -13,12 +13,12 @@ import (
 
 var gitCommit = "dev"
 
-var versionFlag = flag.Bool("version", false, "version")
-var infoFlag = flag.Bool("info", false, "info output")
-var debugFlag = flag.Bool("debug", false, "debug output")
-var indexFlag = flag.String("index", "", "index html template")
-var listenFlag = flag.String("listen", ":8080", "listen address")
+var versionFlag = flag.Bool("version", false, "Print version ("+gitCommit+")")
+var infoFlag = flag.Bool("info", false, "Info output")
+var debugFlag = flag.Bool("debug", false, "Debug output")
 var configFlag = flag.String("config", "ydls.json", "Config file")
+var indexFlag = flag.String("index", "", "Path to index template")
+var listenFlag = flag.String("listen", ":8080", "Listen address")
 
 func init() {
 	flag.Parse()

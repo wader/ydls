@@ -1,9 +1,7 @@
 package ydls
 
 import (
-	"encoding/json"
 	"fmt"
-	"io"
 )
 
 // Format media container format, possible codecs, extension and mime
@@ -25,7 +23,7 @@ type FormatCodec struct {
 	FormatFlags []string
 }
 
-func (f *Format) String() string {
+func (f Format) String() string {
 	return fmt.Sprintf("%s:%s:%s:%s:%s:%s:%s",
 		f.Name,
 		f.Formats,
@@ -39,17 +37,6 @@ func (f *Format) String() string {
 
 // Formats ordered list of Formats
 type Formats []Format
-
-func parseFormats(r io.Reader) (*Formats, error) {
-	f := &Formats{}
-
-	d := json.NewDecoder(r)
-	if err := d.Decode(f); err != nil {
-		return nil, err
-	}
-
-	return f, nil
-}
 
 // FindByName find format by name
 func (fs Formats) FindByName(name string) *Format {

@@ -29,10 +29,10 @@ func stringsContains(strings []string, s string) bool {
 	return false
 }
 
-func ydlsFromFormatsEnv(t *testing.T) *YDLS {
-	ydls, err := NewFromFile(os.Getenv("FORMATS"))
+func ydlsFromEnv(t *testing.T) YDLS {
+	ydls, err := NewFromFile(os.Getenv("CONFIG"))
 	if err != nil {
-		t.Fatalf("failed to read formats: %s", err)
+		t.Fatalf("failed to read config: %s", err)
 	}
 
 	return ydls
@@ -61,7 +61,7 @@ func TestFormats(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	ydls := ydlsFromFormatsEnv(t)
+	ydls := ydlsFromEnv(t)
 
 	for _, c := range []struct {
 		url              string
@@ -82,7 +82,7 @@ func TestFormats(t *testing.T) {
 
 				ctx, cancelFn := context.WithCancel(context.Background())
 
-				dr, err := ydls.Download(ctx, c.url, f.Name, DownloadOptions{})
+				dr, err := ydls.Download(ctx, DownloadOptions{URL: c.url, Format: f.Name}, nil)
 				if err != nil {
 					cancelFn()
 					t.Errorf("%s: %s: download failed: %s", c.url, f.Name, err)
@@ -135,13 +135,13 @@ func TestRawFormat(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	ydls := ydlsFromFormatsEnv(t)
+	ydls := ydlsFromEnv(t)
 
 	defer leaktest.Check(t)()
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
-	dr, err := ydls.Download(ctx, youtbeuTestVideoURL, "", DownloadOptions{})
+	dr, err := ydls.Download(ctx, DownloadOptions{URL: youtbeuTestVideoURL}, nil)
 	if err != nil {
 		cancelFn()
 		t.Errorf("%s: %s: download failed: %s", youtbeuTestVideoURL, "raw", err)
@@ -165,7 +165,7 @@ func TestForceCodec(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	ydls := ydlsFromFormatsEnv(t)
+	ydls := ydlsFromEnv(t)
 
 	defer leaktest.Check(t)()
 
@@ -185,7 +185,14 @@ func TestForceCodec(t *testing.T) {
 		return
 	}
 
-	dr, err := ydls.Download(ctx, youtbeuTestVideoURL, mkvFormat.Name, DownloadOptions{ForceACodec: forceACodec, ForceVCodec: forceVCodec})
+	dr, err := ydls.Download(ctx,
+		DownloadOptions{
+			URL:    youtbeuTestVideoURL,
+			Format: mkvFormat.Name,
+			ACodec: forceACodec,
+			VCodec: forceVCodec,
+		},
+		nil)
 	if err != nil {
 		cancelFn()
 		t.Errorf("%s: %s: download failed: %s", youtbeuTestVideoURL, "raw", err)

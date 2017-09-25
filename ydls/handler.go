@@ -27,12 +27,7 @@ func safeContentDispositionFilename(s string) string {
 	return string(rs)
 }
 
-func splitRequestURL(URL *url.URL) (format string, urlStr string, forceACodec string, forceVCodec string) {
-	if URL.Query().Get("url") != "" {
-		// ?url=url&format=format&acodec=&vcodec=
-		return URL.Query().Get("format"), URL.Query().Get("url"), URL.Query().Get("acodec"), URL.Query().Get("vcodec")
-	}
-
+func splitRequestURL(URL *url.URL) (formatAndOpts string, urlStr string) {
 	// /format/schema://host.domin/path?query
 	// /format/host.domain/path?query
 	// /schema://host.domain/path?query
@@ -44,12 +39,12 @@ func splitRequestURL(URL *url.URL) (format string, urlStr string, forceACodec st
 
 	// format? part does not contains ":" or "."
 	if !strings.Contains(parts[0], ":") && !strings.Contains(parts[0], ".") {
-		format = parts[0]
+		formatAndOpts = parts[0]
 		parts = parts[1:]
 	}
 
 	if len(parts) == 0 {
-		return "", "", "", ""
+		return "", ""
 	}
 
 	if len(parts) == 2 {
@@ -58,7 +53,7 @@ func splitRequestURL(URL *url.URL) (format string, urlStr string, forceACodec st
 		if URL.RawQuery != "" {
 			s += "?" + URL.RawQuery
 		}
-		return format, s, "", ""
+		return formatAndOpts, s
 
 	}
 
@@ -67,36 +62,47 @@ func splitRequestURL(URL *url.URL) (format string, urlStr string, forceACodec st
 		s += "?" + URL.RawQuery
 	}
 
-	return format, s, "", ""
-}
-
-func parseFormatDownloadURL(URL *url.URL) (format string, downloadURL *url.URL, forceACodec string, forceVCodec string) {
-	var urlStr string
-	format, urlStr, forceACodec, forceVCodec = splitRequestURL(URL)
-
-	if !strings.HasPrefix(urlStr, "http://") && !strings.HasPrefix(urlStr, "https://") {
-		urlStr = "http://" + urlStr
-	}
-
-	downloadURL, err := url.Parse(urlStr)
-	if err != nil {
-		return "", nil, "", ""
-	}
-
-	if downloadURL.Host == "" ||
-		(downloadURL.Scheme != "http" && downloadURL.Scheme != "https") {
-		return "", nil, "", ""
-	}
-
-	return format, downloadURL, forceACodec, forceVCodec
+	return formatAndOpts, s
 }
 
 // Handler is a http.Handler using ydls
 type Handler struct {
-	YDLS      *YDLS
+	YDLS      YDLS
 	IndexTmpl *template.Template
 	InfoLog   *log.Logger
 	DebugLog  *log.Logger
+}
+
+func (yh *Handler) parseFormatDownloadURL(URL *url.URL) (DownloadOptions, error) {
+	var urlStr string
+	var optStrings []string
+
+	if URL.Query().Get("url") != "" {
+		// ?url=url&format=format&acodec=&vcodec=
+
+		urlStr = URL.Query().Get("url")
+		if v := URL.Query().Get("format"); v != "" {
+			optStrings = append(optStrings, v)
+		}
+		if v := URL.Query().Get("acodec"); v != "" {
+			optStrings = append(optStrings, v)
+		}
+		if v := URL.Query().Get("vcodec"); v != "" {
+			optStrings = append(optStrings, v)
+		}
+	} else {
+		// /format+codec+codec/url
+
+		var formatAndOpts string
+		formatAndOpts, urlStr = splitRequestURL(URL)
+		optStrings = strings.Split(formatAndOpts, "+")
+	}
+
+	if len(optStrings) == 0 {
+		return DownloadOptions{URL: urlStr}, nil
+	}
+
+	return yh.YDLS.ParseDownloadOptions(urlStr, optStrings[0], optStrings[1:])
 }
 
 func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
@@ -126,27 +132,27 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	formatName, downloadURL, forceACodec, forceVCodec := parseFormatDownloadURL(r.URL)
-	if downloadURL == nil {
-		infoLog.Printf("%s Invalid request %s %s", r.RemoteAddr, r.Method, r.URL.Path)
-		http.Error(w, "Invalid URL", http.StatusBadRequest)
+	downloadOptions, err := yh.parseFormatDownloadURL(r.URL)
+	if err != nil {
+		infoLog.Printf("%s Invalid request %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, err.Error())
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if _, urlErr := url.Parse(downloadOptions.URL); err != nil {
+		infoLog.Printf("%s Invalid download URL %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, urlErr.Error())
+		http.Error(w, urlErr.Error(), http.StatusBadRequest)
 		return
 	}
 
-	fancyFormatName := "best"
-	if formatName != "" {
-		fancyFormatName = formatName
-	}
-	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, fancyFormatName, downloadURL)
+	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, firstNonEmpty(downloadOptions.Format, "best"), downloadOptions.URL)
 
-	dr, err := yh.YDLS.Download(r.Context(), downloadURL.String(), formatName,
-		DownloadOptions{
-			DebugLog:    debugLog,
-			ForceACodec: forceACodec,
-			ForceVCodec: forceVCodec,
-		},
+	dr, err := yh.YDLS.Download(
+		r.Context(),
+		downloadOptions,
+		debugLog,
 	)
 	if err != nil {
+		infoLog.Printf("%s Download failed %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, err.Error())
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}

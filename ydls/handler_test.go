@@ -12,58 +12,6 @@ import (
 	"github.com/wader/ydls/leaktest"
 )
 
-func TestParseFormatDownloadURL(t *testing.T) {
-	for _, c := range []struct {
-		url                 *url.URL
-		expectedFormat      string
-		expectedURL         string
-		expectedForceACodec string
-		expectedForceVCodec string
-	}{
-		{&url.URL{Path: "/format/http://domain/path", RawQuery: "query"},
-			"format", "http://domain/path?query", "", ""},
-		{&url.URL{Path: "/format/http://domain/a/b"},
-			"format", "http://domain/a/b", "", ""},
-		{&url.URL{Path: "/format/domain.com/a/b"},
-			"format", "http://domain.com/a/b", "", ""},
-		{&url.URL{Path: "/http://domain/path", RawQuery: "query"},
-			"", "http://domain/path?query", "", ""},
-		{&url.URL{Path: "/domain.com/path", RawQuery: "query"},
-			"", "http://domain.com/path?query", "", ""},
-		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=format"},
-			"format", "http://domain.com", "", ""},
-		{&url.URL{Path: "/", RawQuery: "url=http://domain.com"},
-			"", "http://domain.com", "", ""},
-		{&url.URL{Path: "/", RawQuery: "url=domain.com&format=format"},
-			"format", "http://domain.com", "", ""},
-		{&url.URL{Path: "/", RawQuery: "url=domain.com"},
-			"", "http://domain.com", "", ""},
-		{&url.URL{Path: "/b", RawQuery: "query"},
-			"", "", "", ""},
-		{&url.URL{Path: "/", RawQuery: "query"},
-			"", "", "", ""},
-		{&url.URL{Path: "/", RawQuery: "url=domain.com&format=format&acodec=a&vcodec=v"},
-			"format", "http://domain.com", "a", "v"},
-	} {
-		format, URL, forceACodec, forceVCodec := parseFormatDownloadURL(c.url)
-		if URL == nil {
-			if c.expectedURL != "" {
-				t.Errorf("url=%+v, got fail, expected format=%v url=%v",
-					c.url, c.expectedFormat, c.expectedURL)
-			}
-		} else {
-			if format != c.expectedFormat || URL.String() != c.expectedURL ||
-				forceACodec != c.expectedForceACodec || forceVCodec != c.expectedForceVCodec {
-				t.Errorf("url=%+v, got format=%v url=%v forceACodec=%v forceVCodec=%s, expected format=%v url=%v forceACodec=%v forceVCodec=%s",
-					c.url, format, URL,
-					forceACodec, forceVCodec,
-					c.expectedFormat, c.expectedURL,
-					c.expectedForceACodec, c.expectedForceVCodec)
-			}
-		}
-	}
-}
-
 func TestURLEncode(t *testing.T) {
 	for _, c := range []struct {
 		s      string
@@ -96,16 +44,59 @@ func TestSafeContentDispositionFilename(t *testing.T) {
 	}
 }
 
-func ydlsHandlerFromFormatsEnv(t *testing.T) *Handler {
+func ydlsHandlerFromEnv(t *testing.T) *Handler {
 	h := &Handler{}
 	var err error
 
-	h.YDLS, err = NewFromFile(os.Getenv("FORMATS"))
+	h.YDLS, err = NewFromFile(os.Getenv("CONFIG"))
 	if err != nil {
-		t.Fatalf("failed to read formats: %s", err)
+		t.Fatalf("failed to read config: %s", err)
 	}
 
 	return h
+}
+
+func TestParseFormatDownloadURL(t *testing.T) {
+	h := ydlsHandlerFromEnv(t)
+
+	for _, c := range []struct {
+		url          *url.URL
+		expectedOpts DownloadOptions
+		expectedErr  bool
+	}{
+		{&url.URL{Path: "/mp3/http://domain/path", RawQuery: "query"},
+			DownloadOptions{Format: "mp3", URL: "http://domain/path?query"}, false},
+		{&url.URL{Path: "/mp3/http://domain/a/b"},
+			DownloadOptions{Format: "mp3", URL: "http://domain/a/b"}, false},
+		{&url.URL{Path: "/http://domain/path", RawQuery: "query"},
+			DownloadOptions{Format: "", URL: "http://domain/path?query"}, false},
+		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mp3"},
+			DownloadOptions{Format: "mp3", URL: "http://domain.com"}, false},
+		{&url.URL{Path: "/", RawQuery: "url=http://domain.com"},
+			DownloadOptions{Format: "", URL: "http://domain.com"}, false},
+		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mkv&acodec=flac&vcodec=theora"},
+			DownloadOptions{Format: "mkv", URL: "http://domain.com", ACodec: "flac", VCodec: "theora"}, false},
+		{&url.URL{Path: "/mkv+flac+theora/http://domain.com", RawQuery: ""},
+			DownloadOptions{Format: "mkv", URL: "http://domain.com", ACodec: "flac", VCodec: "theora"}, false},
+		{&url.URL{Path: "/mkv+flac+theora/http://domain.com", RawQuery: ""},
+			DownloadOptions{Format: "mkv", URL: "http://domain.com", ACodec: "flac", VCodec: "theora"}, false},
+		{&url.URL{Path: "/mkv+nope/http://domain.com", RawQuery: ""},
+			DownloadOptions{}, true},
+	} {
+		opts, err := h.parseFormatDownloadURL(c.url)
+		if err != nil {
+			if !c.expectedErr {
+				t.Errorf("url=%+v, got error %v, expected %#v", c.url, err, c.expectedOpts)
+			}
+		} else {
+			if c.expectedErr {
+				t.Errorf("url=%+v, got %#v, expected error", c.url, opts)
+			} else if opts.Format != c.expectedOpts.Format || opts.URL != c.expectedOpts.URL ||
+				opts.ACodec != c.expectedOpts.ACodec || opts.VCodec != c.expectedOpts.VCodec {
+				t.Errorf("url=%+v, got %#v, expected %#v", c.url, opts, c.expectedOpts)
+			}
+		}
+	}
 }
 
 func TestYDLSHandlerDownload(t *testing.T) {
@@ -115,7 +106,7 @@ func TestYDLSHandlerDownload(t *testing.T) {
 
 	defer leaktest.Check(t)()
 
-	h := ydlsHandlerFromFormatsEnv(t)
+	h := ydlsHandlerFromEnv(t)
 
 	rr := httptest.NewRecorder()
 	testMediaURL := "https://www.youtube.com/watch?v=C0DPdy98e4c"
@@ -145,7 +136,7 @@ func TestYDLSHandlerDownload(t *testing.T) {
 func TestYDLSHandlerBadURL(t *testing.T) {
 	defer leaktest.Check(t)()
 
-	h := ydlsHandlerFromFormatsEnv(t)
+	h := ydlsHandlerFromEnv(t)
 
 	rr := httptest.NewRecorder()
 	req := httptest.NewRequest("GET", "http://hostname/badurl", nil)
@@ -160,7 +151,7 @@ func TestYDLSHandlerBadURL(t *testing.T) {
 func TestYDLSHandlerIndexTemplate(t *testing.T) {
 	defer leaktest.Check(t)()
 
-	h := ydlsHandlerFromFormatsEnv(t)
+	h := ydlsHandlerFromEnv(t)
 	h.IndexTmpl, _ = template.New("index").Parse("hello")
 
 	rr := httptest.NewRecorder()
