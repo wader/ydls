@@ -20,7 +20,7 @@ RUN \
   wget -O - https://downloads.xiph.org/releases/vorbis/libvorbis-$VORBIS_VERSION.tar.gz | tar xz && \
   cd libvorbis-$VORBIS_VERSION && \
   CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
-    ./configure --enable-static && \
+  ./configure --enable-static && \
   make -j4 install
 
 ENV OPUS_VERSION=1.2.1
@@ -28,7 +28,7 @@ RUN \
   wget -O - https://archive.mozilla.org/pub/opus/opus-$OPUS_VERSION.tar.gz | tar xz && \
   cd opus-$OPUS_VERSION && \
   CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
-    ./configure --enable-static && \
+  ./configure --enable-static && \
   make -j4 install
 
 # require libogg to build
@@ -37,7 +37,7 @@ RUN \
   wget -O - https://downloads.xiph.org/releases/theora/libtheora-$THEORA_VERSION.tar.bz2 | tar xj && \
   cd libtheora-$THEORA_VERSION && \
   CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
-    ./configure --enable-pic --enable-static && \
+  ./configure --enable-pic --enable-static && \
   make -j4 install
 
 ENV X264_VERSION=aaa9aa83a111ed6f1db253d5afa91c5fc844583f
@@ -46,7 +46,7 @@ RUN \
   cd x264 && \
   git checkout $X264_VERSION && \
   CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
-    ./configure --enable-pic --enable-static && make -j4 install
+  ./configure --enable-pic --enable-static && make -j4 install
 
 # note that this will produce a "static" PIE binary with no dynamic lib deps
 ENV FFMPEG_VERSION=n3.3.4
@@ -54,45 +54,45 @@ RUN \
   git clone --branch $FFMPEG_VERSION --depth 1 https://github.com/FFmpeg/FFmpeg.git && \
   cd FFmpeg && \
   ./configure \
-    --toolchain=hardened \
-    --disable-shared \
-    --enable-static \
-    --pkg-config-flags=--static \
-    --extra-ldflags=-static \
-    --extra-cflags=-static \
-    --enable-gpl \
-    --enable-nonfree \
-    --enable-openssl \
-    --disable-ffserver \
-    --disable-doc \
-    --disable-ffplay \
-    --disable-encoders \
-    --enable-encoder=aac \
-    --enable-encoder=flac \
-    --enable-encoder=pcm_s16le \
-    --enable-libmp3lame \
-    --enable-encoder=libmp3lame \
-    --enable-libvorbis \
-    --enable-encoder=libvorbis \
-    --enable-libopus \
-    --enable-encoder=libopus \
-    --enable-libtheora \
-    --enable-encoder=libtheora \
-    --enable-libvpx \
-    --enable-encoder=libvpx_vp8 \
-    --enable-encoder=libvpx_vp9 \
-    --enable-libx264 \
-    --enable-encoder=libx264 \
-    --enable-libx265 \
-    --enable-encoder=libx265 \
-    && \
+  --toolchain=hardened \
+  --disable-shared \
+  --enable-static \
+  --pkg-config-flags=--static \
+  --extra-ldflags=-static \
+  --extra-cflags=-static \
+  --enable-gpl \
+  --enable-nonfree \
+  --enable-openssl \
+  --disable-ffserver \
+  --disable-doc \
+  --disable-ffplay \
+  --disable-encoders \
+  --enable-encoder=aac \
+  --enable-encoder=flac \
+  --enable-encoder=pcm_s16le \
+  --enable-libmp3lame \
+  --enable-encoder=libmp3lame \
+  --enable-libvorbis \
+  --enable-encoder=libvorbis \
+  --enable-libopus \
+  --enable-encoder=libopus \
+  --enable-libtheora \
+  --enable-encoder=libtheora \
+  --enable-libvpx \
+  --enable-encoder=libvpx_vp8 \
+  --enable-encoder=libvpx_vp9 \
+  --enable-libx264 \
+  --enable-encoder=libx264 \
+  --enable-libx265 \
+  --enable-encoder=libx265 \
+  && \
   make -j4 install && \
   ldd /usr/local/bin/ffmpeg | grep -vq lib && \
   ldd /usr/local/bin/ffprobe | grep -vq lib
 
 FROM golang:1.9-stretch as ydls-builder
 ENV YDL_VERSION=2017.09.24
-ENV FORMATS=/etc/formats.json
+ENV CONFIG=/etc/ydls.json
 
 RUN \
   curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
@@ -103,7 +103,7 @@ COPY --from=ffmpeg-builder \
   /usr/local/bin/
 
 COPY . /go/src/github.com/wader/ydls/
-COPY formats.json /etc
+COPY ydls.json /etc
 
 WORKDIR /go/src/github.com/wader/ydls
 
@@ -118,7 +118,7 @@ RUN \
 FROM alpine:3.6
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
 ENV LISTEN=:8080
-ENV FORMATS=/etc/formats.json
+ENV CONFIG=/etc/ydls.json
 
 RUN apk add --no-cache \
   ca-certificates \
@@ -136,7 +136,7 @@ COPY --from=ydls-builder \
   /usr/local/bin/youtube-dl \
   /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin
-COPY formats.json /etc
+COPY ydls.json /etc
 
 # make sure all binaries work and do some sanity checks (https, DNS)
 RUN \

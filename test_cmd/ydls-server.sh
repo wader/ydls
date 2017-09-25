@@ -5,7 +5,7 @@ TEMPDIR=`mktemp -d`
 trap "rm -rf $TEMPDIR" EXIT
 cd "$TEMPDIR"
 
-ydls-server -listen :1234 -formats "$FORMATS" &
+ydls-server -listen :1234 -config "$CONFIG" &
 sleep 1
 
 curl -OJ "http://0:1234/mp3/https://www.youtube.com/watch?v=C0DPdy98e4c"

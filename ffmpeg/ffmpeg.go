@@ -115,6 +115,7 @@ type Format struct {
 
 // FFmpeg instance
 type FFmpeg struct {
+	InputFlags []string
 	StreamMaps []StreamMap
 	Format     Format
 	Stderr     io.Writer
@@ -179,6 +180,7 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 
 	ffmpegName := "ffmpeg"
 	ffmpegArgs := []string{"-hide_banner"}
+	ffmpegArgs = append(ffmpegArgs, f.InputFlags...)
 
 	var extraFiles []*os.File
 	for _, ifd := range inputToFDs {

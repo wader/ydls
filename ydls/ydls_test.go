@@ -71,7 +71,7 @@ func TestFormats(t *testing.T) {
 		{"https://soundcloud.com/timsweeney/thedrifter", true, "BIS Radio Show #793 with The Drifter"},
 		{youtbeuTestVideoURL, false, "TEST VIDEO"},
 	} {
-		for _, f := range *ydls.Formats {
+		for _, f := range ydls.Config.Formats {
 			func() {
 				defer leaktest.Check(t)()
 
@@ -171,7 +171,7 @@ func TestForceCodec(t *testing.T) {
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
-	mkvFormat := ydls.Formats.FindByName("mkv")
+	mkvFormat := ydls.Config.Formats.FindByName("mkv")
 	forceACodec := "opus"
 	forceVCodec := "vp9"
 

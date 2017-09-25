@@ -16,9 +16,9 @@ var gitCommit = "dev"
 var versionFlag = flag.Bool("version", false, "version")
 var infoFlag = flag.Bool("info", false, "info output")
 var debugFlag = flag.Bool("debug", false, "debug output")
-var formatsFlag = flag.String("formats", "formats.json", "formats config file")
 var indexFlag = flag.String("index", "", "index html template")
 var listenFlag = flag.String("listen", ":8080", "listen address")
+var configFlag = flag.String("config", "ydls.json", "Config file")
 
 func init() {
 	flag.Parse()
@@ -36,9 +36,9 @@ func main() {
 	yh := &ydls.Handler{}
 	var err error
 
-	yh.YDLS, err = ydls.NewFromFile(*formatsFlag)
+	yh.YDLS, err = ydls.NewFromFile(*configFlag)
 	if err != nil {
-		log.Fatalf("failed to read formats: %s", err)
+		log.Fatalf("failed to read config: %s", err)
 	}
 	if *infoFlag {
 		yh.InfoLog = log.New(os.Stdout, "INFO: ", log.Ltime)

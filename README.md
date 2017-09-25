@@ -19,7 +19,7 @@ Docker image supports all default native ffmpeg decoders and can encoding to:
 |webm|webm, matroska|vorbis, opus|vp8, vp9|
 |mkv|matroska|aac, mp3, vorbis, opus, flac|h264, vp8, h265, vp9, theora|
 
-See [formats.json](formats.json) for more details.
+See [ydls.json](ydls.json) for more details.
 
 ## Usage
 
@@ -35,10 +35,10 @@ Run `go get github.com/wader/ydls/cmd/...` This  will install `ydls-server` and
 `ydls-get`. Make sure you have ffmpeg, youtube-dl, rtmpdump and mplayer
 installed and in path.
 
-Copy and edit [formats.json](formats.json) to match your ffmpeg builds
+Copy and edit [ydls.json](ydls.json) to match your ffmpeg builds
 supported formats and codecs.
 
-Start with `ydls-server -formats /path/to/formats.json` and it default will listen
+Start with `ydls-server -config /path/to/ydls.json` and it default will listen
 on port 8080.
 
 ## Endpoints
@@ -137,7 +137,7 @@ docker run --rm -ti --entrypoint bash -v "$PWD:/go/src/github.com/wader/ydls" -w
 Then inside dev conatiner:
 
 ```sh
-go run cmd/ydls-get/main.go -formats ./formats.json ...
+go run cmd/ydls-get/main.go -ydls ./ydls.json ...
 ```
 
 ## TODO

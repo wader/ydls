@@ -198,22 +198,22 @@ func downloadAndProbeFormat(ctx context.Context, ydl *youtubedl.Info, filter str
 
 // YDLS youtubedl downloader with some extras
 type YDLS struct {
-	Formats *Formats
+	Config Config
 }
 
-// NewFromFile new YDLs using formats file
-func NewFromFile(formatsPath string) (*YDLS, error) {
-	formatsFile, err := os.Open(formatsPath)
+// NewFromFile new YDLs using config file
+func NewFromFile(configPath string) (YDLS, error) {
+	configFile, err := os.Open(configPath)
 	if err != nil {
-		return nil, err
+		return YDLS{}, err
 	}
-	defer formatsFile.Close()
-	formats, err := parseFormats(formatsFile)
+	defer configFile.Close()
+	config, err := parseConfig(configFile)
 	if err != nil {
-		return nil, err
+		return YDLS{}, err
 	}
 
-	return &YDLS{Formats: formats}, nil
+	return YDLS{Config: config}, nil
 }
 
 // DownloadOptions optional download options
@@ -288,7 +288,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, o
 		log.Printf("Probed format %s", dprc.probeInfo)
 
 		// see if we know about the probed format, otherwise fallback to "raw"
-		outFormat := ydls.Formats.Find(dprc.probeInfo.FormatName(), dprc.probeInfo.ACodec(), dprc.probeInfo.VCodec())
+		outFormat := ydls.Config.Formats.Find(dprc.probeInfo.FormatName(), dprc.probeInfo.ACodec(), dprc.probeInfo.VCodec())
 		if outFormat != nil {
 			dr.MIMEType = outFormat.MIMEType
 			dr.Filename = safeFilename(ydl.Title + "." + outFormat.Ext)
@@ -325,7 +325,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, o
 		}
 	}()
 
-	outFormat := ydls.Formats.FindByName(formatName)
+	outFormat := ydls.Config.Formats.FindByName(options.Format)
 	if outFormat == nil {
 		return nil, fmt.Errorf("could not find format")
 	}
@@ -449,6 +449,7 @@ func (ydls *YDLS) Download(ctx context.Context, url string, formatName string, o
 	closeOnDone = append(closeOnDone, ffmpegR)
 
 	ffmpegP := &ffmpeg.FFmpeg{
+		InputFlags: ydls.Config.InputFlags,
 		StreamMaps: streamMaps,
 		Format:     ffmpeg.Format{Name: outFormat.Formats.first(), Flags: ffmpegFormatFlags},
 		DebugLog:   log,

@@ -17,9 +17,9 @@ var gitCommit = "dev"
 
 var versionFlag = flag.Bool("version", false, "version")
 var debugFlag = flag.Bool("debug", false, "debug output")
-var formatsFlag = flag.String("formats", "formats.json", "formats config file")
 var aCodecFlag = flag.String("acodec", "", "force audio codec")
 var vCodecFlag = flag.String("vcodec", "", "force video codec")
+var configFlag = flag.String("config", "ydls.json", "Config file")
 
 type progressWriter struct {
 	fn    func(bytes uint64)
@@ -68,9 +68,9 @@ func fatalIfErrorf(err error, format string, a ...interface{}) {
 }
 
 func main() {
-	y, err := ydls.NewFromFile(*formatsFlag)
+	y, err := ydls.NewFromFile(*configFlag)
 	if err != nil {
-		log.Fatalf("failed to read formats: %s", err)
+		log.Fatalf("failed to read config: %s", err)
 	}
 	var debugLog *log.Logger
 	if *debugFlag {
