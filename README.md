@@ -25,10 +25,10 @@ See [ydls.json](ydls.json) for more details.
 
 ### Run with docker
 
-Pull `mwader/ydls` or build image using Dockerfile. Run a container and publish
+Pull `mwader/ydls` or build image using the Dockerfile. Run a container and publish
 TCP port 8080 somehow.
 
-`docker run --rm -p 8080:8080 mwader/ydls `
+`docker run -p 8080:8080 mwader/ydls `
 
 ### Build and install yourself
 
@@ -45,8 +45,8 @@ on port 8080.
 ## Endpoints
 
 Download and make sure media is in specified format:  
-`GET /<format[+codec...]>/<URL-not-encoded>`  
-`GET /?format=<format>&url=<URL-encoded>[&vcodec=...&acodec=...]`
+`GET /<format>[+option+option...]/<URL-not-encoded>`  
+`GET /?format=<format>&url=<URL>[&vcodec=...&acodec=...&retranscode=...]`
 
 Download in best format:  
 `GET /<URL-not-encoded>`  
@@ -54,19 +54,16 @@ Download in best format:
 
 ### Parameters
 
-`format` - Format name. See table above and [ydls.json](ydls.json)
-
-`URL` - Any URL that [youtube-dl](https://yt-dl.org) can handle
-
+`format` - Format name. See table above and [ydls.json](ydls.json)  
+`URL` - Any URL that [youtube-dl](https://yt-dl.org) can handle  
 `URL-not-encoded` - Non-URL-encoded URL. The idea is to be able to simply
 prepend the download URL with the ydls URL by hand without doing any encoding
-(for example in the browser location bar).
+(for example in the browser location bar).  
+`acodec` - Audio codec to use instead of default for format  
+`vcodec` - Video codec to use instead of default for format  
+`retranscode` - Retranscode even if input codec is same as output  
 
-`acodec` - Audio codec to use instead of default for format.
-
-`acodec` - Video codec to use instead of default for format.
-
-`codec` - Same as `acodec`/`vcodec` but when not using query parameters.
+`option` - Codec name or `retranscode`.
 
 ### Examples
 
@@ -81,6 +78,9 @@ Download and make sure media is in webm format:
 
 Download and make sure media is in mkv format using mp3 and h264 codecs:  
 `http://ydls/mkv+mp3+h264/https://www.youtube.com/watch?v=cF1zJYkBW4A`
+
+Download and retranscode to mp3 even if input is already mp3:  
+`http://ydls/mp3+retranscode/https://www.youtube.com/watch?v=cF1zJYkBW4A`
 
 Download in best format:  
 `http://ydls/https://www.youtube.com/watch?v=cF1zJYkBW4A`

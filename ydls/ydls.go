@@ -218,10 +218,11 @@ func NewFromFile(configPath string) (YDLS, error) {
 
 // DownloadOptions download options
 type DownloadOptions struct {
-	URL    string
-	Format string
-	ACodec string // force audio codec
-	VCodec string // force video codec
+	URL         string
+	Format      string
+	ACodec      string // force audio codec
+	VCodec      string // force video codec
+	Retranscode bool   // force retranscode even if same input codec
 }
 
 // DownloadResult download result
@@ -255,6 +256,7 @@ func fancyYDLFormatName(ydlFormat *youtubedl.Format) string {
 	return ydlFormat.String()
 }
 
+// ParseDownloadOptions parse options based on curret config
 func (ydls *YDLS) ParseDownloadOptions(url string, format string, optStrings []string) (DownloadOptions, error) {
 	codecHints := map[string]string{}
 	for _, f := range ydls.Config.Formats {
@@ -272,7 +274,9 @@ func (ydls *YDLS) ParseDownloadOptions(url string, format string, optStrings []s
 	}
 
 	for _, opt := range optStrings {
-		if hint, ok := codecHints[opt]; ok {
+		if opt == "retranscode" {
+			opts.Retranscode = true
+		} else if hint, ok := codecHints[opt]; ok {
 			switch hint {
 			case "acodec":
 				opts.ACodec = opt
@@ -458,35 +462,41 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLo
 	copy(ffmpegFormatFlags, outFormat.FormatFlags)
 
 	if len(aCodecFormats) > 0 && aDprc.probeInfo != nil && aDprc.probeInfo.ACodec() != "" {
-		codecFormat := chooseFormatCodec(aCodecFormats, aDprc.probeInfo.ACodec())
+		aCodecFormat := chooseFormatCodec(aCodecFormats, aDprc.probeInfo.ACodec())
+		if options.Retranscode {
+			aCodecFormat, _ = aCodecFormats.first()
+		}
 		streamMaps = append(streamMaps, ffmpeg.StreamMap{
 			Reader:     aDprc,
 			Specifier:  "a:0",
-			Codec:      "acodec:" + codecFormat.Codec,
-			CodecFlags: codecFormat.CodecFlags,
+			Codec:      "acodec:" + aCodecFormat.Codec,
+			CodecFlags: aCodecFormat.CodecFlags,
 		})
-		ffmpegFormatFlags = append(ffmpegFormatFlags, codecFormat.FormatFlags...)
+		ffmpegFormatFlags = append(ffmpegFormatFlags, aCodecFormat.FormatFlags...)
 
 		log.Printf("  audio %s probed:%s -> %s",
 			fancyYDLFormatName(aYDLFormat),
 			aDprc.probeInfo,
-			codecFormat.Codec,
+			aCodecFormat.Codec,
 		)
 	}
 	if len(vCodecFormats) > 0 && vDprc.probeInfo != nil && vDprc.probeInfo.VCodec() != "" {
-		codecFormat := chooseFormatCodec(vCodecFormats, vDprc.probeInfo.VCodec())
+		vCodecFormat := chooseFormatCodec(vCodecFormats, vDprc.probeInfo.VCodec())
+		if options.Retranscode {
+			vCodecFormat, _ = vCodecFormats.first()
+		}
 		streamMaps = append(streamMaps, ffmpeg.StreamMap{
 			Reader:     vDprc,
 			Specifier:  "v:0",
-			Codec:      "vcodec:" + codecFormat.Codec,
-			CodecFlags: codecFormat.CodecFlags,
+			Codec:      "vcodec:" + vCodecFormat.Codec,
+			CodecFlags: vCodecFormat.CodecFlags,
 		})
-		ffmpegFormatFlags = append(ffmpegFormatFlags, codecFormat.FormatFlags...)
+		ffmpegFormatFlags = append(ffmpegFormatFlags, vCodecFormat.FormatFlags...)
 
 		log.Printf("  video %s probed:%s -> %s",
 			fancyYDLFormatName(vYDLFormat),
 			vDprc.probeInfo,
-			codecFormat.Codec,
+			vCodecFormat.Codec,
 		)
 	}
 

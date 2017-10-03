@@ -169,8 +169,6 @@ func TestForceCodec(t *testing.T) {
 
 	defer leaktest.Check(t)()
 
-	ctx, cancelFn := context.WithCancel(context.Background())
-
 	mkvFormat := ydls.Config.Formats.FindByName("mkv")
 	forceACodec := "opus"
 	forceVCodec := "vp9"
@@ -184,6 +182,8 @@ func TestForceCodec(t *testing.T) {
 		t.Errorf("test sanity check failed: video codec already the prefered one")
 		return
 	}
+
+	ctx, cancelFn := context.WithCancel(context.Background())
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{

@@ -80,6 +80,10 @@ func TestParseFormatDownloadURL(t *testing.T) {
 			DownloadOptions{Format: "mkv", URL: "http://domain.com", ACodec: "flac", VCodec: "theora"}, false},
 		{&url.URL{Path: "/mkv+flac+theora/http://domain.com", RawQuery: ""},
 			DownloadOptions{Format: "mkv", URL: "http://domain.com", ACodec: "flac", VCodec: "theora"}, false},
+		{&url.URL{Path: "/mp3+retranscode/http://domain.com", RawQuery: ""},
+			DownloadOptions{Format: "mp3", URL: "http://domain.com", ACodec: "", VCodec: "", Retranscode: true}, false},
+		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mp3&retranscode=1"},
+			DownloadOptions{Format: "mp3", URL: "http://domain.com", ACodec: "", VCodec: "", Retranscode: true}, false},
 		{&url.URL{Path: "/mkv+nope/http://domain.com", RawQuery: ""},
 			DownloadOptions{}, true},
 	} {
@@ -92,7 +96,8 @@ func TestParseFormatDownloadURL(t *testing.T) {
 			if c.expectedErr {
 				t.Errorf("url=%+v, got %#v, expected error", c.url, opts)
 			} else if opts.Format != c.expectedOpts.Format || opts.URL != c.expectedOpts.URL ||
-				opts.ACodec != c.expectedOpts.ACodec || opts.VCodec != c.expectedOpts.VCodec {
+				opts.ACodec != c.expectedOpts.ACodec || opts.VCodec != c.expectedOpts.VCodec ||
+				opts.Retranscode != c.expectedOpts.Retranscode {
 				t.Errorf("url=%+v, got %#v, expected %#v", c.url, opts, c.expectedOpts)
 			}
 		}

@@ -78,20 +78,23 @@ func (yh *Handler) parseFormatDownloadURL(URL *url.URL) (DownloadOptions, error)
 	var optStrings []string
 
 	if URL.Query().Get("url") != "" {
-		// ?url=url&format=format&acodec=&vcodec=
+		// ?url=url&format=format&acodec=&vcodec=...
 
 		urlStr = URL.Query().Get("url")
-		if v := URL.Query().Get("format"); v != "" {
-			optStrings = append(optStrings, v)
-		}
+
+		optStrings = append(optStrings, URL.Query().Get("format"))
+
 		if v := URL.Query().Get("acodec"); v != "" {
 			optStrings = append(optStrings, v)
 		}
 		if v := URL.Query().Get("vcodec"); v != "" {
 			optStrings = append(optStrings, v)
 		}
+		if v := URL.Query().Get("retranscode"); v != "" {
+			optStrings = append(optStrings, "retranscode")
+		}
 	} else {
-		// /format+codec+codec/url
+		// /format+opts.../url
 
 		var formatAndOpts string
 		formatAndOpts, urlStr = splitRequestURL(URL)
