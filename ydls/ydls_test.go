@@ -12,6 +12,7 @@ import (
 
 	"github.com/wader/ydls/ffmpeg"
 	"github.com/wader/ydls/leaktest"
+	"github.com/wader/ydls/timerange"
 	"github.com/wader/ydls/youtubedl"
 )
 
@@ -195,7 +196,7 @@ func TestForceCodec(t *testing.T) {
 		nil)
 	if err != nil {
 		cancelFn()
-		t.Errorf("%s: %s: download failed: %s", youtbeuTestVideoURL, "raw", err)
+		t.Errorf("%s: download failed: %s", youtbeuTestVideoURL, err)
 		return
 	}
 
@@ -212,8 +213,50 @@ func TestForceCodec(t *testing.T) {
 		t.Errorf("%s: force codec failed: found %s", youtbeuTestVideoURL, pi)
 		return
 	}
+}
 
-	t.Logf("%s: OK (probed %s)\n", youtbeuTestVideoURL, pi)
+func TestTimeRangeOption(t *testing.T) {
+	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	}
+
+	ydls := ydlsFromEnv(t)
+
+	defer leaktest.Check(t)()
+
+	mkvFormat := ydls.Config.Formats.FindByName("mkv")
+	timeRange, timeRangeErr := timerange.NewFromString("10s-15s")
+	if timeRangeErr != nil {
+		t.Fatalf("failed to parse time range")
+	}
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	dr, err := ydls.Download(ctx,
+		DownloadOptions{
+			URL:       youtbeuTestVideoURL,
+			Format:    mkvFormat.Name,
+			TimeRange: timeRange,
+		},
+		nil)
+	if err != nil {
+		cancelFn()
+		t.Fatalf("%s: download failed: %s", youtbeuTestVideoURL, err)
+	}
+
+	pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+	dr.Media.Close()
+	dr.Wait()
+	cancelFn()
+	if err != nil {
+		t.Errorf("%s: probe failed: %s", youtbeuTestVideoURL, err)
+		return
+	}
+
+	if pi.Duration() != timeRange.Duration() {
+		t.Errorf("%s: probed duration not %v, got %v", youtbeuTestVideoURL, timeRange.Duration(), pi.Duration())
+		return
+	}
 }
 
 func testBestFormatCase(formats []*youtubedl.Format, aCodecs prioStringSet, vCodecs prioStringSet, aFormatID string, vFormatID string) error {

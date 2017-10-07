@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/wader/ydls/leaktest"
 )
@@ -24,7 +25,7 @@ func dummyFile(t *testing.T, format string, acodec string, vcodec string) io.Rea
 		"-f", "lavfi", "-i", "anullsrc",
 		"-map", "0:0", "-acodec", acodec,
 		"-map", "1:0", "-vcodec", vcodec,
-		"-shortest",
+		"-t", "1",
 		"-f", format,
 		"-",
 	)
@@ -43,6 +44,26 @@ func dummyFile(t *testing.T, format string, acodec string, vcodec string) io.Rea
 	return stdoutBuf
 }
 
+func TestDurationToPosition(t *testing.T) {
+	for _, tc := range []struct {
+		duration time.Duration
+		expected string
+	}{
+		{time.Duration(1) * time.Second, "0:00:01"},
+		{time.Duration(59) * time.Second, "0:00:59"},
+		{time.Duration(60) * time.Second, "0:01:00"},
+		{time.Duration(61) * time.Second, "0:01:01"},
+		{time.Duration(3599) * time.Second, "0:59:59"},
+		{time.Duration(3600) * time.Second, "1:00:00"},
+		{time.Duration(3601) * time.Second, "1:00:01"},
+		{time.Duration(100) * time.Hour, "100:00:00"},
+	} {
+		if v := DurationToPosition(tc.duration); v != tc.expected {
+			t.Errorf("Expected %v to be %s, got %s", tc.duration, tc.expected, v)
+		}
+	}
+}
+
 func TestProbe(t *testing.T) {
 	if !testFfmpeg {
 		t.Skip("TEST_FFMPEG env not set")
@@ -56,13 +77,16 @@ func TestProbe(t *testing.T) {
 	}
 
 	if pi.FormatName() != "matroska" {
-		t.Fatalf("FormatName should be matroska, is %s", pi.FormatName())
+		t.Errorf("FormatName should be matroska, is %s", pi.FormatName())
 	}
 	if pi.ACodec() != "mp3" {
-		t.Fatalf("ACodec should be mp3, is %s", pi.ACodec())
+		t.Errorf("ACodec should be mp3, is %s", pi.ACodec())
 	}
 	if pi.VCodec() != "h264" {
-		t.Fatalf("VCodec should be h264, is %s", pi.VCodec())
+		t.Errorf("VCodec should be h264, is %s", pi.VCodec())
+	}
+	if v := pi.Duration().Seconds(); v != 1 {
+		t.Errorf("Duration should be %v, is %v", 1, v)
 	}
 }
 

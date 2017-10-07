@@ -9,13 +9,28 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
+	"time"
 )
 
 // ProbeInfo ffprobe result
 type ProbeInfo struct {
 	Format  map[string]interface{}   `json:"format"`
 	Streams []map[string]interface{} `json:"streams"`
+}
+
+// DurationToPosition time.Duration to ffmpeg position format
+func DurationToPosition(d time.Duration) string {
+	n := uint64(d.Seconds())
+
+	s := n % 60
+	n /= 60
+	m := n % 60
+	n /= 60
+	h := n
+
+	return fmt.Sprintf("%d:%.2d:%.2d", h, m, s)
 }
 
 func (pi *ProbeInfo) findStringFieldStream(findField, findValue, field string) string {
@@ -45,6 +60,13 @@ func (pi *ProbeInfo) FormatName() string {
 		return fl[0]
 	}
 	return ""
+}
+
+// Duration probed duration
+func (pi *ProbeInfo) Duration() time.Duration {
+	v, _ := pi.Format["duration"].(string)
+	f, _ := strconv.ParseFloat(v, 64)
+	return time.Second * time.Duration(f)
 }
 
 func (pi *ProbeInfo) String() string {
@@ -115,12 +137,13 @@ type Format struct {
 
 // FFmpeg instance
 type FFmpeg struct {
-	InputFlags []string
-	StreamMaps []StreamMap
-	Format     Format
-	Stderr     io.Writer
-	Stdout     io.WriteCloser
-	DebugLog   *log.Logger
+	InputFlags  []string
+	OutputFlags []string
+	StreamMaps  []StreamMap
+	Format      Format
+	Stderr      io.Writer
+	Stdout      io.WriteCloser
+	DebugLog    *log.Logger
 
 	cmd         *exec.Cmd
 	cmdErr      error
@@ -204,6 +227,7 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 
 	ffmpegArgs = append(ffmpegArgs, "-f", f.Format.Name)
 	ffmpegArgs = append(ffmpegArgs, f.Format.Flags...)
+	ffmpegArgs = append(ffmpegArgs, f.OutputFlags...)
 	ffmpegArgs = append(ffmpegArgs, "pipe:1")
 
 	f.cmd = exec.CommandContext(ctx, ffmpegName, ffmpegArgs...)

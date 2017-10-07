@@ -17,6 +17,7 @@ import (
 	"github.com/wader/ydls/ffmpeg"
 	"github.com/wader/ydls/id3v2"
 	"github.com/wader/ydls/rereader"
+	"github.com/wader/ydls/timerange"
 	"github.com/wader/ydls/writelogger"
 	"github.com/wader/ydls/youtubedl"
 )
@@ -220,9 +221,10 @@ func NewFromFile(configPath string) (YDLS, error) {
 type DownloadOptions struct {
 	URL         string
 	Format      string
-	ACodec      string // force audio codec
-	VCodec      string // force video codec
-	Retranscode bool   // force retranscode even if same input codec
+	ACodec      string              // force audio codec
+	VCodec      string              // force video codec
+	Retranscode bool                // force retranscode even if same input codec
+	TimeRange   timerange.TimeRange // time range limit
 }
 
 // DownloadResult download result
@@ -286,6 +288,8 @@ func (ydls *YDLS) ParseDownloadOptions(url string, format string, optStrings []s
 				// should not happen
 				return DownloadOptions{}, fmt.Errorf("unknown hint type %s for %s", hint, opt)
 			}
+		} else if tr, trErr := timerange.NewFromString(opt); trErr == nil {
+			opts.TimeRange = tr
 		} else {
 			return DownloadOptions{}, fmt.Errorf("unknown opt %s", opt)
 		}
@@ -505,13 +509,25 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLo
 	ffmpegR, ffmpegW := io.Pipe()
 	closeOnDone = append(closeOnDone, ffmpegR)
 
+	var inputFlags []string
+	var outputFlags []string
+	inputFlags = append(inputFlags, ydls.Config.InputFlags...)
+
+	if !timerange.IsZero(options.TimeRange) {
+		if options.TimeRange.Start != 0 {
+			inputFlags = append(inputFlags, "-ss", ffmpeg.DurationToPosition(options.TimeRange.Start))
+		}
+		outputFlags = []string{"-to", ffmpeg.DurationToPosition(options.TimeRange.Duration())}
+	}
+
 	ffmpegP := &ffmpeg.FFmpeg{
-		InputFlags: ydls.Config.InputFlags,
-		StreamMaps: streamMaps,
-		Format:     ffmpeg.Format{Name: outFormat.Formats.first(), Flags: ffmpegFormatFlags},
-		DebugLog:   log,
-		Stdout:     ffmpegW,
-		Stderr:     ffmpegStderr,
+		InputFlags:  inputFlags,
+		OutputFlags: outputFlags,
+		StreamMaps:  streamMaps,
+		Format:      ffmpeg.Format{Name: outFormat.Formats.first(), Flags: ffmpegFormatFlags},
+		DebugLog:    log,
+		Stdout:      ffmpegW,
+		Stderr:      ffmpegStderr,
 	}
 
 	if err := ffmpegP.Start(ctx); err != nil {

@@ -8,8 +8,10 @@ import (
 	"net/url"
 	"os"
 	"testing"
+	"time"
 
 	"github.com/wader/ydls/leaktest"
+	"github.com/wader/ydls/timerange"
 )
 
 func TestURLEncode(t *testing.T) {
@@ -84,6 +86,10 @@ func TestParseFormatDownloadURL(t *testing.T) {
 			DownloadOptions{Format: "mp3", URL: "http://domain.com", ACodec: "", VCodec: "", Retranscode: true}, false},
 		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mp3&retranscode=1"},
 			DownloadOptions{Format: "mp3", URL: "http://domain.com", ACodec: "", VCodec: "", Retranscode: true}, false},
+		{&url.URL{Path: "/mkv+123s/http://domain.com", RawQuery: ""},
+			DownloadOptions{Format: "mkv", URL: "http://domain.com", TimeRange: timerange.TimeRange{Stop: time.Second * 123}}, false},
+		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mkv&time=123s"},
+			DownloadOptions{Format: "mkv", URL: "http://domain.com", TimeRange: timerange.TimeRange{Stop: time.Second * 123}}, false},
 		{&url.URL{Path: "/mkv+nope/http://domain.com", RawQuery: ""},
 			DownloadOptions{}, true},
 	} {

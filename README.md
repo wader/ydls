@@ -62,8 +62,10 @@ prepend the download URL with the ydls URL by hand without doing any encoding
 `acodec` - Audio codec to use instead of default for format  
 `vcodec` - Video codec to use instead of default for format  
 `retranscode` - Retranscode even if input codec is same as output  
+`time` - Only download specificed time range. Ex: `30s`, `20m30s`, `1h20s30s` will limit
+duration. `10s-30s` will seek 10 seconds and stop at 30 seconds (20 second output duration)
 
-`option` - Codec name or `retranscode`.
+`option` - Codec name, time range or `retranscode`
 
 ### Examples
 
@@ -81,6 +83,9 @@ Download and make sure media is in mkv format using mp3 and h264 codecs:
 
 Download and retranscode to mp3 even if input is already mp3:  
 `http://ydls/mp3+retranscode/https://www.youtube.com/watch?v=cF1zJYkBW4A`
+
+Download specified time range in mp3:  
+`http://ydls/mp3+10s-30s/https://www.youtube.com/watch?v=cF1zJYkBW4A`
 
 Download in best format:  
 `http://ydls/https://www.youtube.com/watch?v=cF1zJYkBW4A`

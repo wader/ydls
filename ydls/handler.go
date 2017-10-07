@@ -93,6 +93,9 @@ func (yh *Handler) parseFormatDownloadURL(URL *url.URL) (DownloadOptions, error)
 		if v := URL.Query().Get("retranscode"); v != "" {
 			optStrings = append(optStrings, "retranscode")
 		}
+		if v := URL.Query().Get("time"); v != "" {
+			optStrings = append(optStrings, v)
+		}
 	} else {
 		// /format+opts.../url
 
