@@ -6,7 +6,7 @@ import (
 )
 
 func TestIsZero(t *testing.T) {
-	if !TimeRange{}.IsZero() {
+	if !(TimeRange{}).IsZero() {
 		t.Errorf("Expected IsZero not true for TimeRange{}")
 	}
 }
