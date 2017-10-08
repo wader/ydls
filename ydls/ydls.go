@@ -513,7 +513,7 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLo
 	var outputFlags []string
 	inputFlags = append(inputFlags, ydls.Config.InputFlags...)
 
-	if !timerange.IsZero(options.TimeRange) {
+	if !options.TimeRange.IsZero() {
 		if options.TimeRange.Start != 0 {
 			inputFlags = append(inputFlags, "-ss", ffmpeg.DurationToPosition(options.TimeRange.Start))
 		}

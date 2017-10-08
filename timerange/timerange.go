@@ -19,10 +19,6 @@ func NewFromString(s string) (TimeRange, error) {
 	return parseDurationRange(s)
 }
 
-func IsZero(tr TimeRange) bool {
-	return tr.Start == 0 && tr.Stop == 0
-}
-
 // N or NhNmNs
 var parseDurationReN = regexp.MustCompile(`^\d+$`)
 var parseDurationReMix = regexp.MustCompile(`^(?:(\d+)h)?(?:(\d+)m)?(?:(\d+)s)?$`)
@@ -78,6 +74,11 @@ func parseDurationRange(s string) (TimeRange, error) {
 	}
 
 	return tr, nil
+}
+
+// IsZero is start and stop zero
+func (tr TimeRange) IsZero() bool {
+	return tr.Start == 0 && tr.Stop == 0
 }
 
 // Duration duration between start and stop
