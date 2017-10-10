@@ -32,8 +32,8 @@ TCP port 8080 somehow.
 
 ### Build and install yourself
 
-Run `go get github.com/wader/ydls/cmd/...` This  will install `ydls-server` and
-`ydls-get`. Make sure you have ffmpeg, youtube-dl, rtmpdump and mplayer
+Run `go get github.com/wader/ydls/cmd/ydls` to install `ydls`.
+Make sure you have ffmpeg, youtube-dl, rtmpdump and mplayer
 installed and in `PATH`.
 
 Copy and edit [ydls.json](ydls.json) to match your ffmpeg builds
@@ -122,7 +122,7 @@ docker run --rm -ti --entrypoint bash -v "$PWD:/go/src/github.com/wader/ydls" -w
 Then inside dev container:
 
 ```sh
-go run cmd/ydls-get/main.go -config ./ydls.json ...
+go run cmd/ydls/main.go -config ./ydls.json ...
 ```
 
 ## TODO

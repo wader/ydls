@@ -108,12 +108,11 @@ COPY ydls.json /etc
 WORKDIR /go/src/github.com/wader/ydls
 
 RUN TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 go test -v -cover -race ./...
-RUN go install -installsuffix netgo -tags netgo -ldflags "-X main.gitCommit=$(git describe --always)" ./cmd/...
+RUN go install -installsuffix netgo -tags netgo -ldflags "-X main.gitCommit=$(git describe --always)" ./cmd/ydls
 RUN \
-  ldd /go/bin/ydls-get | grep -q "not a dynamic executable" && \
-  ldd /go/bin/ydls-server | grep -q "not a dynamic executable" && \
-  test_cmd/ydls-get.sh && \
-  test_cmd/ydls-server.sh
+  ldd /go/bin/ydls | grep -q "not a dynamic executable" && \
+  test_cmd/ydls-server.sh && \
+  test_cmd/ydls-get.sh
 
 FROM alpine:3.6
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
@@ -131,8 +130,7 @@ COPY --from=ffmpeg-builder \
   /usr/local/bin/ffprobe \
   /usr/local/bin/
 COPY --from=ydls-builder \
-  /go/bin/ydls-server \
-  /go/bin/ydls-get \
+  /go/bin/ydls \
   /usr/local/bin/youtube-dl \
   /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin
@@ -143,8 +141,7 @@ RUN \
   youtube-dl --version && \
   ffmpeg -version && \
   ffprobe -version && \
-  ydls-get -version && \
-  ydls-server -version && \
+  ydls -version && \
   ffmpeg -i https://www.google.com 2>&1 | grep -q "Invalid data found when processing input"
 
 USER nobody

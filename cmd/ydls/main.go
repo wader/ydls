@@ -4,8 +4,10 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -16,23 +18,18 @@ import (
 var gitCommit = "dev"
 
 var versionFlag = flag.Bool("version", false, "Print version ("+gitCommit+")")
+
 var debugFlag = flag.Bool("debug", false, "Debug output")
 var configFlag = flag.String("config", "ydls.json", "Config file")
+var infoFlag = flag.Bool("info", false, "Info output")
 
-type progressWriter struct {
-	fn    func(bytes uint64)
-	bytes uint64
-}
-
-func (pw *progressWriter) Write(p []byte) (n int, err error) {
-	pw.bytes += uint64(len(p))
-	pw.fn(pw.bytes)
-	return len(p), nil
-}
+var serverFlag = flag.Bool("server", false, "Start server")
+var listenFlag = flag.String("listen", ":8080", "Listen address")
+var indexFlag = flag.String("index", "", "Path to index template")
 
 func init() {
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s [options] URL [format] [codec] [codec]:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage of %s [flags] URL [format] [options]...:\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -44,6 +41,38 @@ func init() {
 	if os.Getenv("DEBUG") != "" {
 		*debugFlag = true
 	}
+}
+
+func server(y ydls.YDLS) {
+	yh := &ydls.Handler{YDLS: y}
+
+	if *infoFlag {
+		yh.InfoLog = log.New(os.Stdout, "INFO: ", log.Ltime)
+	}
+	if *debugFlag {
+		yh.DebugLog = log.New(os.Stdout, "DEBUG: ", log.Ltime)
+	}
+	if *indexFlag != "" {
+		if indexTmpl, err := template.ParseFiles(*indexFlag); err != nil {
+			log.Fatalf("failed to parse index template: %s", err)
+		} else {
+			yh.IndexTmpl = indexTmpl
+		}
+	}
+
+	log.Printf("Service listen on %s", *listenFlag)
+	log.Fatal(http.ListenAndServe(*listenFlag, yh))
+}
+
+type progressWriter struct {
+	fn    func(bytes uint64)
+	bytes uint64
+}
+
+func (pw *progressWriter) Write(p []byte) (n int, err error) {
+	pw.bytes += uint64(len(p))
+	pw.fn(pw.bytes)
+	return len(p), nil
 }
 
 func absRootPath(root string, path string) (string, error) {
@@ -65,7 +94,7 @@ func fatalIfErrorf(err error, format string, a ...interface{}) {
 	}
 }
 
-func main() {
+func get(y ydls.YDLS) {
 	y, err := ydls.NewFromFile(*configFlag)
 	if err != nil {
 		log.Fatalf("failed to read config: %s", err)
@@ -113,4 +142,17 @@ func main() {
 
 	io.Copy(mw, dr.Media)
 	fmt.Print("\n")
+}
+
+func main() {
+	y, err := ydls.NewFromFile(*configFlag)
+	if err != nil {
+		log.Fatalf("failed to read config: %s", err)
+	}
+
+	if *serverFlag {
+		server(y)
+	} else {
+		get(y)
+	}
 }
