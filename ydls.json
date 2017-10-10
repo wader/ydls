@@ -66,7 +66,7 @@
       "VCodecs": [{
         "Codec": "h264"
       }, {
-        "Codec": "h265"
+        "Codec": "hevc"
       }],
       "Ext": "mp4",
       "MIMEType": "video/mp4"
@@ -106,7 +106,7 @@
       }, {
         "Codec": "vp8"
       }, {
-        "Codec": "h265"
+        "Codec": "hevc"
       }, {
         "Codec": "vp9"
       }, {
