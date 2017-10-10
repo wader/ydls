@@ -123,9 +123,9 @@ func Probe(ctx context.Context, r io.Reader, debugLog *log.Logger, stderr io.Wri
 
 // StreamMap map input to output
 type StreamMap struct {
-	Reader     io.Reader
-	Specifier  string // 0, a:0, v:0, etc
-	Codec      string // acodec:mp3, vcodec:vp8, etc
+	Reader     io.Reader // many streams maps can use same reader
+	Specifier  string    // 0, a:0, v:0, etc
+	Codec      string    // acodec:mp3, vcodec:vp8, etc
 	CodecFlags []string
 }
 
