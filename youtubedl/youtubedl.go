@@ -66,13 +66,6 @@ func (f *Format) String() string {
 	)
 }
 
-// FormatByNormBR formats sorted by NormBR
-type FormatByNormBR []*Format
-
-func (a FormatByNormBR) Len() int           { return len(a) }
-func (a FormatByNormBR) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
-func (a FormatByNormBR) Less(i, j int) bool { return a[i].NormBR > a[j].NormBR }
-
 func normalizeCodecName(c string) string {
 	codecNameNormalizeMap := map[string]string{
 		"none": "",

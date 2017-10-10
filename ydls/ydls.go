@@ -85,7 +85,9 @@ func findFormat(formats []*youtubedl.Format, protocol string, aCodecs prioString
 		matched = append(matched, f)
 	}
 
-	sort.Sort(youtubedl.FormatByNormBR(matched))
+	sort.Slice(matched, func(i int, j int) bool {
+		return matched[j].NormBR < matched[i].NormBR
+	})
 
 	if len(matched) > 0 {
 		return matched[0]
