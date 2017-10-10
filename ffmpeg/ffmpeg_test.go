@@ -3,10 +3,8 @@ package ffmpeg
 import (
 	"bytes"
 	"context"
-	"io"
+	"log"
 	"os"
-	"os/exec"
-	"strings"
 	"testing"
 	"time"
 
@@ -14,35 +12,6 @@ import (
 )
 
 var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""
-
-func dummyFile(t *testing.T, format string, acodec string, vcodec string) io.Reader {
-	var err error
-
-	// file with black screen and no sound
-	dummyFileCmd := exec.Command(
-		"ffmpeg",
-		"-f", "lavfi", "-i", "color=s=cga:d=1",
-		"-f", "lavfi", "-i", "anullsrc",
-		"-map", "0:0", "-acodec", acodec,
-		"-map", "1:0", "-vcodec", vcodec,
-		"-t", "1",
-		"-f", format,
-		"-",
-	)
-
-	stdoutBuf := &bytes.Buffer{}
-	stderrBuf := &bytes.Buffer{}
-	dummyFileCmd.Stdout = stdoutBuf
-	dummyFileCmd.Stderr = stderrBuf
-
-	if err = dummyFileCmd.Run(); err != nil {
-		t.Logf("cmd failed: %s", strings.Join(dummyFileCmd.Args, " "))
-		t.Log(string(stderrBuf.Bytes()))
-		t.Fatal(err)
-	}
-
-	return stdoutBuf
-}
 
 func TestDurationToPosition(t *testing.T) {
 	for _, tc := range []struct {
@@ -71,7 +40,12 @@ func TestProbe(t *testing.T) {
 
 	defer leaktest.Check(t)()
 
-	pi, probeErr := Probe(context.Background(), dummyFile(t, "matroska", "mp3", "h264"), nil, nil)
+	dummy, dummyErr := Dummy("matroska", "mp3", "h264")
+	if dummyErr != nil {
+		log.Fatal(dummyErr)
+	}
+
+	pi, probeErr := Probe(context.Background(), dummy, nil, nil)
 	if probeErr != nil {
 		t.Error(probeErr)
 	}
@@ -105,18 +79,21 @@ func TestStart(t *testing.T) {
 
 	defer leaktest.Check(t)()
 
-	file := dummyFile(t, "matroska", "mp3", "h264")
+	dummy, dummyErr := Dummy("matroska", "mp3", "h264")
+	if dummyErr != nil {
+		log.Fatal(dummyErr)
+	}
 	output := &closeBuffer{}
 
 	ffmpegP := &FFmpeg{
 		StreamMaps: []StreamMap{
 			StreamMap{
-				Reader:    file,
+				Reader:    dummy,
 				Specifier: "a:0",
 				Codec:     "acodec:vorbis",
 			},
 			StreamMap{
-				Reader:    file,
+				Reader:    dummy,
 				Specifier: "v:0",
 				Codec:     "vcodec:vp8",
 			},

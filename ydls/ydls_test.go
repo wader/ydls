@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"strings"
 	"testing"
 
 	"github.com/wader/ydls/ffmpeg"
@@ -15,6 +14,8 @@ import (
 	"github.com/wader/ydls/timerange"
 	"github.com/wader/ydls/youtubedl"
 )
+
+const youtubeTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
 
 var testNetwork = os.Getenv("TEST_NETWORK") != ""
 var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
@@ -55,112 +56,6 @@ func TestSafeFilename(t *testing.T) {
 	}
 }
 
-const youtbeuTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
-
-func TestFormats(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
-	}
-
-	ydls := ydlsFromEnv(t)
-
-	for _, c := range []struct {
-		url              string
-		audioOnly        bool
-		expectedFilename string
-	}{
-		{"https://soundcloud.com/timsweeney/thedrifter", true, "BIS Radio Show #793 with The Drifter"},
-		{youtbeuTestVideoURL, false, "TEST VIDEO"},
-	} {
-		for _, f := range ydls.Config.Formats {
-			func() {
-				defer leaktest.Check(t)()
-
-				if c.audioOnly && len(f.VCodecs) > 0 {
-					t.Logf("%s: %s: skip, audio only\n", c.url, f.Name)
-					return
-				}
-
-				ctx, cancelFn := context.WithCancel(context.Background())
-
-				dr, err := ydls.Download(ctx, DownloadOptions{URL: c.url, Format: f.Name}, nil)
-				if err != nil {
-					cancelFn()
-					t.Errorf("%s: %s: download failed: %s", c.url, f.Name, err)
-					return
-				}
-
-				pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
-				dr.Media.Close()
-				dr.Wait()
-				cancelFn()
-				if err != nil {
-					t.Errorf("%s: %s: probe failed: %s", c.url, f.Name, err)
-					return
-				}
-
-				if !strings.HasPrefix(dr.Filename, c.expectedFilename) {
-					t.Errorf("%s: %s: expected filename '%s' found '%s'", c.url, f.Name, c.expectedFilename, dr.Filename)
-					return
-				}
-				if f.MIMEType != dr.MIMEType {
-					t.Errorf("%s: %s: expected MIME type '%s' found '%s'", c.url, f.Name, f.MIMEType, dr.MIMEType)
-					return
-				}
-				if !stringsContains([]string(f.Formats), pi.FormatName()) {
-					t.Errorf("%s: %s: expected format %s found %s", c.url, f.Name, f.Formats, pi.FormatName())
-					return
-				}
-				if len(f.ACodecs.CodecNames()) != 0 && !stringsContains(f.ACodecs.CodecNames(), pi.ACodec()) {
-					t.Errorf("%s: %s: expected acodec %s found %s", c.url, f.Name, f.ACodecs.CodecNames(), pi.ACodec())
-					return
-				}
-				if len(f.VCodecs.CodecNames()) != 0 && !stringsContains(f.VCodecs.CodecNames(), pi.VCodec()) {
-					t.Errorf("%s: %s: expected vcodec %s found %s", c.url, f.Name, f.VCodecs.CodecNames(), pi.VCodec())
-					return
-				}
-				if f.Prepend == "id3v2" {
-					if _, ok := pi.Format["tags"]; !ok {
-						t.Errorf("%s: %s: expected id3v2 tag", c.url, f.Name)
-					}
-				}
-
-				t.Logf("%s: %s: OK (probed %s)\n", c.url, f.Name, pi)
-			}()
-		}
-	}
-}
-
-func TestRawFormat(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
-	}
-
-	ydls := ydlsFromEnv(t)
-
-	defer leaktest.Check(t)()
-
-	ctx, cancelFn := context.WithCancel(context.Background())
-
-	dr, err := ydls.Download(ctx, DownloadOptions{URL: youtbeuTestVideoURL}, nil)
-	if err != nil {
-		cancelFn()
-		t.Errorf("%s: %s: download failed: %s", youtbeuTestVideoURL, "raw", err)
-		return
-	}
-
-	pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
-	dr.Media.Close()
-	dr.Wait()
-	cancelFn()
-	if err != nil {
-		t.Errorf("%s: %s: probe failed: %s", youtbeuTestVideoURL, "raw", err)
-		return
-	}
-
-	t.Logf("%s: %s: OK (probed %s)\n", youtbeuTestVideoURL, "raw", pi)
-}
-
 func TestForceCodec(t *testing.T) {
 	if !testNetwork || !testFfmpeg || !testYoutubeldl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
@@ -188,7 +83,7 @@ func TestForceCodec(t *testing.T) {
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			URL:    youtbeuTestVideoURL,
+			URL:    youtubeTestVideoURL,
 			Format: mkvFormat.Name,
 			ACodec: forceACodec,
 			VCodec: forceVCodec,
@@ -196,7 +91,7 @@ func TestForceCodec(t *testing.T) {
 		nil)
 	if err != nil {
 		cancelFn()
-		t.Errorf("%s: download failed: %s", youtbeuTestVideoURL, err)
+		t.Errorf("%s: download failed: %s", youtubeTestVideoURL, err)
 		return
 	}
 
@@ -205,12 +100,12 @@ func TestForceCodec(t *testing.T) {
 	dr.Wait()
 	cancelFn()
 	if err != nil {
-		t.Errorf("%s: probe failed: %s", youtbeuTestVideoURL, err)
+		t.Errorf("%s: probe failed: %s", youtubeTestVideoURL, err)
 		return
 	}
 
 	if pi.FormatName() != "matroska" || pi.ACodec() != forceACodec || pi.VCodec() != forceVCodec {
-		t.Errorf("%s: force codec failed: found %s", youtbeuTestVideoURL, pi)
+		t.Errorf("%s: force codec failed: found %s", youtubeTestVideoURL, pi)
 		return
 	}
 }
@@ -234,14 +129,14 @@ func TestTimeRangeOption(t *testing.T) {
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			URL:       youtbeuTestVideoURL,
+			URL:       youtubeTestVideoURL,
 			Format:    mkvFormat.Name,
 			TimeRange: timeRange,
 		},
 		nil)
 	if err != nil {
 		cancelFn()
-		t.Fatalf("%s: download failed: %s", youtbeuTestVideoURL, err)
+		t.Fatalf("%s: download failed: %s", youtubeTestVideoURL, err)
 	}
 
 	pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
@@ -249,12 +144,12 @@ func TestTimeRangeOption(t *testing.T) {
 	dr.Wait()
 	cancelFn()
 	if err != nil {
-		t.Errorf("%s: probe failed: %s", youtbeuTestVideoURL, err)
+		t.Errorf("%s: probe failed: %s", youtubeTestVideoURL, err)
 		return
 	}
 
 	if pi.Duration() != timeRange.Duration() {
-		t.Errorf("%s: probed duration not %v, got %v", youtbeuTestVideoURL, timeRange.Duration(), pi.Duration())
+		t.Errorf("%s: probed duration not %v, got %v", youtubeTestVideoURL, timeRange.Duration(), pi.Duration())
 		return
 	}
 }
