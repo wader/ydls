@@ -95,10 +95,6 @@ func fatalIfErrorf(err error, format string, a ...interface{}) {
 }
 
 func get(y ydls.YDLS) {
-	y, err := ydls.NewFromFile(*configFlag)
-	if err != nil {
-		log.Fatalf("failed to read config: %s", err)
-	}
 	var debugLog *log.Logger
 	if *debugFlag {
 		debugLog = log.New(os.Stdout, "DEBUG: ", log.Ltime)
@@ -113,6 +109,7 @@ func get(y ydls.YDLS) {
 	if flag.NArg() == 1 {
 		downloadOptions = ydls.DownloadOptions{URL: url}
 	} else {
+		var err error
 		downloadOptions, err = y.ParseDownloadOptions(url, flag.Arg(1), flag.Args()[2:])
 		fatalIfErrorf(err, "format and options")
 	}
