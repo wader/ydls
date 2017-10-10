@@ -66,12 +66,14 @@ func (f *Format) String() string {
 	)
 }
 
+// guess codec from fuzzy codec name
 func normalizeCodecName(c string) string {
 	codecNameNormalizeMap := map[string]string{
 		"none": "",
 		"avc1": "h264",
 		"mp4a": "aac",
 		"mp4v": "h264",
+		"h265": "hevc",
 	}
 
 	// "  NAME.something  " -> "name"
