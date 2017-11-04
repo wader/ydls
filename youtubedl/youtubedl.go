@@ -150,6 +150,8 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 		"--skip-download",
 		"--write-info-json",
 		"--write-thumbnail",
+		// don't base output filename on source info
+		"--output", "source",
 		// provide URL via stdin for security, youtube-dl has some run command args
 		"--batch-file", "-",
 	)
