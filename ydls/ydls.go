@@ -475,15 +475,16 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLo
 		streamMaps = append(streamMaps, ffmpeg.StreamMap{
 			Reader:     aDprc,
 			Specifier:  "a:0",
-			Codec:      "acodec:" + aCodecFormat.Codec,
+			Codec:      "acodec:" + firstNonEmpty(ydls.Config.CodecMap[aCodecFormat.Codec], aCodecFormat.Codec),
 			CodecFlags: aCodecFormat.CodecFlags,
 		})
 		ffmpegFormatFlags = append(ffmpegFormatFlags, aCodecFormat.FormatFlags...)
 
-		log.Printf("  audio %s probed:%s -> %s",
+		log.Printf("  audio %s probed:%s -> %s (%s)",
 			fancyYDLFormatName(aYDLFormat),
 			aDprc.probeInfo,
 			aCodecFormat.Codec,
+			ydls.Config.CodecMap[aCodecFormat.Codec],
 		)
 	}
 	if len(vCodecFormats) > 0 && vDprc.probeInfo != nil && vDprc.probeInfo.VCodec() != "" {
@@ -494,15 +495,16 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLo
 		streamMaps = append(streamMaps, ffmpeg.StreamMap{
 			Reader:     vDprc,
 			Specifier:  "v:0",
-			Codec:      "vcodec:" + vCodecFormat.Codec,
+			Codec:      "vcodec:" + firstNonEmpty(ydls.Config.CodecMap[vCodecFormat.Codec], vCodecFormat.Codec),
 			CodecFlags: vCodecFormat.CodecFlags,
 		})
 		ffmpegFormatFlags = append(ffmpegFormatFlags, vCodecFormat.FormatFlags...)
 
-		log.Printf("  video %s probed:%s -> %s",
+		log.Printf("  video %s probed:%s -> %s (%s)",
 			fancyYDLFormatName(vYDLFormat),
 			vDprc.probeInfo,
 			vCodecFormat.Codec,
+			ydls.Config.CodecMap[vCodecFormat.Codec],
 		)
 	}
 

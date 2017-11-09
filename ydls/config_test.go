@@ -65,7 +65,7 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 					ffmpeg.StreamMap{
 						Reader:    dummyReader,
 						Specifier: codecType + ":0",
-						Codec:     codecType + "codec:" + codecName,
+						Codec:     codecType + "codec:" + firstNonEmpty(ydls.Config.CodecMap[codecName], codecName),
 					},
 				},
 				Format:   ffmpeg.Format{Name: "matroska"},

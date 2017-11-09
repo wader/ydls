@@ -90,7 +90,7 @@ func TestStart(t *testing.T) {
 			StreamMap{
 				Reader:    dummy,
 				Specifier: "a:0",
-				Codec:     "acodec:vorbis",
+				Codec:     "acodec:libvorbis",
 			},
 			StreamMap{
 				Reader:    dummy,

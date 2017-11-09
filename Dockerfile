@@ -66,25 +66,13 @@ RUN \
   --disable-ffserver \
   --disable-doc \
   --disable-ffplay \
-  --disable-encoders \
-  --enable-encoder=aac \
-  --enable-encoder=flac \
-  --enable-encoder=pcm_s16le \
   --enable-libmp3lame \
-  --enable-encoder=libmp3lame \
   --enable-libvorbis \
-  --enable-encoder=libvorbis \
   --enable-libopus \
-  --enable-encoder=libopus \
   --enable-libtheora \
-  --enable-encoder=libtheora \
   --enable-libvpx \
-  --enable-encoder=libvpx_vp8 \
-  --enable-encoder=libvpx_vp9 \
   --enable-libx264 \
-  --enable-encoder=libx264 \
   --enable-libx265 \
-  --enable-encoder=libx265 \
   && \
   make -j4 install && \
   ldd /usr/local/bin/ffmpeg | grep -vq lib && \
