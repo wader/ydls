@@ -203,11 +203,11 @@ func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 
 	ffmpegName := "ffmpeg"
 	ffmpegArgs := []string{"-hide_banner"}
-	ffmpegArgs = append(ffmpegArgs, f.InputFlags...)
 
 	var extraFiles []*os.File
 	for _, ifd := range inputToFDs {
 		extraFiles = append(extraFiles, ifd.r)
+		ffmpegArgs = append(ffmpegArgs, f.InputFlags...)
 		ffmpegArgs = append(ffmpegArgs, "-i", fmt.Sprintf("pipe:%d", ifd.childFD))
 	}
 
