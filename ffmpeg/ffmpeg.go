@@ -9,6 +9,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"reflect"
 	"strconv"
 	"strings"
 	"time"
@@ -16,8 +17,159 @@ import (
 
 // ProbeInfo ffprobe result
 type ProbeInfo struct {
-	Format  map[string]interface{}   `json:"format"`
-	Streams []map[string]interface{} `json:"streams"`
+	Format  ProbeFormat            `json:"format"`
+	Streams []ProbeStream          `json:"streams"`
+	Raw     map[string]interface{} `json:"-"`
+}
+
+type ProbeStream struct {
+	Index          uint   `json:"index"`
+	CodecName      string `json:"codec_name"`
+	CodecLongName  string `json:"codec_long_name"`
+	CodecType      string `json:"codec_type"`
+	CodecTimeBase  string `json:"codec_time_base"`
+	CodecTagString string `json:"codec_tag_string"`
+	CodecTag       string `json:"codec_tag"`
+	SampleFmt      string `json:"sample_fmt"`
+	SampleRate     string `json:"sample_rate"`
+	Channels       uint   `json:"channels"`
+	ChannelLayout  string `json:"channel_layout"`
+	BitsPerSample  uint   `json:"bits_per_sample"`
+	RFrameRate     string `json:"r_frame_rate"`
+	AvgFrameRate   string `json:"avg_frame_rate"`
+	TimeBase       string `json:"time_base"`
+	StartPts       int64  `json:"start_pts"`
+	StartTime      string `json:"start_time"`
+	DurationTs     uint64 `json:"duration_ts"`
+	Duration       string `json:"duration"`
+	BitRate        string `json:"bit_rate"`
+}
+
+type ProbeFormat struct {
+	Filename       string   `json:"filename"`
+	FormatName     string   `json:"format_name"`
+	FormatLongName string   `json:"format_long_name"`
+	StartTime      string   `json:"start_time"`
+	Duration       string   `json:"duration"`
+	Size           string   `json:"size"`
+	BitRate        string   `json:"bit_rate"`
+	ProbeScore     uint     `json:"probe_score"`
+	Tags           Metadata `json:"tags"`
+}
+
+// from libavformat/avformat.h
+// json tag is used for metadata key name also
+type Metadata struct {
+	Album string `json:"album"` // name of the set this work belongs to
+	// main creator of the set/album, if different from artist.
+	// e.g. "Various Artists" for compilation albums.
+	AlbumArtist  string `json:"album_artist"`
+	Artist       string `json:"artist"`        // main creator of the work
+	Comment      string `json:"comment"`       // any additional description of the file.
+	Composer     string `json:"composer"`      // who composed the work, if different from artist.
+	Copyright    string `json:"copyright"`     // name of copyright holder.
+	CreationTime string `json:"creation_time"` // date when the file was created, preferably in ISO 8601.
+	Date         string `json:"date"`          // date when the work was created, preferably in ISO 8601.
+	Disc         string `json:"disc"`          // number of a subset, e.g. disc in a multi-disc collection.
+	Encoder      string `json:"encoder"`       // name/settings of the software/hardware that produced the file.
+	EncodedBy    string `json:"encoded_by"`    // person/group who created the file.
+	Filename     string `json:"filename"`      // original name of the file.
+	Genre        string `json:"genre"`         // <self-evident>.
+	// main language in which the work is performed, preferably
+	// in ISO 639-2 format. Multiple languages can be specified by
+	// separating them with commas.
+	Language string `json:"language"`
+	// artist who performed the work, if different from artist.
+	// E.g for "Also sprach Zarathustra", artist would be "Richard
+	// Strauss" and performer "London Philharmonic Orchestra".
+	Performer       string `json:"performer"`
+	Publisher       string `json:"publisher"`        // name of the label/publisher.
+	ServiceName     string `json:"service_name"`     // name of the service in broadcasting (channel name).
+	ServiceProvider string `json:"service_provider"` // name of the service provider in broadcasting.
+	Title           string `json:"title"`            // name of the work.
+	Track           string `json:"track"`            // number of this work in the set, can be in form current/total.
+	VariantBitrate  string `json:"variant_bitrate"`  // the total bitrate of the bitrate variant that the current stream is part of
+}
+
+type Codec interface {
+	codecArgs() []string
+}
+
+type VideoCodec string
+
+func (c VideoCodec) codecArgs() []string {
+	return []string{"-codec:v", string(c)}
+}
+
+type AudioCodec string
+
+func (c AudioCodec) codecArgs() []string {
+	return []string{"-codec:a", string(c)}
+}
+
+type Input interface {
+	input()
+}
+
+type Output interface {
+	output()
+}
+
+// Reader read from a io.Reader
+// is a struct as a interface can't be a receiver
+type Reader struct {
+	Reader io.Reader
+}
+
+func (Reader) input() {}
+
+// Writer write to a io.WriteCloser
+type Writer struct {
+	Writer io.WriteCloser
+}
+
+func (Writer) output() {}
+
+// URL read or write to URL (local file path, pipe:, https:// etc)
+type URL string
+
+func (URL) input()  {}
+func (URL) output() {}
+
+// Format output format
+type Format struct {
+	Name  string
+	Flags []string
+}
+
+// Map input stream to output stream
+type Map struct {
+	Input      Input  // many streams can use same the input
+	Specifier  string // 0, a:0, v:0, etc
+	Codec      Codec
+	CodecFlags []string
+}
+
+type Stream struct {
+	InputFlags  []string
+	OutputFlags []string
+	Maps        []Map
+	Format      Format
+	Metadata    Metadata
+	Output      Output
+}
+
+// FFmpeg instance
+type FFmpeg struct {
+	Streams  []Stream
+	Stderr   io.Writer
+	DebugLog *log.Logger
+
+	cmd       *exec.Cmd
+	cmdWaitCh chan error
+	// design borrowed from go src/exec/exec.go
+	copyErrCh chan error
+	copyFns   []func() error
 }
 
 // DurationToPosition time.Duration to ffmpeg position format
@@ -33,251 +185,318 @@ func DurationToPosition(d time.Duration) string {
 	return fmt.Sprintf("%d:%.2d:%.2d", h, m, s)
 }
 
-func (pi *ProbeInfo) findStringFieldStream(findField, findValue, field string) string {
-	for _, fs := range pi.Streams {
-		if s, _ := fs[findField].(string); s == findValue {
-			v, _ := fs[field].(string)
-			return v
+func (pi *ProbeInfo) UnmarshalJSON(text []byte) error {
+	type probeInfo ProbeInfo
+	var piDummy probeInfo
+	err := json.Unmarshal(text, &piDummy)
+	json.Unmarshal(text, &piDummy.Raw)
+	*pi = ProbeInfo(piDummy)
+	return err
+}
+
+func (pi ProbeInfo) FindStreamType(codecType string) (ProbeStream, bool) {
+	for _, s := range pi.Streams {
+		if s.CodecType == codecType {
+			return s, true
 		}
+	}
+	return ProbeStream{}, false
+}
+
+// VideoCodec probed video codec
+func (pi ProbeInfo) VideoCodec() string {
+	if s, ok := pi.FindStreamType("video"); ok {
+		return s.CodecName
 	}
 	return ""
 }
 
-// VCodec probed video codec
-func (pi *ProbeInfo) VCodec() string {
-	return pi.findStringFieldStream("codec_type", "video", "codec_name")
-}
-
-// ACodec probed audio codec
-func (pi *ProbeInfo) ACodec() string {
-	return pi.findStringFieldStream("codec_type", "audio", "codec_name")
+// AudioCodec probed audio codec
+func (pi ProbeInfo) AudioCodec() string {
+	if s, ok := pi.FindStreamType("audio"); ok {
+		return s.CodecName
+	}
+	return ""
 }
 
 // FormatName probed format
-func (pi *ProbeInfo) FormatName() string {
-	v, _ := pi.Format["format_name"].(string)
-	if fl := strings.Split(v, ","); len(fl) > 0 {
+func (pi ProbeInfo) FormatName() string {
+	if fl := strings.Split(pi.Format.FormatName, ","); len(fl) > 0 {
 		return fl[0]
 	}
 	return ""
 }
 
 // Duration probed duration
-func (pi *ProbeInfo) Duration() time.Duration {
-	v, _ := pi.Format["duration"].(string)
-	f, _ := strconv.ParseFloat(v, 64)
-	return time.Second * time.Duration(f)
+func (pi ProbeInfo) Duration() time.Duration {
+	v, _ := strconv.ParseFloat(pi.Format.Duration, 64)
+	return time.Second * time.Duration(v)
 }
 
-func (pi *ProbeInfo) String() string {
-	return fmt.Sprintf("%s:%s:%s", pi.FormatName(), pi.ACodec(), pi.VCodec())
-}
-
-func probeInfoParse(r io.Reader) (pi *ProbeInfo, err error) {
-	pi = &ProbeInfo{}
-	d := json.NewDecoder(r)
-	if err := d.Decode(&pi); err != nil {
-		return nil, err
+func (pi ProbeInfo) String() string {
+	var codecs []string
+	for _, s := range pi.Streams {
+		codecs = append(codecs, s.CodecName)
 	}
 
-	return pi, nil
+	return fmt.Sprintf("%s:%s", pi.FormatName(), strings.Join(codecs, ":"))
 }
 
 // Probe run ffprobe with context
-func Probe(ctx context.Context, r io.Reader, debugLog *log.Logger, stderr io.Writer) (pi *ProbeInfo, err error) {
+func Probe(ctx context.Context, i Input, debugLog *log.Logger, stderr io.Writer) (pi ProbeInfo, err error) {
 	log := log.New(ioutil.Discard, "", 0)
 	if debugLog != nil {
 		log = debugLog
 	}
 
-	cmd := exec.CommandContext(
-		ctx,
-		"ffprobe",
+	ffprobeName := "ffprobe"
+	ffprobeArgs := []string{
 		"-hide_banner",
 		"-print_format", "json",
 		"-show_format",
 		"-show_streams",
-		"pipe:0",
-	)
-	cmd.Stdin = r
+	}
+	cmd := exec.CommandContext(ctx, ffprobeName, ffprobeArgs...)
+	switch i := i.(type) {
+	case Reader:
+		cmd.Stdin = i.Reader
+		cmd.Args = append(cmd.Args, "pipe:0")
+	case URL:
+		cmd.Args = append(cmd.Args, string(i))
+	default:
+		panic(fmt.Sprintf("unknown input type %v", i))
+	}
 	cmd.Stderr = stderr
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
-		return nil, err
+		return ProbeInfo{}, err
 	}
 
 	log.Printf("cmd %v", cmd.Args)
 
 	if cmdErr := cmd.Start(); cmdErr != nil {
-		return nil, cmdErr
+		return ProbeInfo{}, cmdErr
 	}
 	defer cmd.Wait()
 
-	var piErr error
-	if pi, piErr = probeInfoParse(stdout); err != nil {
-		return nil, piErr
+	d := json.NewDecoder(stdout)
+	pi = ProbeInfo{}
+	if err := d.Decode(&pi); err != nil {
+		return ProbeInfo{}, err
 	}
 
 	return pi, nil
 }
 
-// StreamMap map input to output
-type StreamMap struct {
-	Reader     io.Reader // many streams maps can use same reader
-	Specifier  string    // 0, a:0, v:0, etc
-	Codec      string    // acodec:mp3, vcodec:vp8, etc
-	CodecFlags []string
+func (m Metadata) Map() map[string]string {
+	kv := map[string]string{}
+	t := reflect.TypeOf(m)
+	v := reflect.ValueOf(m)
+
+	for i := 0; i < t.NumField(); i++ {
+		field := t.Field(i)
+		value := v.Field(i).String()
+		if value == "" {
+			continue
+		}
+
+		// json tag is used for metadata key name
+		key := field.Tag.Get("json")
+		kv[key] = value
+	}
+
+	return kv
 }
 
-// Format output format
-type Format struct {
-	Name  string
-	Flags []string
+func (a Metadata) Merge(b Metadata) Metadata {
+	at := reflect.TypeOf(a)
+	av := reflect.ValueOf(&a)
+	bv := reflect.ValueOf(b)
+
+	for i := 0; i < at.NumField(); i++ {
+		af := av.Elem().Field(i)
+		if af.String() == "" {
+			bf := bv.Field(i)
+			af.SetString(bf.String())
+		}
+	}
+
+	return a
 }
 
-// FFmpeg instance
-type FFmpeg struct {
-	InputFlags  []string
-	OutputFlags []string
-	StreamMaps  []StreamMap
-	Format      Format
-	Stderr      io.Writer
-	Stdout      io.WriteCloser
-	DebugLog    *log.Logger
+func (f *FFmpeg) Start(ctx context.Context) error {
+	f.cmdWaitCh = make(chan error)
 
-	cmd         *exec.Cmd
-	cmdErr      error
-	cmdWaitCh   chan error
-	startWaitCh chan struct{}
-}
-
-func (f *FFmpeg) startAux(ctx context.Context, stdout io.WriteCloser) error {
 	log := log.New(ioutil.Discard, "", 0)
 	if f.DebugLog != nil {
 		log = f.DebugLog
 	}
 
-	// figure out unique readers and create pipes for each
-	type inputFD struct {
-		r           *os.File
-		w           *os.File
-		childFD     int // fd in child process
-		inputFileID int // ffmpeg input file id
+	// figure out unique readers and create pipes for io.Readers
+	type ffmpegInput struct {
+		flags []string
+		arg   string // ffmpeg -i argument (pipe:, url)
+		index int    // ffmpeg input index
 	}
-	inputToFDs := []*inputFD{}
-	inputToFDMap := map[io.Reader]*inputFD{}
+	inputs := []*ffmpegInput{}
+	inputsMap := map[Input]*ffmpegInput{}
 
-	closeFilesFn := func() {
-		for _, ifd := range inputToFDs {
-			ifd.r.Close()
+	type ffmpegOutput struct {
+		arg string // ffmpeg output argument (pipe:, url)
+	}
+	outputs := []*ffmpegOutput{}
+	outputsMap := map[Output]*ffmpegOutput{}
+
+	closeAfterStartFns := []func(){}
+	closeAfterStart := func() {
+		for _, fn := range closeAfterStartFns {
+			fn()
 		}
-		stdout.Close()
 	}
 
 	// from os.Cmd "entry i becomes file descriptor 3+i"
 	childFD := 3
-	inputFileID := 0
-	for _, m := range f.StreamMaps {
-		// skip if reader already created
-		if _, ok := inputToFDMap[m.Reader]; ok {
-			continue
+	var extraFiles []*os.File
+	inputFileIndex := 0
+
+	for _, stream := range f.Streams {
+		for _, m := range stream.Maps {
+			// skip if input already created
+			if fi, ok := inputsMap[m.Input]; ok {
+				fi.flags = append(fi.flags, stream.InputFlags...)
+				continue
+			}
+
+			switch i := m.Input.(type) {
+			case Reader:
+				fi := &ffmpegInput{
+					arg:   fmt.Sprintf("pipe:%d", childFD),
+					index: inputFileIndex,
+				}
+				fi.flags = make([]string, len(stream.InputFlags))
+				copy(fi.flags, stream.InputFlags)
+				childFD++
+				inputFileIndex++
+
+				pr, pw, pErr := os.Pipe()
+				if pErr != nil {
+					return pErr
+				}
+				extraFiles = append(extraFiles, pr)
+				f.copyFns = append(f.copyFns, func() error {
+					_, err := io.Copy(pw, i.Reader)
+					pw.Close()
+					return err
+				})
+				closeAfterStartFns = append(closeAfterStartFns, func() {
+					pr.Close()
+				})
+
+				inputs = append(inputs, fi)
+				inputsMap[i] = fi
+			case URL:
+				fi := &ffmpegInput{
+					arg:   string(i),
+					index: inputFileIndex,
+					flags: []string{},
+				}
+				fi.flags = make([]string, len(stream.InputFlags))
+				copy(fi.flags, stream.InputFlags)
+				inputFileIndex++
+
+				inputs = append(inputs, fi)
+				inputsMap[i] = fi
+			default:
+				panic(fmt.Sprintf("unknown input type %v", i))
+			}
 		}
 
-		var err error
-		ifd := &inputFD{childFD: childFD, inputFileID: inputFileID}
-		childFD++
-		inputFileID++
+		switch o := stream.Output.(type) {
+		case Writer:
+			fo := &ffmpegOutput{
+				arg: fmt.Sprintf("pipe:%d", childFD),
+			}
+			childFD++
 
-		ifd.r, ifd.w, err = os.Pipe()
-		if err != nil {
-			return err
+			pr, pw, pErr := os.Pipe()
+			if pErr != nil {
+				return pErr
+			}
+			extraFiles = append(extraFiles, pw)
+			f.copyFns = append(f.copyFns, func() error {
+				_, err := io.Copy(o.Writer, pr)
+				o.Writer.Close()
+				pr.Close()
+				return err
+			})
+			closeAfterStartFns = append(closeAfterStartFns, func() {
+				pw.Close()
+			})
+
+			outputs = append(outputs, fo)
+			outputsMap[o] = fo
+		case URL:
+			fo := &ffmpegOutput{
+				arg: string(o),
+			}
+
+			outputs = append(outputs, fo)
+			outputsMap[o] = fo
+		default:
+			panic(fmt.Sprintf("unknown output type %v", o))
 		}
-		go func(r io.Reader) {
-			io.Copy(ifd.w, r)
-			ifd.w.Close()
-		}(m.Reader)
-
-		inputToFDs = append(inputToFDs, ifd)
-		inputToFDMap[m.Reader] = ifd
 	}
 
 	ffmpegName := "ffmpeg"
-	ffmpegArgs := []string{"-hide_banner"}
+	ffmpegArgs := []string{"-hide_banner", "-y"}
 
-	var extraFiles []*os.File
-	for _, ifd := range inputToFDs {
-		extraFiles = append(extraFiles, ifd.r)
-		ffmpegArgs = append(ffmpegArgs, f.InputFlags...)
-		ffmpegArgs = append(ffmpegArgs, "-i", fmt.Sprintf("pipe:%d", ifd.childFD))
+	for _, fi := range inputs {
+		ffmpegArgs = append(ffmpegArgs, fi.flags...)
+		ffmpegArgs = append(ffmpegArgs, "-i", fi.arg)
 	}
 
-	for _, m := range f.StreamMaps {
-		ifd := inputToFDMap[m.Reader]
+	for _, stream := range f.Streams {
+		fo := outputsMap[stream.Output]
 
-		ffmpegArgs = append(ffmpegArgs, "-map", fmt.Sprintf("%d:%s", ifd.inputFileID, m.Specifier))
-		codecParts := strings.SplitN(m.Codec, ":", 2)
-		if len(codecParts) == 2 && (codecParts[0] == "acodec" || codecParts[0] == "vcodec") {
-			ffmpegArgs = append(ffmpegArgs, "-"+codecParts[0], codecParts[1])
-		} else {
-			closeFilesFn()
-			return fmt.Errorf("codec must be acodec/vcodec:name (was %s)", m.Codec)
+		for _, m := range stream.Maps {
+			fi := inputsMap[m.Input]
+			ffmpegArgs = append(ffmpegArgs, "-map", fmt.Sprintf("%d:%s", fi.index, m.Specifier))
+			ffmpegArgs = append(ffmpegArgs, m.Codec.codecArgs()...)
+			ffmpegArgs = append(ffmpegArgs, m.CodecFlags...)
 		}
-		ffmpegArgs = append(ffmpegArgs, m.CodecFlags...)
-	}
 
-	ffmpegArgs = append(ffmpegArgs, "-f", f.Format.Name)
-	ffmpegArgs = append(ffmpegArgs, f.Format.Flags...)
-	ffmpegArgs = append(ffmpegArgs, f.OutputFlags...)
-	ffmpegArgs = append(ffmpegArgs, "pipe:1")
+		ffmpegArgs = append(ffmpegArgs, "-f", stream.Format.Name)
+		ffmpegArgs = append(ffmpegArgs, stream.Format.Flags...)
+		for k, v := range stream.Metadata.Map() {
+			ffmpegArgs = append(ffmpegArgs, "-metadata", k+"="+v)
+		}
+		ffmpegArgs = append(ffmpegArgs, stream.OutputFlags...)
+		ffmpegArgs = append(ffmpegArgs, fo.arg)
+	}
 
 	f.cmd = exec.CommandContext(ctx, ffmpegName, ffmpegArgs...)
 	f.cmd.ExtraFiles = extraFiles
 	f.cmd.Stderr = f.Stderr
-	f.cmd.Stdout = stdout
 
 	log.Printf("cmd %v", f.cmd.Args)
 
 	if err := f.cmd.Start(); err != nil {
-		closeFilesFn()
+		closeAfterStart()
 		return err
+	}
+
+	// after fork we can close read on input and write on output pipes
+	closeAfterStart()
+
+	f.copyErrCh = make(chan error, len(f.copyFns))
+	for _, fn := range f.copyFns {
+		go func(fn func() error) {
+			f.copyErrCh <- fn()
+		}(fn)
 	}
 
 	go func() {
 		f.cmdWaitCh <- f.cmd.Wait()
-		closeFilesFn()
-	}()
-
-	return nil
-}
-
-// Start ffmpeg with context and return once there is data to be read
-func (f *FFmpeg) Start(ctx context.Context) error {
-	f.cmdWaitCh = make(chan error, 1)
-	f.startWaitCh = make(chan struct{}, 1)
-
-	probeR, probeW := io.Pipe()
-	if err := f.startAux(ctx, probeW); err != nil {
-		probeR.Close()
-		return err
-	}
-
-	probeByte := make([]byte, 1)
-	if _, readErr := io.ReadFull(probeR, probeByte); readErr != nil {
-		probeR.Close()
-		f.cmdErr = <-f.cmdWaitCh
-		if f.cmdErr != nil {
-			return f.cmdErr
-		}
-		return readErr
-	}
-
-	go func() {
-		f.Stdout.Write(probeByte)
-		io.Copy(f.Stdout, probeR)
-		probeR.Close()
-		f.Stdout.Close()
-		f.cmdErr = <-f.cmdWaitCh
-		close(f.startWaitCh)
 	}()
 
 	return nil
@@ -285,6 +504,17 @@ func (f *FFmpeg) Start(ctx context.Context) error {
 
 // Wait for ffmpeg to finish
 func (f *FFmpeg) Wait() error {
-	<-f.startWaitCh
-	return f.cmdErr
+	var copyErr error
+	for range f.copyFns {
+		if err := <-f.copyErrCh; err != nil && copyErr == nil {
+			copyErr = err
+		}
+	}
+
+	cmdErr := <-f.cmdWaitCh
+	if cmdErr != nil {
+		return cmdErr
+	}
+
+	return copyErr
 }
