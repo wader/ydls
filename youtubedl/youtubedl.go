@@ -26,11 +26,11 @@ type Info struct {
 	Uploader string `json:"uploader"`
 	Creator  string `json:"creator"`
 
-	Title       string    `json:"title"`
-	Description string    `json:"description"`
-	Duration    float64   `json:"duration"`
-	Thumbnail   string    `json:"thumbnail"`
-	Formats     []*Format `json:"formats"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`
+	Duration    float64  `json:"duration"`
+	Thumbnail   string   `json:"thumbnail"`
+	Formats     []Format `json:"formats"`
 
 	// not unmarshalled, populated from image thumbnail file
 	ThumbnailBytes []byte `json:"-"`
@@ -55,7 +55,7 @@ type Format struct {
 	NormVCodec string
 }
 
-func (f *Format) String() string {
+func (f Format) String() string {
 	return fmt.Sprintf("%s:%s:%s:%s:%s:%f",
 		f.FormatID,
 		f.Protocol,
@@ -103,19 +103,21 @@ func codecFromExt(ext string) (acodec string, vcodec string) {
 	}
 }
 
-func parseInfo(r io.Reader) (i *Info, err error) {
-	i = &Info{}
+func parseInfo(r io.Reader) (info Info, err error) {
+	info = Info{}
 
-	i.rawJSON, err = ioutil.ReadAll(r)
+	info.rawJSON, err = ioutil.ReadAll(r)
 	if err != nil {
-		return nil, err
+		return Info{}, err
 	}
 
-	if err := json.Unmarshal(i.rawJSON, i); err != nil {
-		return nil, err
+	if err := json.Unmarshal(info.rawJSON, &info); err != nil {
+		return Info{}, err
 	}
 
-	for _, f := range i.Formats {
+	for i, _ := range info.Formats {
+		f := &info.Formats[i]
+
 		f.NormACodec = normalizeCodecName(f.ACodec)
 		f.NormVCodec = normalizeCodecName(f.VCodec)
 
@@ -134,11 +136,11 @@ func parseInfo(r io.Reader) (i *Info, err error) {
 		}
 	}
 
-	return i, nil
+	return info, nil
 }
 
 // NewFromURL new Info downloaded from URL using context
-func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err error) {
+func NewFromURL(ctx context.Context, url string, stdout io.Writer) (info Info, err error) {
 	tempPath, _ := ioutil.TempDir("", "ydls-youtubedl")
 	defer os.RemoveAll(tempPath)
 
@@ -150,6 +152,7 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 		"--skip-download",
 		"--write-info-json",
 		"--write-thumbnail",
+		"--restrict-filenames",
 		// don't base output filename on source info
 		"--output", "source",
 		// provide URL via stdin for security, youtube-dl has some run command args
@@ -159,15 +162,15 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 	cmd.Stdout = stdout
 	cmdStderr, cmdStderrErr := cmd.StderrPipe()
 	if cmdStderrErr != nil {
-		return nil, cmdStderrErr
+		return Info{}, cmdStderrErr
 	}
 	cmdStdin, cmdStdinErr := cmd.StdinPipe()
 	if cmdStdinErr != nil {
-		return nil, cmdStdinErr
+		return Info{}, cmdStdinErr
 	}
 
 	if err := cmd.Start(); err != nil {
-		return nil, err
+		return Info{}, err
 	}
 	defer cmd.Wait()
 
@@ -179,7 +182,7 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 		const errorPrefix = "ERROR: "
 		line := stderrLineScanner.Text()
 		if strings.HasPrefix(line, errorPrefix) {
-			return nil, Error(line[len(errorPrefix):])
+			return Info{}, Error(line[len(errorPrefix):])
 		}
 	}
 
@@ -187,10 +190,10 @@ func NewFromURL(ctx context.Context, url string, stdout io.Writer) (i *Info, err
 }
 
 // NewFromPath new Info from path with JSON and optional image
-func NewFromPath(infoPath string) (i *Info, err error) {
+func NewFromPath(infoPath string) (info Info, err error) {
 	files, err := ioutil.ReadDir(infoPath)
 	if err != nil {
-		return nil, err
+		return Info{}, err
 	}
 
 	infoJSONPath := ""
@@ -205,27 +208,27 @@ func NewFromPath(infoPath string) (i *Info, err error) {
 	}
 
 	if infoPath == "" {
-		return nil, fmt.Errorf("no info json found")
+		return Info{}, fmt.Errorf("no info json found")
 	}
 
 	file, err := os.Open(infoJSONPath)
 	if err != nil {
-		return nil, err
+		return Info{}, err
 	}
 	defer file.Close()
-	i, err = parseInfo(file)
+	info, err = parseInfo(file)
 	if err != nil {
-		return nil, err
+		return Info{}, err
 	}
 
 	if thumbnailPath != "" {
-		i.ThumbnailBytes, err = ioutil.ReadFile(thumbnailPath)
+		info.ThumbnailBytes, err = ioutil.ReadFile(thumbnailPath)
 		if err != nil {
-			return nil, fmt.Errorf("failed to read thumbnail")
+			return Info{}, fmt.Errorf("failed to read thumbnail")
 		}
 	}
 
-	return i, nil
+	return info, nil
 }
 
 // DownloadResult download result
@@ -234,19 +237,14 @@ type DownloadResult struct {
 	waitCh chan struct{}
 }
 
-// Wait for resource cleanup
-func (dr *DownloadResult) Wait() {
-	<-dr.waitCh
-}
-
 // Download format matched by filter
-func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (*DownloadResult, error) {
+func (info Info) Download(ctx context.Context, filter string, stderr io.Writer) (*DownloadResult, error) {
 	tempPath, tempErr := ioutil.TempDir("", "ydls-youtubedl")
 	if tempErr != nil {
 		return nil, tempErr
 	}
 	jsonTempPath := path.Join(tempPath, "info.json")
-	if err := ioutil.WriteFile(jsonTempPath, i.rawJSON, 0644); err != nil {
+	if err := ioutil.WriteFile(jsonTempPath, info.rawJSON, 0644); err != nil {
 		os.RemoveAll(tempPath)
 		return nil, err
 	}
@@ -260,6 +258,7 @@ func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (*
 		"youtube-dl",
 		"--no-call-home",
 		"--no-cache-dir",
+		"--restrict-filenames",
 		"--load-info", jsonTempPath,
 		"-f", filter,
 		"-o", "-",
@@ -282,4 +281,9 @@ func (i *Info) Download(ctx context.Context, filter string, stderr io.Writer) (*
 	}()
 
 	return dr, nil
+}
+
+// Wait for resource cleanup
+func (dr *DownloadResult) Wait() {
+	<-dr.waitCh
 }
