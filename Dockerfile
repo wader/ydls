@@ -5,6 +5,9 @@ RUN apk add --no-cache \
   openssl \
   bash \
   build-base \
+  autoconf \
+  automake \
+  libtool \
   git \
   yasm \
   zlib-dev \
@@ -14,17 +17,25 @@ RUN apk add --no-cache \
   libvpx-dev \
   x265-dev
 
-# some -dev alpine packages lack .a files
-ENV VORBIS_VERSION=1.3.5
+# some -dev alpine packages lack .a files in 3.6 (some fixed in edge)
 RUN \
+  FDK_AAC_VERSION=0.1.5 && \
+  wget -O - https://github.com/mstorsjo/fdk-aac/archive/v$FDK_AAC_VERSION.tar.gz | tar xz && \
+  cd fdk-aac-$FDK_AAC_VERSION && \
+  ./autogen.sh && \
+  ./configure --enable-static && \
+  make -j4 install
+
+RUN \
+  VORBIS_VERSION=1.3.5 && \
   wget -O - https://downloads.xiph.org/releases/vorbis/libvorbis-$VORBIS_VERSION.tar.gz | tar xz && \
   cd libvorbis-$VORBIS_VERSION && \
   CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
   ./configure --enable-static && \
   make -j4 install
 
-ENV OPUS_VERSION=1.2.1
 RUN \
+  OPUS_VERSION=1.2.1 && \
   wget -O - https://archive.mozilla.org/pub/opus/opus-$OPUS_VERSION.tar.gz | tar xz && \
   cd opus-$OPUS_VERSION && \
   CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
@@ -32,16 +43,17 @@ RUN \
   make -j4 install
 
 # require libogg to build
-ENV THEORA_VERSION=1.1.1
 RUN \
+  THEORA_VERSION=1.1.1 && \
   wget -O - https://downloads.xiph.org/releases/theora/libtheora-$THEORA_VERSION.tar.bz2 | tar xj && \
   cd libtheora-$THEORA_VERSION && \
   CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
   ./configure --enable-pic --enable-static && \
   make -j4 install
 
-ENV X264_VERSION=aaa9aa83a111ed6f1db253d5afa91c5fc844583f
+# x264 only has a "stable" branch no tags
 RUN \
+  X264_VERSION=aaa9aa83a111ed6f1db253d5afa91c5fc844583f && \
   git clone git://git.videolan.org/x264.git && \
   cd x264 && \
   git checkout $X264_VERSION && \
@@ -67,6 +79,7 @@ RUN \
   --disable-doc \
   --disable-ffplay \
   --enable-libmp3lame \
+  --enable-libfdk-aac \
   --enable-libvorbis \
   --enable-libopus \
   --enable-libtheora \

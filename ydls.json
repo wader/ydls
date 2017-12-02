@@ -3,7 +3,8 @@
   "CodecMap": {
     "mp3": "libmp3lame",
     "vorbis": "libvorbis",
-    "opus": "libopus"
+    "opus": "libopus",
+    "aac": "libfdk_aac"
   },
   "Formats": [{
       "Name": "mp3",
