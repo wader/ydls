@@ -98,7 +98,9 @@ func interestingGoroutines() (gs []string) {
 			strings.Contains(stack, "signal.signal_recv") ||
 			strings.Contains(stack, "sigterm.handler") ||
 			strings.Contains(stack, "runtime_mcall") ||
-			strings.Contains(stack, "goroutine in C code") {
+			strings.Contains(stack, "goroutine in C code") ||
+			// match leaktest.Check concurrent leak check routines
+			strings.Contains(stack, "leaktest.Check") {
 			continue
 		}
 		gs = append(gs, strings.TrimSpace(g))
@@ -195,7 +197,7 @@ func checkLeak(
 	t ErrorReporter,
 	timeout time.Duration,
 	resource string,
-	check func() (leaked interface{}, ok bool)) {
+	check func() (leaked interface{}, ok bool)) error {
 	deadline := time.Now().Add(timeout)
 	for {
 		leaked, ok := check()
@@ -208,9 +210,10 @@ func checkLeak(
 			continue
 		}
 
-		t.Errorf("Leaked %s: %v", resource, leaked)
-		break
+		return fmt.Errorf("Leaked %s: %v", resource, leaked)
 	}
+
+	return nil
 }
 
 // Check check for leaked fds and child processes
@@ -238,52 +241,79 @@ func Check(t ErrorReporter) func() {
 		defer os.Setenv("TMPDIR", origTMPDIR)
 		defer os.RemoveAll(testTempDir)
 
-		checkLeak(t, 1*time.Second, "file descriptors", func() (interface{}, bool) {
-			fdsAfter, fdsAfterErr := fdsForCurrentProcess()
-			if fdsAfterErr != nil {
-				t.Fatal(fdsAfterErr)
+		checks := []struct {
+			name string
+			fn   func() (interface{}, bool)
+		}{
+			{
+
+				name: "file descriptors",
+				fn: func() (interface{}, bool) {
+					fdsAfter, fdsAfterErr := fdsForCurrentProcess()
+					if fdsAfterErr != nil {
+						t.Fatal(fdsAfterErr)
+					}
+
+					leaked := intSetMinus(fdsAfter, fdsBefore)
+					return leaked, len(leaked) == 0
+				},
+			},
+			{
+				name: "child processes",
+				fn: func() (interface{}, bool) {
+					childsAfter, childsAfterErr := childsForPid(os.Getpid())
+					if childsAfterErr != nil {
+						t.Fatal(childsAfterErr)
+					}
+
+					leaked := intSetMinus(childsAfter, childsBefore)
+					fancyPids := []string{}
+					for _, pid := range leaked {
+						stat, err := readProcStatForPid(pid)
+						if err == nil {
+							fancyPids = append(fancyPids, fmt.Sprintf("%d %s", pid, stat.name))
+						} else {
+							fancyPids = append(fancyPids, strconv.Itoa(pid))
+						}
+					}
+
+					return fancyPids, len(fancyPids) == 0
+				},
+			},
+			{
+				name: "goroutines",
+				fn: func() (interface{}, bool) {
+					leaked := stringSetMinus(interestingGoroutines(), goroutinesBefore)
+					return leaked, len(leaked) == 0
+				}},
+			{
+				name: "temp files",
+				fn: func() (interface{}, bool) {
+					leaked := []string{}
+					filepath.Walk(testTempDir, func(path string, info os.FileInfo, err error) error {
+						if path == testTempDir {
+							return nil
+						}
+						leaked = append(leaked, path)
+						return nil
+					})
+
+					return leaked, len(leaked) == 0
+				},
+			},
+		}
+		checkWaitCh := make(chan error, len(checks))
+
+		for _, check := range checks {
+			check := check
+			go func() {
+				checkWaitCh <- checkLeak(t, 5*time.Second, check.name, check.fn)
+			}()
+		}
+		for range checks {
+			if err := <-checkWaitCh; err != nil {
+				t.Errorf("%s", err)
 			}
-
-			leaked := intSetMinus(fdsAfter, fdsBefore)
-			return leaked, len(leaked) == 0
-		})
-
-		checkLeak(t, 1*time.Second, "child processes", func() (interface{}, bool) {
-			childsAfter, childsAfterErr := childsForPid(os.Getpid())
-			if childsAfterErr != nil {
-				t.Fatal(childsAfterErr)
-			}
-
-			leaked := intSetMinus(childsAfter, childsBefore)
-			fancyPids := []string{}
-			for _, pid := range leaked {
-				stat, err := readProcStatForPid(pid)
-				if err == nil {
-					fancyPids = append(fancyPids, fmt.Sprintf("%d %s", pid, stat.name))
-				} else {
-					fancyPids = append(fancyPids, strconv.Itoa(pid))
-				}
-			}
-
-			return fancyPids, len(fancyPids) == 0
-		})
-
-		checkLeak(t, 5*time.Second, "goroutines", func() (interface{}, bool) {
-			leaked := stringSetMinus(interestingGoroutines(), goroutinesBefore)
-			return leaked, len(leaked) == 0
-		})
-
-		checkLeak(t, 1*time.Second, "temp files", func() (interface{}, bool) {
-			leaked := []string{}
-			filepath.Walk(testTempDir, func(path string, info os.FileInfo, err error) error {
-				if path == testTempDir {
-					return nil
-				}
-				leaked = append(leaked, path)
-				return nil
-			})
-
-			return leaked, len(leaked) == 0
-		})
+		}
 	}
 }

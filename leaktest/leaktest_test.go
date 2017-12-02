@@ -46,7 +46,7 @@ func tesFn(t *testing.T, inGorutine bool, shouldFail bool, fn func()) {
 		if shouldFail {
 			t.Errorf("failed to detect leak")
 		} else {
-			t.Errorf("failed when there was no leak")
+			t.Errorf("failed when there was no leak (%s)", checker.msg)
 		}
 	}
 }
@@ -117,18 +117,24 @@ func TestBlockWaitMutexCondUnreferenced(t *testing.T) {
 }
 
 func TestLeakFd(t *testing.T) {
+	var r, w *os.File
 	testLeak(t, func() {
-		os.Pipe()
+		r, w, _ = os.Pipe()
 	})
+	r.Close()
+	w.Close()
 }
 
 func TestLeakFdBeforeClosed(t *testing.T) {
 	r, w, _ := os.Pipe()
+	var r2, w2 *os.File
 	testLeak(t, func() {
-		os.Pipe()
+		r2, w2, _ = os.Pipe()
 		r.Close()
 		w.Close()
 	})
+	r2.Close()
+	w2.Close()
 }
 
 func TestLeakFdBeforeClosedNoLeak(t *testing.T) {
