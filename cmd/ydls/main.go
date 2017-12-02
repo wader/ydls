@@ -27,6 +27,13 @@ var serverFlag = flag.Bool("server", false, "Start server")
 var listenFlag = flag.String("listen", ":8080", "Listen address")
 var indexFlag = flag.String("index", "", "Path to index template")
 
+func fatalIfErrorf(err error, format string, a ...interface{}) {
+	if err != nil {
+		a = append(a, err)
+		log.Fatalf(format+": %v", a...)
+	}
+}
+
 func init() {
 	flag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage of %s [flags] URL [format] [options]...:\n", os.Args[0])
@@ -53,11 +60,9 @@ func server(y ydls.YDLS) {
 		yh.DebugLog = log.New(os.Stdout, "DEBUG: ", log.Ltime)
 	}
 	if *indexFlag != "" {
-		if indexTmpl, err := template.ParseFiles(*indexFlag); err != nil {
-			log.Fatalf("failed to parse index template: %s", err)
-		} else {
-			yh.IndexTmpl = indexTmpl
-		}
+		indexTmpl, err := template.ParseFiles(*indexFlag)
+		fatalIfErrorf(err, "failed to parse index template")
+		yh.IndexTmpl = indexTmpl
 	}
 
 	log.Printf("Service listen on %s", *listenFlag)
@@ -87,14 +92,7 @@ func absRootPath(root string, path string) (string, error) {
 	return abs, nil
 }
 
-func fatalIfErrorf(err error, format string, a ...interface{}) {
-	if err != nil {
-		a = append(a, err)
-		log.Fatalf(format+": %v", a...)
-	}
-}
-
-func get(y ydls.YDLS) {
+func download(y ydls.YDLS) {
 	var debugLog *log.Logger
 	if *debugFlag {
 		debugLog = log.New(os.Stdout, "DEBUG: ", log.Ltime)
@@ -143,13 +141,11 @@ func get(y ydls.YDLS) {
 
 func main() {
 	y, err := ydls.NewFromFile(*configFlag)
-	if err != nil {
-		log.Fatalf("failed to read config: %s", err)
-	}
+	fatalIfErrorf(err, "failed to read config")
 
 	if *serverFlag {
 		server(y)
 	} else {
-		get(y)
+		download(y)
 	}
 }
