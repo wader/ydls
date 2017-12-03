@@ -73,7 +73,7 @@ func TestInfiniteForLoop(t *testing.T) {
 
 func TestSelectUnreferencedChannel(t *testing.T) {
 	testGoroutineLeak(t, func() {
-		c := make(chan struct{}, 0)
+		c := make(chan struct{})
 		select {
 		case <-c:
 		}
@@ -82,8 +82,8 @@ func TestSelectUnreferencedChannel(t *testing.T) {
 
 func TestBlockSelectUnreferencedChannel(t *testing.T) {
 	testGoroutineLeak(t, func() {
-		c := make(chan struct{}, 0)
-		c2 := make(chan struct{}, 0)
+		c := make(chan struct{})
+		c2 := make(chan struct{})
 		select {
 		case <-c:
 		case c2 <- struct{}{}:
