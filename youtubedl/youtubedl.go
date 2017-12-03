@@ -117,7 +117,7 @@ func parseInfo(r io.Reader) (info Info, err error) {
 		return Info{}, err
 	}
 
-	for i, _ := range info.Formats {
+	for i := range info.Formats {
 		f := &info.Formats[i]
 
 		f.NormACodec = normalizeCodecName(f.ACodec)
@@ -239,6 +239,11 @@ type DownloadResult struct {
 	waitCh chan struct{}
 }
 
+// Wait for resource cleanup
+func (dr *DownloadResult) Wait() {
+	<-dr.waitCh
+}
+
 // Download format matched by filter
 func (info Info) Download(ctx context.Context, filter string, stderr io.Writer) (*DownloadResult, error) {
 	tempPath, tempErr := ioutil.TempDir("", "ydls-youtubedl")
@@ -283,9 +288,4 @@ func (info Info) Download(ctx context.Context, filter string, stderr io.Writer) 
 	}()
 
 	return dr, nil
-}
-
-// Wait for resource cleanup
-func (dr *DownloadResult) Wait() {
-	<-dr.waitCh
 }
