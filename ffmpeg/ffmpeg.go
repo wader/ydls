@@ -274,15 +274,22 @@ func Probe(ctx context.Context, i Input, debugLog *log.Logger, stderr io.Writer)
 
 	log.Printf("cmd %v", cmd.Args)
 
-	if cmdErr := cmd.Start(); cmdErr != nil {
-		return ProbeInfo{}, cmdErr
+	if err := cmd.Start(); err != nil {
+		return ProbeInfo{}, err
 	}
-	defer cmd.Wait()
+
+	pi = ProbeInfo{}
 
 	d := json.NewDecoder(stdout)
-	pi = ProbeInfo{}
-	if err := d.Decode(&pi); err != nil {
-		return ProbeInfo{}, err
+	jsonErr := d.Decode(&pi)
+
+	waitErr := cmd.Wait()
+	if exitErr, ok := waitErr.(*exec.ExitError); ok && !exitErr.Success() {
+		return ProbeInfo{}, exitErr
+	}
+
+	if jsonErr != nil {
+		return ProbeInfo{}, jsonErr
 	}
 
 	return pi, nil
