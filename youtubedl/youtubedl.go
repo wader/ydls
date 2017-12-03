@@ -252,7 +252,7 @@ func (info Info) Download(ctx context.Context, filter string, stderr io.Writer) 
 	}
 
 	dr := &DownloadResult{
-		waitCh: make(chan struct{}, 1),
+		waitCh: make(chan struct{}),
 	}
 
 	cmd := exec.CommandContext(
