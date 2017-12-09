@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"net/url"
 	"os"
+	"reflect"
 	"testing"
 	"time"
 
@@ -76,16 +77,16 @@ func TestParseFormatDownloadURL(t *testing.T) {
 			DownloadOptions{Format: "mp3", URL: "http://domain.com"}, false},
 		{&url.URL{Path: "/", RawQuery: "url=http://domain.com"},
 			DownloadOptions{Format: "", URL: "http://domain.com"}, false},
-		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mkv&acodec=flac&vcodec=theora"},
-			DownloadOptions{Format: "mkv", URL: "http://domain.com", ACodec: "flac", VCodec: "theora"}, false},
+		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mkv&codec=flac&codec=theora"},
+			DownloadOptions{Format: "mkv", URL: "http://domain.com", Codecs: []string{"flac", "theora"}}, false},
 		{&url.URL{Path: "/mkv+flac+theora/http://domain.com", RawQuery: ""},
-			DownloadOptions{Format: "mkv", URL: "http://domain.com", ACodec: "flac", VCodec: "theora"}, false},
+			DownloadOptions{Format: "mkv", URL: "http://domain.com", Codecs: []string{"flac", "theora"}}, false},
 		{&url.URL{Path: "/mkv+flac+theora/http://domain.com", RawQuery: ""},
-			DownloadOptions{Format: "mkv", URL: "http://domain.com", ACodec: "flac", VCodec: "theora"}, false},
+			DownloadOptions{Format: "mkv", URL: "http://domain.com", Codecs: []string{"flac", "theora"}}, false},
 		{&url.URL{Path: "/mp3+retranscode/http://domain.com", RawQuery: ""},
-			DownloadOptions{Format: "mp3", URL: "http://domain.com", ACodec: "", VCodec: "", Retranscode: true}, false},
+			DownloadOptions{Format: "mp3", URL: "http://domain.com", Retranscode: true}, false},
 		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mp3&retranscode=1"},
-			DownloadOptions{Format: "mp3", URL: "http://domain.com", ACodec: "", VCodec: "", Retranscode: true}, false},
+			DownloadOptions{Format: "mp3", URL: "http://domain.com", Retranscode: true}, false},
 		{&url.URL{Path: "/mkv+123s/http://domain.com", RawQuery: ""},
 			DownloadOptions{Format: "mkv", URL: "http://domain.com", TimeRange: timerange.TimeRange{Stop: time.Second * 123}}, false},
 		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mkv&time=123s"},
@@ -102,7 +103,7 @@ func TestParseFormatDownloadURL(t *testing.T) {
 			if c.expectedErr {
 				t.Errorf("url=%+v, got %#v, expected error", c.url, opts)
 			} else if opts.Format != c.expectedOpts.Format || opts.URL != c.expectedOpts.URL ||
-				opts.ACodec != c.expectedOpts.ACodec || opts.VCodec != c.expectedOpts.VCodec ||
+				!reflect.DeepEqual(opts.Codecs, c.expectedOpts.Codecs) ||
 				opts.Retranscode != c.expectedOpts.Retranscode {
 				t.Errorf("url=%+v, got %#v, expected %#v", c.url, opts, c.expectedOpts)
 			}

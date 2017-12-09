@@ -1,125 +1,338 @@
 {
-  "InputFlags": ["-thread_queue_size", "512"],
+  "InputFlags": [
+    "-thread_queue_size",
+    "512"
+  ],
   "CodecMap": {
     "mp3": "libmp3lame",
     "vorbis": "libvorbis",
     "opus": "libopus",
     "aac": "libfdk_aac"
   },
-  "Formats": [{
-      "Name": "mp3",
-      "Formats": ["mp3"],
-      "FormatFlags": ["-id3v2_version", "0"],
-      "ACodecs": [{
-        "Codec": "mp3"
-      }],
+  "Formats": {
+    "mp3": {
+      "Formats": [
+        "mp3"
+      ],
+      "FormatFlags": [
+        "-id3v2_version",
+        "0"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "mp3"
+            }
+          ]
+        }
+      ],
       "Prepend": "id3v2",
       "Ext": "mp3",
       "MIMEType": "audio/mpeg"
     },
-    {
-      "Name": "m4a",
-      "Formats": ["mov", "m4a", "3gp", "mj2"],
-      "FormatFlags": ["-frag_size", "1000000"],
-      "ACodecs": [{
-        "Codec": "aac",
-        "FormatFlags": ["-bsf:a", "aac_adtstoasc"]
-      }],
+    "m4a": {
+      "Formats": [
+        "mov"
+      ],
+      "FormatFlags": [
+        "-frag_size",
+        "100000"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "aac",
+              "FormatFlags": [
+                "-bsf:a",
+                "aac_adtstoasc"
+              ]
+            }
+          ]
+        }
+      ],
       "Ext": "m4a",
       "MIMEType": "audio/mp4"
     },
-    {
-      "Name": "ogg",
-      "Formats": ["ogg"],
-      "ACodecs": [{
-        "Codec": "vorbis"
-      }, {
-        "Codec": "opus"
-      }],
+    "ogg": {
+      "Formats": [
+        "ogg"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "vorbis"
+            },
+            {
+              "Name": "opus"
+            }
+          ]
+        }
+      ],
       "Ext": "ogg",
       "MIMEType": "audio/ogg"
     },
-    {
-      "Name": "flac",
-      "Formats": ["flac"],
-      "ACodecs": [{
-        "Codec": "flac"
-      }],
+    "flac": {
+      "Formats": [
+        "flac"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "flac"
+            }
+          ]
+        }
+      ],
       "Ext": "flac",
       "MIMEType": "audio/flac"
     },
-    {
-      "Name": "wav",
-      "Formats": ["wav"],
-      "ACodecs": [{
-        "Codec": "pcm_s16le"
-      }],
+    "alac": {
+      "Formats": [
+        "mov"
+      ],
+      "FormatFlags": [
+        "-frag_size",
+        "100000"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "alac"
+            }
+          ]
+        }
+      ],
+      "Ext": "m4a",
+      "MIMEType": "audio/mp4"
+    },
+    "wav": {
+      "Formats": [
+        "wav"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "pcm_s16le"
+            }
+          ]
+        }
+      ],
       "Ext": "wav",
       "MIMEType": "audio/wav"
     },
-    {
-      "Name": "mp4",
-      "Formats": ["mov", "m4a", "3gp", "mj2"],
-      "FormatFlags": ["-movflags", "isml+frag_keyframe"],
-      "ACodecs": [{
-        "Codec": "aac",
-        "FormatFlags": ["-bsf:a", "aac_adtstoasc"]
-      }, {
-        "Codec": "mp3"
-      }, {
-        "Codec": "vorbis"
-      }],
-      "VCodecs": [{
-        "Codec": "h264"
-      }, {
-        "Codec": "hevc"
-      }],
+    "mp4": {
+      "Formats": [
+        "mov"
+      ],
+      "FormatFlags": [
+        "-movflags",
+        "isml+frag_keyframe"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "aac",
+              "FormatFlags": [
+                "-bsf:a",
+                "aac_adtstoasc"
+              ]
+            },
+            {
+              "Name": "mp3"
+            },
+            {
+              "Name": "vorbis"
+            },
+            {
+              "Name": "flac"
+            },
+            {
+              "Name": "alac"
+            }
+          ]
+        },
+        {
+          "Specifier": "v:0",
+          "Codecs": [
+            {
+              "Name": "h264"
+            },
+            {
+              "Name": "hevc"
+            }
+          ]
+        }
+      ],
       "Ext": "mp4",
       "MIMEType": "video/mp4"
     },
-    {
-      "Name": "webm",
-      "Formats": ["webm", "matroska"],
-      "ACodecs": [{
-        "Codec": "vorbis"
-      }, {
-        "Codec": "opus"
-      }],
-      "VCodecs": [{
-        "Codec": "vp8"
-      }, {
-        "Codec": "vp9"
-      }],
+    "webm": {
+      "Formats": [
+        "webm",
+        "matroska"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "vorbis"
+            },
+            {
+              "Name": "opus"
+            }
+          ]
+        },
+        {
+          "Specifier": "v:0",
+          "Codecs": [
+            {
+              "Name": "vp8"
+            },
+            {
+              "Name": "vp9"
+            }
+          ]
+        }
+      ],
       "Ext": "webm",
       "MIMEType": "video/webm"
     },
-    {
-      "Name": "mkv",
-      "Formats": ["matroska"],
-      "ACodecs": [{
-        "Codec": "aac"
-      }, {
-        "Codec": "mp3"
-      }, {
-        "Codec": "vorbis"
-      }, {
-        "Codec": "opus"
-      }, {
-        "Codec": "flac"
-      }],
-      "VCodecs": [{
-        "Codec": "h264"
-      }, {
-        "Codec": "vp8"
-      }, {
-        "Codec": "hevc"
-      }, {
-        "Codec": "vp9"
-      }, {
-        "Codec": "theora"
-      }],
+    "mkv": {
+      "Formats": [
+        "matroska"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "aac"
+            },
+            {
+              "Name": "mp3"
+            },
+            {
+              "Name": "vorbis"
+            },
+            {
+              "Name": "opus"
+            },
+            {
+              "Name": "flac"
+            },
+            {
+              "Name": "alac"
+            },
+            {
+              "Name": "ac3"
+            }
+          ]
+        },
+        {
+          "Specifier": "v:0",
+          "Codecs": [
+            {
+              "Name": "h264"
+            },
+            {
+              "Name": "hevc"
+            },
+            {
+              "Name": "vp8"
+            },
+            {
+              "Name": "vp9"
+            },
+            {
+              "Name": "theora"
+            }
+          ]
+        }
+      ],
       "Ext": "mkv",
       "MIMEType": "video/x-matroska"
+    },
+    "ts": {
+      "Formats": [
+        "mpegts"
+      ],
+      "Streams": [
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "aac"
+            },
+            {
+              "Name": "mp3"
+            },
+            {
+              "Name": "ac3"
+            }
+          ]
+        },
+        {
+          "Specifier": "v:0",
+          "Codecs": [
+            {
+              "Name": "h264"
+            },
+            {
+              "Name": "hevc"
+            }
+          ]
+        }
+      ],
+      "Ext": "ts",
+      "MIMEType": "video/MP2T"
+    },
+    "mxf": {
+      "Formats": [
+        "mxf"
+      ],
+      "Streams": [
+        {
+          "Specifier": "v:0",
+          "Codecs": [
+            {
+              "Name": "mpeg2video",
+              "Flags": [
+                "-qscale:v",
+                "4"
+              ]
+            }
+          ]
+        },
+        {
+          "Specifier": "a:0",
+          "Codecs": [
+            {
+              "Name": "pcm_s16le",
+              "Flags": [
+                "-ar",
+                "48000"
+              ]
+            }
+          ]
+        }
+      ],
+      "Ext": "mxf",
+      "MIMEType": "application/mxf"
     }
-  ]
+  }
 }

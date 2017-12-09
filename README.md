@@ -10,14 +10,17 @@ Docker image support all default native ffmpeg decoders and can encode to:
 
 |Format name|Container|Audio codecs|Video codecs|
 |-|-|-|-|
-|mp3|mp3|mp3||
-|m4a|mov, m4a, 3gp, mj2|aac||
-|ogg|ogg|vorbis, opus||
+|alac|mov|alac||
 |flac|flac|flac||
+|m4a|mov|aac||
+|mp3|mp3|mp3||
+|ogg|ogg|vorbis, opus||
 |wav|wav|pcm_s16le||
-|mp4|mov, m4a, 3gp, mj2|aac, mp3, vorbis|h264, hevc|
-|webm|webm, matroska|vorbis, opus|vp8, vp9|
-|mkv|matroska|aac, mp3, vorbis, opus, flac|h264, vp8, hevc, vp9, theora|
+|mkv|matroska|aac, mp3, vorbis, opus, flac, alac, ac3|h264, hevc, vp8, vp9, theora|
+|mp4|mov|aac, mp3, vorbis, flac, alac|h264, hevc|
+|mxf|mxf|pcm_s16le|mpeg2video|
+|ts|mpegts|aac, mp3, ac3|h264, hevc|
+|webm|webm|vorbis, opus|vp8, vp9|
 
 See [ydls.json](ydls.json) for more details.
 
@@ -46,7 +49,7 @@ on port 8080.
 
 Download and make sure media is in specified format:  
 `GET /<format>[+option+option...]/<URL-not-encoded>`  
-`GET /?format=<format>&url=<URL>[&vcodec=...&acodec=...&retranscode=...]`
+`GET /?format=<format>&url=<URL>[&codec=...&codec=...&retranscode=...]`
 
 Download in best format:  
 `GET /<URL-not-encoded>`  
@@ -58,9 +61,9 @@ Download in best format:
 `URL` - Any URL that [youtube-dl](https://yt-dl.org) can handle  
 `URL-not-encoded` - Non-URL-encoded URL. The idea is to be able to simply
 prepend the download URL with the ydls URL by hand without doing any encoding
-(for example in the browser location bar).  
-`acodec` - Audio codec to use instead of default for format  
-`vcodec` - Video codec to use instead of default for format  
+(for example in the browser location bar)  
+`codec` - Codec to use instead of default for format (can be specified one or two times for
+audio and video codec)  
 `retranscode` - Retranscode even if input codec is same as output  
 `time` - Only download specificed time range. Ex: `30s`, `20m30s`, `1h20s30s` will limit
 duration. `10s-30s` will seek 10 seconds and stop at 30 seconds (20 second output duration)
@@ -127,6 +130,8 @@ go run cmd/ydls/main.go -config ./ydls.json ...
 
 ## TODO
 
+- Bitrate factor per codec when sorting
+- Choose different formats if retranscode?
 - youtubedl info, just url no formats?
 - X-Remote IP header?
 - seccomp and chroot things

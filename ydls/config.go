@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"strings"
+
+	"github.com/wader/ydls/stringprioset"
 )
 
 // YDLS config
@@ -15,60 +18,148 @@ type Config struct {
 
 // Format media container format, possible codecs, extension and mime
 type Format struct {
-	Name        string
-	Formats     prioStringSet
+	Formats     stringprioset.Set
 	FormatFlags []string
-	ACodecs     prioFormatCodecSet
-	VCodecs     prioFormatCodecSet
+	Streams     []Stream
 	Ext         string
 	Prepend     string
 	MIMEType    string
 }
 
-// FormatCodec codec name and ffmpeg args
-type FormatCodec struct {
-	Codec       string
-	CodecFlags  []string
+func (f *Format) UnmarshalJSON(b []byte) (err error) {
+	type FormatRaw Format
+	var fr FormatRaw
+	if err := json.Unmarshal(b, &fr); err != nil {
+		return err
+	}
+	*f = Format(fr)
+
+	if f.Ext == "" {
+		return fmt.Errorf("format ext can't be empty")
+	}
+	if f.MIMEType == "" {
+		return fmt.Errorf("format mimetype can't be empty")
+	}
+
+	return nil
+}
+
+type Stream struct {
+	Specifier string
+	Codecs    []Codec
+
+	Media      MediaType         `json:"-"`
+	CodecNames stringprioset.Set `json:"-"`
+}
+
+func (s *Stream) UnmarshalJSON(b []byte) (err error) {
+	type StreamRaw Stream
+	var sr StreamRaw
+	if err := json.Unmarshal(b, &sr); err != nil {
+		return err
+	}
+	*s = Stream(sr)
+
+	if strings.HasPrefix(s.Specifier, "a:") {
+		s.Media = MediaAudio
+	} else if strings.HasPrefix(s.Specifier, "v:") {
+		s.Media = MediaVideo
+	} else {
+		return fmt.Errorf("stream specifier must be a: or v: is %s", s.Specifier)
+	}
+
+	var codecNames []string
+	for _, c := range s.Codecs {
+		codecNames = append(codecNames, c.Name)
+	}
+	s.CodecNames = stringprioset.New(codecNames)
+
+	return nil
+}
+
+// Codec codec name and ffmpeg args
+type Codec struct {
+	Name        string
+	Flags       []string
 	FormatFlags []string
 }
 
+func (c *Codec) UnmarshalJSON(b []byte) (err error) {
+	type CodecRaw Codec
+	var cr CodecRaw
+	if err := json.Unmarshal(b, &cr); err != nil {
+		return err
+	}
+	*c = Codec(cr)
+
+	if c.Name == "" {
+		return fmt.Errorf("codec name can't be empty")
+	}
+
+	return nil
+}
+
 func (f Format) String() string {
-	return fmt.Sprintf("%s:%s:%s:%s:%s:%s:%s",
-		f.Name,
+	return fmt.Sprintf("%v:%v:%s:%s:%s",
 		f.Formats,
-		f.ACodecs,
-		f.VCodecs,
-		f.Prepend,
+		f.Streams,
 		f.Ext,
+		f.Prepend,
 		f.MIMEType,
 	)
 }
 
 // Formats ordered list of Formats
-type Formats []Format
+type Formats map[string]Format
 
 // FindByName find format by name
-func (fs Formats) FindByName(name string) *Format {
-	for _, f := range fs {
-		if f.Name == name {
-			return &f
+func (fs Formats) FindByName(name string) (Format, bool) {
+	for formatName, format := range fs {
+		if formatName == name {
+			return format, true
 		}
 	}
 
-	return nil
+	return Format{}, false
 }
 
-// Find find format by format and codecs (* for wildcard)
-func (fs Formats) Find(format string, acodec string, vcodec string) *Format {
-	for _, f := range fs {
-		if (format == "*" || f.Formats.member(format)) &&
-			((f.ACodecs.empty() && acodec == "") || acodec == "*" || f.ACodecs.hasCodec(acodec)) &&
-			((f.VCodecs.empty() && vcodec == "") || vcodec == "*" || f.VCodecs.hasCodec(vcodec)) {
-			return &f
+// FindByFormatCodecs find format by format and codecs
+// prioritize formats with less codecs (more specific)
+// return format and format name, format name is empty if not found
+func (fs Formats) FindByFormatCodecs(format string, codecs []string) (Format, string) {
+	var bestFormat Format
+	var bestFormatName string
+	var bestFormatStreamCodecs uint
+
+	codecsSet := stringprioset.New(codecs)
+
+	for name, f := range fs {
+		if v, ok := f.Formats.First(); !ok || v != format {
+			continue
 		}
+
+		codecsFound := 0
+		streamCodecs := uint(0)
+		for _, s := range f.Streams {
+			streamCodecs += uint(len(s.Codecs))
+
+			if !codecsSet.Intersect(s.CodecNames).Empty() {
+				codecsFound++
+			}
+		}
+
+		if codecsFound != len(f.Streams) ||
+			codecsFound != len(codecs) ||
+			bestFormatStreamCodecs >= streamCodecs {
+			continue
+		}
+
+		bestFormat = f
+		bestFormatName = name
+		bestFormatStreamCodecs = streamCodecs
 	}
 
-	return nil
+	return bestFormat, bestFormatName
 }
 
 func parseConfig(r io.Reader) (Config, error) {

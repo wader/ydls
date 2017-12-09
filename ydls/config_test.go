@@ -28,18 +28,21 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 		t.Skip("TEST_FFMPEG env not set")
 	}
 
-	aCodecs := map[string]bool{}
-	vCodecs := map[string]bool{}
+	codecs := map[ffmpeg.Codec]string{}
 
 	ydls := ydlsFromEnv(t)
 
 	// collect unique codecs
 	for _, f := range ydls.Config.Formats {
-		for _, c := range f.ACodecs {
-			aCodecs[c.Codec] = true
-		}
-		for _, c := range f.VCodecs {
-			vCodecs[c.Codec] = true
+		for _, s := range f.Streams {
+			for _, c := range s.Codecs {
+				codecName := firstNonEmpty(ydls.Config.CodecMap[c.Name], c.Name)
+				if s.Media == MediaAudio {
+					codecs[ffmpeg.AudioCodec(codecName)] = "a:"
+				} else if s.Media == MediaVideo {
+					codecs[ffmpeg.VideoCodec(codecName)] = "a:"
+				}
+			}
 		}
 	}
 
@@ -52,35 +55,38 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 		log.Fatal(dummyBufErr)
 	}
 
-	for codecType, codecs := range map[string]map[string]bool{"a": aCodecs, "v": vCodecs} {
-		for codecName := range codecs {
-			t.Logf("Testing: %s", codecName)
+	for codec, specifier := range codecs {
+		t.Logf("Testing: %v", codec)
 
-			dummyReader := bytes.NewReader(dummyBuf)
+		dummyReader := bytes.NewReader(dummyBuf)
 
-			output := &bufferCloser{}
+		output := &bufferCloser{}
 
-			ffmpegP := &ffmpeg.FFmpeg{
-				StreamMaps: []ffmpeg.StreamMap{
-					ffmpeg.StreamMap{
-						Reader:    dummyReader,
-						Specifier: codecType + ":0",
-						Codec:     codecType + "codec:" + firstNonEmpty(ydls.Config.CodecMap[codecName], codecName),
+		ffmpegP := &ffmpeg.FFmpeg{
+			Streams: []ffmpeg.Stream{
+				ffmpeg.Stream{
+					Maps: []ffmpeg.Map{
+						ffmpeg.Map{
+							Input:     ffmpeg.Reader{Reader: dummyReader},
+							Specifier: specifier,
+							Codec:     codec,
+						},
 					},
+					Format: ffmpeg.Format{Name: "matroska"},
+					Output: ffmpeg.Writer{Writer: output},
 				},
-				Format:   ffmpeg.Format{Name: "matroska"},
-				DebugLog: nil, //log.New(os.Stdout, "debug> ", 0),
-				Stderr:   nil, //writelogger.New(log.New(os.Stdout, "stderr> ", 0), ""),
-				Stdout:   output,
-			}
+			},
+			DebugLog: nil, //log.New(os.Stdout, "debug> ", 0),
+			Stderr:   nil, //writelogger.New(log.New(os.Stdout, "stderr> ", 0), ""),
+		}
 
-			if err := ffmpegP.Start(context.Background()); err != nil {
-				t.Errorf("ffmpeg start failed for %s: %v", codecName, err)
-			} else if err := ffmpegP.Wait(); err != nil {
-				t.Errorf("ffmpeg wait failed for %s: %v", codecName, err)
-			}
+		if err := ffmpegP.Start(context.Background()); err != nil {
+			t.Errorf("ffmpeg start failed for %s: %v", codec, err)
+		} else if err := ffmpegP.Wait(); err != nil {
+			t.Errorf("ffmpeg wait failed for %s: %v", codec, err)
 		}
 	}
+
 }
 
 func TestFormats(t *testing.T) {
@@ -95,15 +101,23 @@ func TestFormats(t *testing.T) {
 		audioOnly        bool
 		expectedFilename string
 	}{
-		{"https://soundcloud.com/timsweeney/thedrifter", true, "BIS Radio Show #793 with The Drifter"},
+		{soundcloudTestAudioURL, true, "BIS Radio Show #793 with The Drifter"},
 		{youtubeTestVideoURL, false, "TEST VIDEO"},
 	} {
-		for _, f := range ydls.Config.Formats {
+		for formatName, f := range ydls.Config.Formats {
 			func() {
 				defer leaktest.Check(t)()
 
-				if c.audioOnly && len(f.VCodecs) > 0 {
-					t.Logf("%s: %s: skip, audio only\n", c.url, f.Name)
+				hasVideo := false
+				for _, s := range f.Streams {
+					if s.Media == MediaVideo {
+						hasVideo = true
+						break
+					}
+				}
+
+				if c.audioOnly && hasVideo {
+					t.Logf("%s: %s: skip, test stream is audio only\n", c.url, formatName)
 					return
 				}
 
@@ -113,53 +127,57 @@ func TestFormats(t *testing.T) {
 					ctx,
 					DownloadOptions{
 						URL:       c.url,
-						Format:    f.Name,
+						Format:    formatName,
 						TimeRange: timerange.TimeRange{Stop: 1 * time.Second},
 					},
 					nil,
 				)
 				if err != nil {
 					cancelFn()
-					t.Errorf("%s: %s: download failed: %s", c.url, f.Name, err)
+					t.Errorf("%s: %s: download failed: %s", c.url, formatName, err)
 					return
 				}
 
-				pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+				const limitBytes = 10 * 1024 * 1024
+				pi, err := ffmpeg.Probe(ctx, ffmpeg.Reader{Reader: io.LimitReader(dr.Media, limitBytes)}, nil, nil)
 				dr.Media.Close()
 				dr.Wait()
 				cancelFn()
 				if err != nil {
-					t.Errorf("%s: %s: probe failed: %s", c.url, f.Name, err)
+					t.Errorf("%s: %s: probe failed: %s", c.url, formatName, err)
 					return
 				}
 
 				if !strings.HasPrefix(dr.Filename, c.expectedFilename) {
-					t.Errorf("%s: %s: expected filename '%s' found '%s'", c.url, f.Name, c.expectedFilename, dr.Filename)
+					t.Errorf("%s: %s: expected filename '%s' found '%s'", c.url, formatName, c.expectedFilename, dr.Filename)
 					return
 				}
 				if f.MIMEType != dr.MIMEType {
-					t.Errorf("%s: %s: expected MIME type '%s' found '%s'", c.url, f.Name, f.MIMEType, dr.MIMEType)
+					t.Errorf("%s: %s: expected MIME type '%s' found '%s'", c.url, formatName, f.MIMEType, dr.MIMEType)
 					return
 				}
-				if !stringsContains([]string(f.Formats), pi.FormatName()) {
-					t.Errorf("%s: %s: expected format %s found %s", c.url, f.Name, f.Formats, pi.FormatName())
+				if !f.Formats.Member(pi.FormatName()) {
+					t.Errorf("%s: %s: expected format %s found %s", c.url, formatName, f.Formats, pi.FormatName())
 					return
 				}
-				if len(f.ACodecs.CodecNames()) != 0 && !stringsContains(f.ACodecs.CodecNames(), pi.ACodec()) {
-					t.Errorf("%s: %s: expected acodec %s found %s", c.url, f.Name, f.ACodecs.CodecNames(), pi.ACodec())
-					return
-				}
-				if len(f.VCodecs.CodecNames()) != 0 && !stringsContains(f.VCodecs.CodecNames(), pi.VCodec()) {
-					t.Errorf("%s: %s: expected vcodec %s found %s", c.url, f.Name, f.VCodecs.CodecNames(), pi.VCodec())
-					return
-				}
-				if f.Prepend == "id3v2" {
-					if _, ok := pi.Format["tags"]; !ok {
-						t.Errorf("%s: %s: expected id3v2 tag", c.url, f.Name)
+
+				for i := 0; i < len(f.Streams); i++ {
+					formatStream := f.Streams[i]
+					probeStream := pi.Streams[i]
+
+					if !formatStream.CodecNames.Member(probeStream.CodecName) {
+						t.Errorf("%s: %s: expected codec %s found %s", c.url, formatName, formatStream.CodecNames, probeStream.CodecName)
+						return
 					}
 				}
 
-				t.Logf("%s: %s: OK (probed %s)\n", c.url, f.Name, pi)
+				if f.Prepend == "id3v2" {
+					if pi.Format.Tags.Title == "" {
+						t.Errorf("%s: %s: expected id3v2 title tag", c.url, formatName)
+					}
+				}
+
+				t.Logf("%s: %s: OK (probed %s)\n", c.url, formatName, pi)
 			}()
 		}
 	}
@@ -183,7 +201,7 @@ func TestRawFormat(t *testing.T) {
 		return
 	}
 
-	pi, err := ffmpeg.Probe(ctx, io.LimitReader(dr.Media, 10*1024*1024), nil, nil)
+	pi, err := ffmpeg.Probe(ctx, ffmpeg.Reader{Reader: io.LimitReader(dr.Media, 10*1024*1024)}, nil, nil)
 	dr.Media.Close()
 	dr.Wait()
 	cancelFn()
@@ -193,4 +211,32 @@ func TestRawFormat(t *testing.T) {
 	}
 
 	t.Logf("%s: %s: OK (probed %s)\n", youtubeTestVideoURL, "raw", pi)
+}
+
+func TestFindByFormatCodecs(t *testing.T) {
+	ydls := ydlsFromEnv(t)
+
+	for i, c := range []struct {
+		format   string
+		codecs   []string
+		expected string
+	}{
+		{"mp3", []string{"mp3"}, "mp3"},
+		{"flac", []string{"flac"}, "flac"},
+		{"mov", []string{"alac"}, "alac"},
+		{"mov", []string{"aac", "h264"}, "mp4"},
+		{"matroska", []string{"vorbis", "vp8"}, "mkv"},
+		{"matroska", []string{"opus", "vp9"}, "mkv"},
+		{"matroska", []string{"aac", "h264"}, "mkv"},
+		{"matroska", []string{"vp8", "vorbis"}, "mkv"},
+		{"matroska", []string{"vorbis", "vp8"}, "mkv"},
+		{"mpegts", []string{"aac", "h264"}, "ts"},
+		{"", []string{}, ""},
+	} {
+		_, actualFormatName := ydls.Config.Formats.FindByFormatCodecs(c.format, c.codecs)
+		if c.expected != actualFormatName {
+			t.Errorf("%d: expected format %s, got %s", i, c.expected, actualFormatName)
+		}
+	}
+
 }
