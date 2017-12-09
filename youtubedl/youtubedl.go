@@ -56,7 +56,7 @@ type Format struct {
 }
 
 func (f Format) String() string {
-	return fmt.Sprintf("%s:%s:%s a:%s:%f v:%s:%f %f",
+	return fmt.Sprintf("%s:%s:%s a:%s:%f v:%s:%f %f %f",
 		f.FormatID,
 		f.Protocol,
 		f.Ext,
@@ -64,6 +64,7 @@ func (f Format) String() string {
 		f.ABR,
 		f.NormVCodec,
 		f.VBR,
+		f.TBR,
 		f.NormBR,
 	)
 }
