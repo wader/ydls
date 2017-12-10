@@ -131,7 +131,6 @@ go run cmd/ydls/main.go -config ./ydls.json ...
 ## TODO
 
 - Bitrate factor per codec when sorting
-- Choose different formats if retranscode?
 - youtubedl info, just url no formats?
 - X-Remote IP header?
 - seccomp and chroot things
