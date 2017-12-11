@@ -85,12 +85,17 @@ type Codec struct {
 }
 
 func (c *Codec) UnmarshalJSON(b []byte) (err error) {
+	var codecString string
 	type CodecRaw Codec
-	var cr CodecRaw
-	if err := json.Unmarshal(b, &cr); err != nil {
+	var codecRaw CodecRaw
+
+	if err := json.Unmarshal(b, &codecString); err == nil {
+		*c = Codec{Name: codecString}
+	} else if err := json.Unmarshal(b, &codecRaw); err == nil {
+		*c = Codec(codecRaw)
+	} else {
 		return err
 	}
-	*c = Codec(cr)
 
 	if c.Name == "" {
 		return fmt.Errorf("codec name can't be empty")
