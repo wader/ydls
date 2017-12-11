@@ -16,13 +16,15 @@ func New(ss []string) Set {
 
 	u := map[string]bool{}
 
-	for _, s := range ss[1:] {
+	for _, s := range ss {
 		u[s] = true
 	}
 
 	n := []string{ss[0]}
 	for s := range u {
-		n = append(n, s)
+		if s != ss[0] {
+			n = append(n, s)
+		}
 	}
 
 	return Set{n}
