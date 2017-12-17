@@ -112,8 +112,8 @@ RUN TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 go test -v -cover -race ./...
 RUN go install -installsuffix netgo -tags netgo -ldflags "-X main.gitCommit=$(git describe --always)" ./cmd/ydls
 RUN \
   ldd /go/bin/ydls | grep -q "not a dynamic executable" && \
-  test_cmd/ydls-server.sh && \
-  test_cmd/ydls-get.sh
+  cmd/ydls/ydls_server_test.sh && \
+  cmd/ydls/ydls_get_test.sh
 
 FROM alpine:3.6
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
