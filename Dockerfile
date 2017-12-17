@@ -117,7 +117,8 @@ RUN \
 
 FROM alpine:3.6
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
-ENV LISTEN=:8080
+ENV PORT=8080
+ENV LISTEN=:$PORT
 ENV CONFIG=/etc/ydls.json
 
 RUN apk add --no-cache \
@@ -146,5 +147,5 @@ RUN \
   ffmpeg -i https://www.google.com 2>&1 | grep -q "Invalid data found when processing input"
 
 USER nobody
-EXPOSE 8080/tcp
+EXPOSE $PORT/tcp
 ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
