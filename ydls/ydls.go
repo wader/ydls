@@ -482,7 +482,7 @@ func (ydls *YDLS) downloadFormat(ctx context.Context, log *log.Logger, options D
 				ydlFormat: ydlFormat,
 			})
 
-			log.Printf("  %s -> %s", s.CodecNames, ydlFormat)
+			log.Printf("  %s: %s", preferredCodecs, ydlFormat)
 		} else {
 			return DownloadResult{}, fmt.Errorf("no %s stream found", s.Media)
 		}
