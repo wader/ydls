@@ -65,8 +65,10 @@ func server(y ydls.YDLS) {
 		yh.IndexTmpl = indexTmpl
 	}
 
-	log.Printf("Service listen on %s", *listenFlag)
-	log.Fatal(http.ListenAndServe(*listenFlag, yh))
+	log.Printf("Listening on %s", *listenFlag)
+	if err := http.ListenAndServe(*listenFlag, yh); err != nil {
+		log.Fatal(err)
+	}
 }
 
 type progressWriter struct {
