@@ -149,6 +149,7 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else if url.Scheme != "http" && url.Scheme != "https" {
 		infoLog.Printf("%s Invalid URL scheme %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, url.Scheme)
 		http.Error(w, "Invalid download URL scheme", http.StatusBadRequest)
+		return
 	}
 
 	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, firstNonEmpty(downloadOptions.Format, "best"), downloadOptions.URL)
