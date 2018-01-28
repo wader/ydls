@@ -89,7 +89,7 @@ func TestFail(t *testing.T) {
 		t.Errorf("%s: should fail", geoBlockedURL)
 	}
 
-	expectedError := "aaaaaaaaaaa: YouTube said: Invalid parameters."
+	expectedError := "aaaaaaaaaaa: YouTube said: This video is unavailable."
 	if err.Error() != expectedError {
 		t.Errorf("%s: expected '%s' got '%s'", geoBlockedURL, expectedError, err.Error())
 	}
