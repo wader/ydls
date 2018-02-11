@@ -92,7 +92,7 @@ RUN \
   ldd /usr/local/bin/ffprobe | grep -vq lib
 
 FROM golang:1.9-stretch as ydls-builder
-ENV YDL_VERSION=2018.02.08
+ENV YDL_VERSION=2018.02.11
 ENV CONFIG=/etc/ydls.json
 
 RUN \
