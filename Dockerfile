@@ -61,7 +61,7 @@ RUN \
   ./configure --enable-pic --enable-static && make -j4 install
 
 # note that this will produce a "static" PIE binary with no dynamic lib deps
-ENV FFMPEG_VERSION=n3.4.1
+ENV FFMPEG_VERSION=n3.4.2
 RUN \
   git clone --branch $FFMPEG_VERSION --depth 1 https://github.com/FFmpeg/FFmpeg.git && \
   cd FFmpeg && \
