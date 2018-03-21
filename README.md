@@ -105,7 +105,7 @@ Download with curl and save to filename provided by response header:
 Docker image can download from command line. This will download in mp3 format
 to current directory:
 
-`docker run --rm -v "$PWD:/root" -w /root --user=root mwader/ydls https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
+`docker run --rm -v "$PWD:/media" -w /media mwader/ydls https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
 
 youtube-dl URL can point to a plain media file.
 
