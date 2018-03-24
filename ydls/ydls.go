@@ -21,7 +21,7 @@ import (
 	"github.com/wader/ydls/youtubedl"
 )
 
-const maxProbeBytes = 10 * 1024 * 1024
+const maxProbeBytes = 20 * 1024 * 1024
 
 type MediaType uint
 
