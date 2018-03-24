@@ -5,8 +5,11 @@ package ydls
 import (
 	"context"
 	"io"
+	"io/ioutil"
 	"os"
+	"sync"
 	"testing"
+	"time"
 
 	"github.com/wader/ydls/ffmpeg"
 	"github.com/wader/ydls/leaktest"
@@ -16,6 +19,7 @@ import (
 )
 
 const youtubeTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
+const youtubeLongTestVideoURL = "https://www.youtube.com/watch?v=z7VYVjR_nwE"
 const soundcloudTestAudioURL = "https://soundcloud.com/timsweeney/thedrifter"
 
 var testNetwork = os.Getenv("TEST_NETWORK") != ""
@@ -213,4 +217,67 @@ func TestFindYDLFormat(t *testing.T) {
 			t.Errorf("%d: expected format %s, got %s", i, c.expectedFormatID, actualFormat)
 		}
 	}
+}
+
+func TestContextCloseProbe(t *testing.T) {
+	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	}
+
+	ydls := ydlsFromEnv(t)
+
+	defer leaktest.Check(t)()
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		time.Sleep(2 * time.Second)
+		cancelFn()
+		wg.Done()
+	}()
+	_, err := ydls.Download(ctx,
+		DownloadOptions{
+			URL:    youtubeLongTestVideoURL,
+			Format: "mkv",
+		},
+		nil)
+	if err == nil {
+		t.Error("expected error while probe")
+	}
+	cancelFn()
+	wg.Wait()
+}
+
+func TestContextCloseDownload(t *testing.T) {
+	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	}
+
+	ydls := ydlsFromEnv(t)
+
+	defer leaktest.Check(t)()
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	dr, err := ydls.Download(ctx,
+		DownloadOptions{
+			URL:    youtubeLongTestVideoURL,
+			Format: "mkv",
+		},
+		nil)
+	if err != nil {
+		t.Error("expected no error while probe")
+	}
+	wg := sync.WaitGroup{}
+	wg.Add(1)
+	go func() {
+		time.Sleep(1 * time.Second)
+		cancelFn()
+		wg.Done()
+	}()
+	io.Copy(ioutil.Discard, dr.Media)
+	cancelFn()
+	wg.Wait()
 }

@@ -368,8 +368,7 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLo
 	log.Printf("URL: %s", options.URL)
 	log.Printf("Output format: %s", options.Format)
 
-	var ydlStdout io.Writer
-	ydlStdout = writelogger.New(log, "ydl-new stdout> ")
+	ydlStdout := writelogger.New(log, "ydl-info stdout> ")
 	ydl, err := youtubedl.NewFromURL(ctx, options.URL, ydlStdout)
 	if err != nil {
 		log.Printf("Failed to download: %s", err)
@@ -515,7 +514,9 @@ func (ydls *YDLS) downloadFormat(ctx context.Context, log *log.Logger, options D
 	downloadsWG.Wait()
 
 	for _, d := range downloads {
-		closeOnDone = append(closeOnDone, d.download)
+		if d.err == nil {
+			closeOnDone = append(closeOnDone, d.download)
+		}
 	}
 
 	for formatID, d := range downloads {
