@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wader/ydls/leaktest"
+	"github.com/wader/ydls/internal/leaktest"
 )
 
 var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""

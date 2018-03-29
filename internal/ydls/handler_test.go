@@ -11,8 +11,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wader/ydls/leaktest"
-	"github.com/wader/ydls/timerange"
+	"github.com/wader/ydls/internal/leaktest"
+	"github.com/wader/ydls/internal/timerange"
 )
 
 func TestURLEncode(t *testing.T) {

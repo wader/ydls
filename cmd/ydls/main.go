@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/wader/ydls/ydls"
+	"github.com/wader/ydls/internal/ydls"
 )
 
 var gitCommit = "dev"

@@ -6,7 +6,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/wader/ydls/leaktest"
+	"github.com/wader/ydls/internal/leaktest"
 )
 
 var testNetwork = os.Getenv("TEST_NETWORK") != ""

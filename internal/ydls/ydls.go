@@ -12,13 +12,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/wader/ydls/ffmpeg"
-	"github.com/wader/ydls/id3v2"
-	"github.com/wader/ydls/rereader"
-	"github.com/wader/ydls/stringprioset"
-	"github.com/wader/ydls/timerange"
-	"github.com/wader/ydls/writelogger"
-	"github.com/wader/ydls/youtubedl"
+	"github.com/wader/ydls/internal/ffmpeg"
+	"github.com/wader/ydls/internal/id3v2"
+	"github.com/wader/ydls/internal/rereader"
+	"github.com/wader/ydls/internal/stringprioset"
+	"github.com/wader/ydls/internal/timerange"
+	"github.com/wader/ydls/internal/writelogger"
+	"github.com/wader/ydls/internal/youtubedl"
 )
 
 const maxProbeBytes = 20 * 1024 * 1024

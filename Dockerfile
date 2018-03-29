@@ -103,7 +103,9 @@ COPY --from=ffmpeg-builder \
   /usr/local/bin/ffprobe \
   /usr/local/bin/
 
-COPY . /go/src/github.com/wader/ydls/
+COPY cmd /go/src/github.com/wader/ydls/cmd
+COPY internal /go/src/github.com/wader/ydls/internal
+COPY .git /go/src/github.com/wader/ydls/.git
 COPY ydls.json /etc
 
 WORKDIR /go/src/github.com/wader/ydls

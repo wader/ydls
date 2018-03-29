@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/wader/ydls/stringprioset"
+	"github.com/wader/ydls/internal/stringprioset"
 )
 
 // YDLS config

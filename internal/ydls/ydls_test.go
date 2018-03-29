@@ -11,11 +11,11 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wader/ydls/ffmpeg"
-	"github.com/wader/ydls/leaktest"
-	"github.com/wader/ydls/stringprioset"
-	"github.com/wader/ydls/timerange"
-	"github.com/wader/ydls/youtubedl"
+	"github.com/wader/ydls/internal/ffmpeg"
+	"github.com/wader/ydls/internal/leaktest"
+	"github.com/wader/ydls/internal/stringprioset"
+	"github.com/wader/ydls/internal/timerange"
+	"github.com/wader/ydls/internal/youtubedl"
 )
 
 const youtubeTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
