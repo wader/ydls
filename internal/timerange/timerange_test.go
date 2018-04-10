@@ -13,41 +13,46 @@ func TestIsZero(t *testing.T) {
 
 func TestParseDuration(t *testing.T) {
 	for _, c := range []struct {
-		s           string
-		expected    time.Duration
-		expectedErr bool
+		s              string
+		expected       Duration
+		expectedString string
+		expectedErr    bool
 	}{
-		{"", 0, true},
-		{"a", 0, true},
+		{"", 0, "", true},
+		{"a", 0, "", true},
 
-		{"1", time.Second * 1, false},
-		{"12", time.Second * 12, false},
-		{"123", time.Second * 123, false},
+		{"1", Duration(time.Second * 1), "1s", false},
+		{"12", Duration(time.Second * 12), "12s", false},
+		{"123", Duration(time.Second * 123), "2m3s", false},
 
-		{"1s", time.Second * 1, false},
-		{"12s", time.Second * 12, false},
-		{"123s", time.Second * 123, false},
+		{"1s", Duration(time.Second * 1), "1s", false},
+		{"12s", Duration(time.Second * 12), "12s", false},
+		{"123s", Duration(time.Second * 123), "2m3s", false},
 
-		{"1m", time.Minute * 1, false},
-		{"12m", time.Minute * 12, false},
-		{"123m", time.Minute * 123, false},
+		{"1m", Duration(time.Minute * 1), "1m", false},
+		{"12m", Duration(time.Minute * 12), "12m", false},
+		{"123m", Duration(time.Minute * 123), "2h3m", false},
 
-		{"1h", time.Hour * 1, false},
-		{"12h", time.Hour * 12, false},
-		{"123h", time.Hour * 123, false},
+		{"1h", Duration(time.Hour * 1), "1h", false},
+		{"12h", Duration(time.Hour * 12), "12h", false},
+		{"123h", Duration(time.Hour * 123), "123h", false},
 
-		{"1h2m3s", time.Hour*1 + time.Minute*2 + time.Second*3, false},
-		{"1h3s", time.Hour*1 + time.Second*3, false},
-		{"1h2m", time.Hour*1 + time.Minute*2, false},
-		{"2m3s", time.Minute*2 + time.Second*3, false},
+		{"1h2m3s", Duration(time.Hour*1 + time.Minute*2 + time.Second*3), "1h2m3s", false},
+		{"1h3s", Duration(time.Hour*1 + time.Second*3), "1h3s", false},
+		{"1h2m", Duration(time.Hour*1 + time.Minute*2), "1h2m", false},
+		{"2m3s", Duration(time.Minute*2 + time.Second*3), "2m3s", false},
 	} {
-		actual, actualErr := parseDuration(c.s)
+		actual, actualErr := NewDurationFromString(c.s)
 		if c.expectedErr && actualErr == nil {
 			t.Errorf("%s, expected error", c.s)
 		}
 
 		if actual != c.expected {
 			t.Errorf("%s, got %v expected %v", c.s, actual, c.expected)
+		}
+
+		if actual.String() != c.expectedString {
+			t.Errorf("%s, got %v expected %v", c.s, actual.String(), c.expectedString)
 		}
 	}
 }
@@ -63,15 +68,15 @@ func TestParseDurationRange(t *testing.T) {
 		{"a", TimeRange{0, 0}, 0, true},
 		{"-a-a-", TimeRange{0, 0}, 0, true},
 
-		{"10", TimeRange{0, time.Second * 10}, time.Second * 10, false},
-		{"10s", TimeRange{0, time.Second * 10}, time.Second * 10, false},
+		{"10", TimeRange{0, Duration(time.Second * 10)}, time.Second * 10, false},
+		{"10s", TimeRange{0, Duration(time.Second * 10)}, time.Second * 10, false},
 
-		{"10s-20s", TimeRange{time.Second * 10, time.Second * 20}, time.Second * 10, false},
-		{"10s-10s", TimeRange{time.Second * 10, time.Second * 10}, 0, false},
+		{"10s-20s", TimeRange{Duration(time.Second * 10), Duration(time.Second * 20)}, time.Second * 10, false},
+		{"10s-10s", TimeRange{Duration(time.Second * 10), Duration(time.Second * 10)}, 0, false},
 
 		{"10s-9s", TimeRange{0, 0}, 0, true},
 	} {
-		actualTr, actualErr := parseDurationRange(c.s)
+		actualTr, actualErr := NewTimeRangeFromString(c.s)
 		if c.expectedErr && actualErr == nil {
 			t.Errorf("%s, expected error", c.s)
 		} else {
