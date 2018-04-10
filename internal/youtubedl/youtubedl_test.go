@@ -30,13 +30,15 @@ func TestParseInfo(t *testing.T) {
 			defer leaktest.Check(t)()
 
 			ctx, cancelFn := context.WithCancel(context.Background())
-			yi, err := NewFromURL(ctx, c.url, nil)
+			ydlResult, err := NewFromURL(ctx, c.url, Options{})
 			if err != nil {
 				cancelFn()
 				t.Errorf("failed to parse %s: %v", c.url, err)
 				return
 			}
 			cancelFn()
+
+			yi := ydlResult.Info
 
 			if yi.Title != c.expectedTitle {
 				t.Errorf("%s: expected title '%s' got '%s'", c.url, c.expectedTitle, yi.Title)
@@ -47,8 +49,8 @@ func TestParseInfo(t *testing.T) {
 			}
 
 			var dummy map[string]interface{}
-			if err := json.Unmarshal(yi.rawJSON, &dummy); err != nil {
-				t.Errorf("%s: failed to parse rawJSON", c.url)
+			if err := json.Unmarshal(ydlResult.RawJSON, &dummy); err != nil {
+				t.Errorf("%s: failed to parse RawJSON", c.url)
 			}
 
 			if len(yi.Formats) == 0 {
@@ -83,7 +85,7 @@ func TestFail(t *testing.T) {
 	defer leaktest.Check(t)()
 
 	geoBlockedURL := "https://www.youtube.com/watch?v=aaaaaaaaaaa"
-	_, err := NewFromURL(context.Background(), geoBlockedURL, nil)
+	_, err := NewFromURL(context.Background(), geoBlockedURL, Options{})
 
 	if err == nil {
 		t.Errorf("%s: should fail", geoBlockedURL)
@@ -92,5 +94,56 @@ func TestFail(t *testing.T) {
 	expectedError := "aaaaaaaaaaa: YouTube said: This video is unavailable."
 	if err.Error() != expectedError {
 		t.Errorf("%s: expected '%s' got '%s'", geoBlockedURL, expectedError, err.Error())
+	}
+}
+
+func TestPlaylist(t *testing.T) {
+	if !testNetwork || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	}
+
+	defer leaktest.Check(t)()
+
+	playlistRawURL := "https://soundcloud.com/mattheis/sets/kindred-phenomena"
+	ydlResult, ydlResultErr := NewFromURL(context.Background(), playlistRawURL, Options{
+		YesPlaylist:    true,
+		SkipThumbnails: true,
+	})
+
+	if ydlResultErr != nil {
+		t.Errorf("failed to download: %s", ydlResultErr)
+	}
+
+	expectedTitle := "Kindred Phenomena"
+	if ydlResult.Info.Title != expectedTitle {
+		t.Errorf("expected title \"%s\" got \"%s\"", expectedTitle, ydlResult.Info.Title)
+	}
+
+	expectedEntries := 8
+	if len(ydlResult.Info.Entries) != expectedEntries {
+		t.Errorf("expected %d entries got %d", expectedEntries, len(ydlResult.Info.Entries))
+	}
+
+	expectedTitleOne := "A1 Mattheis - Herds"
+	if ydlResult.Info.Entries[0].Title != expectedTitleOne {
+		t.Errorf("expected title \"%s\" got \"%s\"", expectedTitleOne, ydlResult.Info.Entries[0].Title)
+	}
+}
+
+func TestPlaylistBadURL(t *testing.T) {
+	if !testNetwork || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	}
+
+	defer leaktest.Check(t)()
+
+	playlistRawURL := "https://soundcloud.com/timsweeney/thedrifter"
+	_, ydlResultErr := NewFromURL(context.Background(), playlistRawURL, Options{
+		YesPlaylist:    true,
+		SkipThumbnails: true,
+	})
+
+	if ydlResultErr == nil {
+		t.Error("expected error")
 	}
 }
