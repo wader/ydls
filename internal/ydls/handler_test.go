@@ -1,19 +1,69 @@
 package ydls
 
 import (
+	"crypto/tls"
 	"html/template"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
 	"os"
-	"reflect"
 	"testing"
-	"time"
 
 	"github.com/wader/ydls/internal/leaktest"
-	"github.com/wader/ydls/internal/timerange"
 )
+
+func TestBaseURLFromRequest(t *testing.T) {
+	type rvars struct {
+		tls  bool
+		host string
+	}
+	type xvars struct {
+		proto  string
+		host   string
+		prefix string
+	}
+	for _, c := range []struct {
+		r               rvars
+		x               xvars
+		baseURLXHeaders baseURLXHeaders
+		expect          string
+	}{
+		{rvars{true, "b"}, xvars{"", "", ""}, trustXHeaders, "https://b"},
+		{rvars{false, "b"}, xvars{"", "", ""}, dontTrustXHeaders, "http://b"},
+
+		{rvars{false, "b"}, xvars{"d", "e", "f"}, trustXHeaders, "d://e/f"},
+		{rvars{false, "b"}, xvars{"d", "e", "f"}, dontTrustXHeaders, "http://b"},
+		{rvars{true, "b"}, xvars{"d", "e", "f"}, dontTrustXHeaders, "https://b"},
+
+		{rvars{true, "b"}, xvars{"d", "", ""}, trustXHeaders, "d://b"},
+		{rvars{false, "b"}, xvars{"d", "", ""}, trustXHeaders, "d://b"},
+
+		{rvars{true, "b"}, xvars{"", "e", ""}, trustXHeaders, "https://e"},
+		{rvars{false, "b"}, xvars{"", "e", ""}, trustXHeaders, "http://e"},
+
+		{rvars{true, "b"}, xvars{"", "", "f"}, trustXHeaders, "https://b/f"},
+		{rvars{false, "b"}, xvars{"", "", "f"}, trustXHeaders, "http://b/f"},
+	} {
+		r := &http.Request{URL: &url.URL{}, Header: http.Header{}}
+		if c.r.tls {
+			r.TLS = &tls.ConnectionState{}
+		}
+		r.Host = c.r.host
+		r.Header.Set("X-Forwarded-Proto", c.x.proto)
+		r.Header.Set("X-Forwarded-Host", c.x.host)
+		r.Header.Set("X-Forwarded-Prefix", c.x.prefix)
+
+		actual := baseURLFromRequest(r, c.baseURLXHeaders).String()
+		if actual != c.expect {
+			t.Errorf("proto:%t:%s host:%s:%s prefix:%s trust:%d, got %v expected %v",
+				c.r.tls, c.x.proto,
+				c.r.host, c.x.host,
+				c.x.prefix,
+				c.baseURLXHeaders, actual, c.expect)
+		}
+	}
+}
 
 func TestURLEncode(t *testing.T) {
 	for _, c := range []struct {
@@ -57,58 +107,6 @@ func ydlsHandlerFromEnv(t *testing.T) *Handler {
 	}
 
 	return h
-}
-
-func TestParseFormatDownloadURL(t *testing.T) {
-	h := ydlsHandlerFromEnv(t)
-
-	for _, c := range []struct {
-		url          *url.URL
-		expectedOpts DownloadOptions
-		expectedErr  bool
-	}{
-		{&url.URL{Path: "/mp3/http://domain/path", RawQuery: "query"},
-			DownloadOptions{Format: "mp3", URL: "http://domain/path?query"}, false},
-		{&url.URL{Path: "/mp3/http://domain/a/b"},
-			DownloadOptions{Format: "mp3", URL: "http://domain/a/b"}, false},
-		{&url.URL{Path: "/http://domain/path", RawQuery: "query"},
-			DownloadOptions{Format: "", URL: "http://domain/path?query"}, false},
-		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mp3"},
-			DownloadOptions{Format: "mp3", URL: "http://domain.com"}, false},
-		{&url.URL{Path: "/", RawQuery: "url=http://domain.com"},
-			DownloadOptions{Format: "", URL: "http://domain.com"}, false},
-		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mkv&codec=flac&codec=theora"},
-			DownloadOptions{Format: "mkv", URL: "http://domain.com", Codecs: []string{"flac", "theora"}}, false},
-		{&url.URL{Path: "/mkv+flac+theora/http://domain.com", RawQuery: ""},
-			DownloadOptions{Format: "mkv", URL: "http://domain.com", Codecs: []string{"flac", "theora"}}, false},
-		{&url.URL{Path: "/mkv+flac+theora/http://domain.com", RawQuery: ""},
-			DownloadOptions{Format: "mkv", URL: "http://domain.com", Codecs: []string{"flac", "theora"}}, false},
-		{&url.URL{Path: "/mp3+retranscode/http://domain.com", RawQuery: ""},
-			DownloadOptions{Format: "mp3", URL: "http://domain.com", Retranscode: true}, false},
-		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mp3&retranscode=1"},
-			DownloadOptions{Format: "mp3", URL: "http://domain.com", Retranscode: true}, false},
-		{&url.URL{Path: "/mkv+123s/http://domain.com", RawQuery: ""},
-			DownloadOptions{Format: "mkv", URL: "http://domain.com", TimeRange: timerange.TimeRange{Stop: time.Second * 123}}, false},
-		{&url.URL{Path: "/", RawQuery: "url=http://domain.com&format=mkv&time=123s"},
-			DownloadOptions{Format: "mkv", URL: "http://domain.com", TimeRange: timerange.TimeRange{Stop: time.Second * 123}}, false},
-		{&url.URL{Path: "/mkv+nope/http://domain.com", RawQuery: ""},
-			DownloadOptions{}, true},
-	} {
-		opts, err := h.parseFormatDownloadURL(c.url)
-		if err != nil {
-			if !c.expectedErr {
-				t.Errorf("url=%+v, got error %v, expected %#v", c.url, err, c.expectedOpts)
-			}
-		} else {
-			if c.expectedErr {
-				t.Errorf("url=%+v, got %#v, expected error", c.url, opts)
-			} else if opts.Format != c.expectedOpts.Format || opts.URL != c.expectedOpts.URL ||
-				!reflect.DeepEqual(opts.Codecs, c.expectedOpts.Codecs) ||
-				opts.Retranscode != c.expectedOpts.Retranscode {
-				t.Errorf("url=%+v, got %#v, expected %#v", c.url, opts, c.expectedOpts)
-			}
-		}
-	}
 }
 
 func TestYDLSHandlerDownload(t *testing.T) {

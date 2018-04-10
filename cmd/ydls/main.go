@@ -95,24 +95,19 @@ func absRootPath(root string, path string) (string, error) {
 }
 
 func download(y ydls.YDLS) {
-	var debugLog *log.Logger
+	var debugLog ydls.Printer
 	if *debugFlag {
 		debugLog = log.New(os.Stdout, "DEBUG: ", log.Ltime)
 	}
 
-	url := flag.Arg(0)
-	if url == "" {
+	rawURL := flag.Arg(0)
+	if rawURL == "" {
 		log.Fatalf("no URL specified")
 	}
 
-	var downloadOptions ydls.DownloadOptions
-	if flag.NArg() == 1 {
-		downloadOptions = ydls.DownloadOptions{URL: url}
-	} else {
-		var err error
-		downloadOptions, err = y.ParseDownloadOptions(url, flag.Arg(1), flag.Args()[2:])
-		fatalIfErrorf(err, "format and options")
-	}
+	downloadOptions, downloadOptionsErr := ydls.NewDownloadOptionsFromOpts(flag.Args()[1:], y.Config.Formats)
+	downloadOptions.MediaRawURL = flag.Arg(0)
+	fatalIfErrorf(downloadOptionsErr, "format and options")
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 	defer cancelFn()
@@ -128,16 +123,22 @@ func download(y ydls.YDLS) {
 	path, err := absRootPath(wd, dr.Filename)
 	fatalIfErrorf(err, "write path")
 
-	mediaFile, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
-	fatalIfErrorf(err, "failed to open file")
-	defer mediaFile.Close()
+	var mediaWriter io.Writer
+	if dr.Filename != "" {
+		mediaFile, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
+		fatalIfErrorf(err, "failed to open file")
+		defer mediaFile.Close()
+		pw := &progressWriter{fn: func(bytes uint64) {
+			fmt.Printf("\r%s %.2fMB", dr.Filename, float64(bytes)/(1024*1024))
+		}}
+		mediaWriter = io.MultiWriter(mediaWriter, pw)
+	} else {
+		mediaWriter = os.Stdout
+	}
 
-	pw := &progressWriter{fn: func(bytes uint64) {
-		fmt.Printf("\r%s %.2fMB", dr.Filename, float64(bytes)/(1024*1024))
-	}}
-	mw := io.MultiWriter(mediaFile, pw)
-
-	io.Copy(mw, dr.Media)
+	io.Copy(mediaWriter, dr.Media)
+	dr.Media.Close()
+	dr.Wait()
 	fmt.Print("\n")
 }
 

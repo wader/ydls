@@ -10,6 +10,12 @@
     "aac": "libfdk_aac"
   },
   "Formats": {
+    "rss": {
+      "Formats": [
+        "rss"
+      ],
+      "EnclosureFormat": "mp3"
+    },
     "mp3": {
       "Formats": [
         "mp3"

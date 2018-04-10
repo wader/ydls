@@ -38,9 +38,9 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 			for _, c := range s.Codecs {
 				codecName := firstNonEmpty(ydls.Config.CodecMap[c.Name], c.Name)
 				if s.Media == MediaAudio {
-					codecs[ffmpeg.AudioCodec(codecName)] = "a:"
+					codecs[ffmpeg.AudioCodec(codecName)] = "a"
 				} else if s.Media == MediaVideo {
-					codecs[ffmpeg.VideoCodec(codecName)] = "a:"
+					codecs[ffmpeg.VideoCodec(codecName)] = "v"
 				}
 			}
 		}
@@ -97,19 +97,23 @@ func TestFormats(t *testing.T) {
 	ydls := ydlsFromEnv(t)
 
 	for _, c := range []struct {
-		url              string
+		MediaRawURL      string
 		audioOnly        bool
 		expectedFilename string
 	}{
 		{soundcloudTestAudioURL, true, "BIS Radio Show #793 with The Drifter"},
 		{youtubeTestVideoURL, false, "TEST VIDEO"},
 	} {
-		for formatName, f := range ydls.Config.Formats {
+		for formatName, format := range ydls.Config.Formats {
+			if firstFormat, _ := format.Formats.First(); firstFormat == "rss" {
+				continue
+			}
+
 			func() {
 				defer leaktest.Check(t)()
 
 				hasVideo := false
-				for _, s := range f.Streams {
+				for _, s := range format.Streams {
 					if s.Media == MediaVideo {
 						hasVideo = true
 						break
@@ -117,7 +121,7 @@ func TestFormats(t *testing.T) {
 				}
 
 				if c.audioOnly && hasVideo {
-					t.Logf("%s: %s: skip, test stream is audio only\n", c.url, formatName)
+					t.Logf("%s: %s: skip, test stream is audio only\n", c.MediaRawURL, formatName)
 					return
 				}
 
@@ -126,15 +130,15 @@ func TestFormats(t *testing.T) {
 				dr, err := ydls.Download(
 					ctx,
 					DownloadOptions{
-						URL:       c.url,
-						Format:    formatName,
-						TimeRange: timerange.TimeRange{Stop: 1 * time.Second},
+						MediaRawURL: c.MediaRawURL,
+						Format:      &format,
+						TimeRange:   timerange.TimeRange{Stop: timerange.Duration(1 * time.Second)},
 					},
 					nil,
 				)
 				if err != nil {
 					cancelFn()
-					t.Errorf("%s: %s: download failed: %s", c.url, formatName, err)
+					t.Errorf("%s: %s: download failed: %s", c.MediaRawURL, formatName, err)
 					return
 				}
 
@@ -144,40 +148,40 @@ func TestFormats(t *testing.T) {
 				dr.Wait()
 				cancelFn()
 				if err != nil {
-					t.Errorf("%s: %s: probe failed: %s", c.url, formatName, err)
+					t.Errorf("%s: %s: probe failed: %s", c.MediaRawURL, formatName, err)
 					return
 				}
 
 				if !strings.HasPrefix(dr.Filename, c.expectedFilename) {
-					t.Errorf("%s: %s: expected filename '%s' found '%s'", c.url, formatName, c.expectedFilename, dr.Filename)
+					t.Errorf("%s: %s: expected filename '%s' found '%s'", c.MediaRawURL, formatName, c.expectedFilename, dr.Filename)
 					return
 				}
-				if f.MIMEType != dr.MIMEType {
-					t.Errorf("%s: %s: expected MIME type '%s' found '%s'", c.url, formatName, f.MIMEType, dr.MIMEType)
+				if format.MIMEType != dr.MIMEType {
+					t.Errorf("%s: %s: expected MIME type '%s' found '%s'", c.MediaRawURL, formatName, format.MIMEType, dr.MIMEType)
 					return
 				}
-				if !f.Formats.Member(pi.FormatName()) {
-					t.Errorf("%s: %s: expected format %s found %s", c.url, formatName, f.Formats, pi.FormatName())
+				if !format.Formats.Member(pi.FormatName()) {
+					t.Errorf("%s: %s: expected format %s found %s", c.MediaRawURL, formatName, format.Formats, pi.FormatName())
 					return
 				}
 
-				for i := 0; i < len(f.Streams); i++ {
-					formatStream := f.Streams[i]
+				for i := 0; i < len(format.Streams); i++ {
+					formatStream := format.Streams[i]
 					probeStream := pi.Streams[i]
 
 					if !formatStream.CodecNames.Member(probeStream.CodecName) {
-						t.Errorf("%s: %s: expected codec %s found %s", c.url, formatName, formatStream.CodecNames, probeStream.CodecName)
+						t.Errorf("%s: %s: expected codec %s found %s", c.MediaRawURL, formatName, formatStream.CodecNames, probeStream.CodecName)
 						return
 					}
 				}
 
-				if f.Prepend == "id3v2" {
+				if format.Prepend == "id3v2" {
 					if pi.Format.Tags.Title == "" {
-						t.Errorf("%s: %s: expected id3v2 title tag", c.url, formatName)
+						t.Errorf("%s: %s: expected id3v2 title tag", c.MediaRawURL, formatName)
 					}
 				}
 
-				t.Logf("%s: %s: OK (probed %s)\n", c.url, formatName, pi)
+				t.Logf("%s: %s: OK (probed %s)\n", c.MediaRawURL, formatName, pi)
 			}()
 		}
 	}
@@ -194,7 +198,7 @@ func TestRawFormat(t *testing.T) {
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
-	dr, err := ydls.Download(ctx, DownloadOptions{URL: youtubeTestVideoURL}, nil)
+	dr, err := ydls.Download(ctx, DownloadOptions{MediaRawURL: youtubeTestVideoURL}, nil)
 	if err != nil {
 		cancelFn()
 		t.Errorf("%s: %s: download failed: %s", youtubeTestVideoURL, "raw", err)

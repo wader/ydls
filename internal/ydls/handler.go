@@ -4,11 +4,44 @@ import (
 	"fmt"
 	"html/template"
 	"io"
-	"log"
 	"net/http"
 	"net/url"
 	"strings"
 )
+
+type baseURLXHeaders int
+
+const (
+	trustXHeaders baseURLXHeaders = iota
+	dontTrustXHeaders
+)
+
+func baseURLFromRequest(r *http.Request, shouldXHeaders baseURLXHeaders) *url.URL {
+	schema := ""
+	host := ""
+	prefix := ""
+	if shouldXHeaders == trustXHeaders {
+		schema = r.Header.Get("X-Forwarded-Proto")
+		host = r.Header.Get("X-Forwarded-Host")
+		prefix = r.Header.Get("X-Forwarded-Prefix")
+	}
+
+	if schema == "" {
+		schema = "http"
+		if r.TLS != nil {
+			schema = "https"
+		}
+	}
+	if host == "" {
+		host = r.Host
+	}
+
+	return &url.URL{
+		Scheme: schema,
+		Host:   host,
+		Path:   prefix,
+	}
+}
 
 // URL encode with space encoded as "%20"
 func urlEncode(s string) string {
@@ -27,90 +60,23 @@ func safeContentDispositionFilename(s string) string {
 	return string(rs)
 }
 
-func splitRequestURL(URL *url.URL) (formatAndOpts string, urlStr string) {
-	// /format/schema://host.domin/path?query
-	// /format/host.domain/path?query
-	// /schema://host.domain/path?query
-	// /host.domain/path?query
-
-	parts := strings.SplitN(URL.Path, "/", 3)
-	// parts[0] always empty, path always starts with /
-	parts = parts[1:]
-
-	// format? part does not contains ":" or "."
-	if !strings.Contains(parts[0], ":") && !strings.Contains(parts[0], ".") {
-		formatAndOpts = parts[0]
-		parts = parts[1:]
-	}
-
-	if len(parts) == 0 {
-		return "", ""
-	}
-
-	if len(parts) == 2 {
-		// had schema:// but split has removed one /
-		s := parts[0] + "/" + parts[1]
-		if URL.RawQuery != "" {
-			s += "?" + URL.RawQuery
-		}
-		return formatAndOpts, s
-
-	}
-
-	s := parts[0]
-	if URL.RawQuery != "" {
-		s += "?" + URL.RawQuery
-	}
-
-	return formatAndOpts, s
-}
-
 // Handler is a http.Handler using ydls
 type Handler struct {
 	YDLS      YDLS
 	IndexTmpl *template.Template
-	InfoLog   *log.Logger
-	DebugLog  *log.Logger
-}
-
-func (yh *Handler) parseFormatDownloadURL(URL *url.URL) (DownloadOptions, error) {
-	var urlStr string
-	var optStrings []string
-
-	if URL.Query().Get("url") != "" {
-		// ?url=url&format=format&codec=&codec=...
-
-		urlStr = URL.Query().Get("url")
-
-		optStrings = append(optStrings, URL.Query().Get("format"))
-
-		if vs := URL.Query()["codec"]; vs != nil {
-			optStrings = append(optStrings, vs...)
-		}
-		if v := URL.Query().Get("retranscode"); v != "" {
-			optStrings = append(optStrings, "retranscode")
-		}
-		if v := URL.Query().Get("time"); v != "" {
-			optStrings = append(optStrings, v)
-		}
-	} else {
-		// /format+opts.../url
-
-		var formatAndOpts string
-		formatAndOpts, urlStr = splitRequestURL(URL)
-		optStrings = strings.Split(formatAndOpts, "+")
-	}
-
-	if len(optStrings) == 0 {
-		return DownloadOptions{URL: urlStr}, nil
-	}
-
-	return yh.YDLS.ParseDownloadOptions(urlStr, optStrings[0], optStrings[1:])
+	InfoLog   Printer
+	DebugLog  Printer
 }
 
 func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	infoLog := logOrDiscard(yh.InfoLog)
-	debugLog := logOrDiscard(yh.DebugLog)
+	infoLog := yh.InfoLog
+	if infoLog == nil {
+		infoLog = nopPrinter{}
+	}
+	debugLog := yh.DebugLog
+	if debugLog == nil {
+		debugLog = nopPrinter{}
+	}
 
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("X-XSS-Protection", "1; mode=block")
@@ -135,24 +101,27 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	downloadOptions, err := yh.parseFormatDownloadURL(r.URL)
-	if err != nil {
-		infoLog.Printf("%s Invalid request %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, err.Error())
-		http.Error(w, err.Error(), http.StatusBadRequest)
+	var downloadOptions DownloadOptions
+	var downloadOptionsErr error
+	if r.URL.Query().Get("url") != "" {
+		// ?url=url&format=format&codec=&codec=...
+		downloadOptions, downloadOptionsErr = NewDownloadOptionsFromQuery(r.URL.Query(), yh.YDLS.Config.Formats)
+	} else {
+		// /opt+opt.../http://...
+		downloadOptions, downloadOptionsErr = NewDownloadOptionsFromPath(r.URL, yh.YDLS.Config.Formats)
+	}
+	if downloadOptionsErr != nil {
+		infoLog.Printf("%s Invalid request %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, downloadOptionsErr.Error())
+		http.Error(w, downloadOptionsErr.Error(), http.StatusBadRequest)
 		return
 	}
+	downloadOptions.BaseURL = baseURLFromRequest(r, trustXHeaders)
 
-	if url, urlErr := url.Parse(downloadOptions.URL); err != nil {
-		infoLog.Printf("%s Invalid download URL %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, urlErr.Error())
-		http.Error(w, urlErr.Error(), http.StatusBadRequest)
-		return
-	} else if url.Scheme != "http" && url.Scheme != "https" {
-		infoLog.Printf("%s Invalid URL scheme %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, url.Scheme)
-		http.Error(w, "Invalid download URL scheme", http.StatusBadRequest)
-		return
+	formatName := "best"
+	if downloadOptions.Format != nil {
+		formatName = downloadOptions.Format.Name
 	}
-
-	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, firstNonEmpty(downloadOptions.Format, "best"), downloadOptions.URL)
+	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, formatName, downloadOptions.MediaRawURL)
 
 	dr, err := yh.YDLS.Download(
 		r.Context(),
@@ -167,10 +136,12 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; reflected-xss block")
 	w.Header().Set("Content-Type", dr.MIMEType)
-	w.Header().Set("Content-Disposition",
-		fmt.Sprintf("attachment; filename*=UTF-8''%s; filename=\"%s\"",
-			urlEncode(dr.Filename), safeContentDispositionFilename(dr.Filename)),
-	)
+	if dr.Filename != "" {
+		w.Header().Set("Content-Disposition",
+			fmt.Sprintf("attachment; filename*=UTF-8''%s; filename=\"%s\"",
+				urlEncode(dr.Filename), safeContentDispositionFilename(dr.Filename)),
+		)
+	}
 
 	io.Copy(w, dr.Media)
 	dr.Media.Close()

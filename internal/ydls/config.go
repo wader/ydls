@@ -18,12 +18,19 @@ type Config struct {
 
 // Format media container format, possible codecs, extension and mime
 type Format struct {
+	Name        string
 	Formats     stringprioset.Set
 	FormatFlags []string
 	Streams     []Stream
 	Ext         string
 	Prepend     string
 	MIMEType    string
+
+	// used by rss feeds etc
+	EntriesCount             int
+	EnclosureFormat          string
+	EnclosureFormatOptions   []string
+	EnclosureDownloadOptions DownloadOptions `json:"-"`
 }
 
 func (f *Format) UnmarshalJSON(b []byte) (err error) {
@@ -34,11 +41,22 @@ func (f *Format) UnmarshalJSON(b []byte) (err error) {
 	}
 	*f = Format(fr)
 
+	if f.Formats.Empty() {
+		return fmt.Errorf("Formats can't be empty")
+	}
+
+	if format, _ := f.Formats.First(); format == "rss" {
+		if f.EnclosureFormat == "" {
+			return fmt.Errorf("EnclosureFormat can't be empty for")
+		}
+		return nil
+	}
+
 	if f.Ext == "" {
-		return fmt.Errorf("format ext can't be empty")
+		return fmt.Errorf("Format ext can't be empty")
 	}
 	if f.MIMEType == "" {
-		return fmt.Errorf("format mimetype can't be empty")
+		return fmt.Errorf("Format mimetype can't be empty")
 	}
 
 	return nil
@@ -48,7 +66,7 @@ type Stream struct {
 	Specifier string
 	Codecs    []Codec
 
-	Media      MediaType         `json:"-"`
+	Media      mediaType         `json:"-"`
 	CodecNames stringprioset.Set `json:"-"`
 }
 
@@ -116,6 +134,46 @@ func (f Format) String() string {
 
 // Formats ordered list of Formats
 type Formats map[string]Format
+
+func (f *Formats) UnmarshalJSON(b []byte) (err error) {
+	type FormatsRaw Formats
+	var fr FormatsRaw
+	if err := json.Unmarshal(b, &fr); err != nil {
+		return err
+	}
+
+	for formatName, format := range fr {
+		format.Name = formatName
+		fr[formatName] = format
+	}
+
+	for formatName, format := range fr {
+		if format.EnclosureFormat != "" {
+			enclosureFormat, enclosureFormatOk := fr[format.EnclosureFormat]
+			if !enclosureFormatOk {
+				return fmt.Errorf("EnclosureFormat %s not found", format.EnclosureFormat)
+			}
+
+			// add format name as first option to make codec check etc work
+			options := append([]string{enclosureFormat.Name}, format.EnclosureFormatOptions...)
+			downloadOptions, downloadOptionsErr := NewDownloadOptionsFromOpts(
+				options, Formats(fr),
+			)
+			if downloadOptionsErr != nil {
+				return fmt.Errorf("EnclosureFormatOptions %s: %s", format.EnclosureFormat, downloadOptionsErr)
+
+				return downloadOptionsErr
+			}
+			format.EnclosureDownloadOptions = downloadOptions
+		}
+
+		fr[formatName] = format
+	}
+
+	*f = Formats(fr)
+
+	return nil
+}
 
 // FindByName find format by name
 func (fs Formats) FindByName(name string) (Format, bool) {

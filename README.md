@@ -3,8 +3,8 @@
 HTTP service for [youtube-dl](https://yt-dl.org) that downloads media for
 requested URL and transmuxes and transcodes to requested format if needed.
 
-I personally use it to create audio only versions of videos from various
-site like youtube, vimeo etc.
+It can be used to convert media, create podcasts and audio only versions of media
+from various site like youtube, vimeo etc.
 
 Docker image support all default native ffmpeg decoders and can encode to:
 
@@ -21,6 +21,9 @@ Docker image support all default native ffmpeg decoders and can encode to:
 |mxf|mxf|pcm_s16le|mpeg2video|
 |ts|mpegts|aac, mp3, ac3|h264, hevc|
 |webm|webm|vorbis, opus|vp8, vp9|
+
+There is also support for `rss` format which will transform a youtube-dl
+playlist info a RSS audio podcast.
 
 See [ydls.json](ydls.json) for more details.
 

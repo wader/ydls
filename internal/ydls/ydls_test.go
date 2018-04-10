@@ -4,23 +4,28 @@ package ydls
 
 import (
 	"context"
+	"encoding/xml"
 	"io"
 	"io/ioutil"
+	"net/url"
 	"os"
+	"strings"
 	"sync"
 	"testing"
 	"time"
 
 	"github.com/wader/ydls/internal/ffmpeg"
 	"github.com/wader/ydls/internal/leaktest"
+	"github.com/wader/ydls/internal/rss"
 	"github.com/wader/ydls/internal/stringprioset"
 	"github.com/wader/ydls/internal/timerange"
 	"github.com/wader/ydls/internal/youtubedl"
 )
 
-const youtubeTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
-const youtubeLongTestVideoURL = "https://www.youtube.com/watch?v=z7VYVjR_nwE"
-const soundcloudTestAudioURL = "https://soundcloud.com/timsweeney/thedrifter"
+var youtubeTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
+var youtubeLongTestVideoURL = "https://www.youtube.com/watch?v=z7VYVjR_nwE"
+var soundcloudTestAudioURL = "https://soundcloud.com/timsweeney/thedrifter"
+var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-phenomena"
 
 var testNetwork = os.Getenv("TEST_NETWORK") != ""
 var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
@@ -66,10 +71,9 @@ func TestForceCodec(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	ydls := ydlsFromEnv(t)
-
 	defer leaktest.Check(t)()
 
+	ydls := ydlsFromEnv(t)
 	const formatName = "mkv"
 	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
 	forceCodecs := []string{"opus", "vp9"}
@@ -78,7 +82,7 @@ func TestForceCodec(t *testing.T) {
 	for _, s := range mkvFormat.Streams {
 		for _, forceCodec := range forceCodecs {
 			if c, ok := s.CodecNames.First(); ok && c == forceCodec {
-				t.Errorf("test sanity check failed: codec already the prefered one")
+				t.Errorf("test sanity check failed: codec already the preferred one")
 				return
 			}
 		}
@@ -88,9 +92,9 @@ func TestForceCodec(t *testing.T) {
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			URL:    youtubeTestVideoURL,
-			Format: formatName,
-			Codecs: forceCodecs,
+			MediaRawURL: youtubeTestVideoURL,
+			Format:      &mkvFormat,
+			Codecs:      forceCodecs,
 		},
 		nil)
 	if err != nil {
@@ -127,11 +131,13 @@ func TestTimeRangeOption(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	ydls := ydlsFromEnv(t)
-
 	defer leaktest.Check(t)()
 
-	timeRange, timeRangeErr := timerange.NewFromString("10s-15s")
+	ydls := ydlsFromEnv(t)
+	const formatName = "mkv"
+	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
+
+	timeRange, timeRangeErr := timerange.NewTimeRangeFromString("10s-15s")
 	if timeRangeErr != nil {
 		t.Fatalf("failed to parse time range")
 	}
@@ -140,9 +146,9 @@ func TestTimeRangeOption(t *testing.T) {
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			URL:       youtubeTestVideoURL,
-			Format:    "mkv",
-			TimeRange: timeRange,
+			MediaRawURL: youtubeTestVideoURL,
+			Format:      &mkvFormat,
+			TimeRange:   timeRange,
 		},
 		nil)
 	if err != nil {
@@ -170,16 +176,18 @@ func TestMissingMediaStream(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	ydls := ydlsFromEnv(t)
-
 	defer leaktest.Check(t)()
+
+	ydls := ydlsFromEnv(t)
+	const formatName = "mkv"
+	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	_, err := ydls.Download(ctx,
 		DownloadOptions{
-			URL:    soundcloudTestAudioURL,
-			Format: "mkv",
+			MediaRawURL: soundcloudTestAudioURL,
+			Format:      &mkvFormat,
 		},
 		nil)
 	cancelFn()
@@ -199,7 +207,7 @@ func TestFindYDLFormat(t *testing.T) {
 
 	for i, c := range []struct {
 		ydlFormats       []youtubedl.Format
-		mediaType        MediaType
+		mediaType        mediaType
 		codecs           stringprioset.Set
 		expectedFormatID string
 	}{
@@ -224,9 +232,11 @@ func TestContextCloseProbe(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	ydls := ydlsFromEnv(t)
-
 	defer leaktest.Check(t)()
+
+	ydls := ydlsFromEnv(t)
+	const formatName = "mkv"
+	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
@@ -239,8 +249,8 @@ func TestContextCloseProbe(t *testing.T) {
 	}()
 	_, err := ydls.Download(ctx,
 		DownloadOptions{
-			URL:    youtubeLongTestVideoURL,
-			Format: "mkv",
+			MediaRawURL: youtubeLongTestVideoURL,
+			Format:      &mkvFormat,
 		},
 		nil)
 	if err == nil {
@@ -255,16 +265,18 @@ func TestContextCloseDownload(t *testing.T) {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
-	ydls := ydlsFromEnv(t)
-
 	defer leaktest.Check(t)()
+
+	ydls := ydlsFromEnv(t)
+	const formatName = "mkv"
+	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			URL:    youtubeLongTestVideoURL,
-			Format: "mkv",
+			MediaRawURL: youtubeLongTestVideoURL,
+			Format:      &mkvFormat,
 		},
 		nil)
 	if err != nil {
@@ -280,4 +292,88 @@ func TestContextCloseDownload(t *testing.T) {
 	io.Copy(ioutil.Discard, dr.Media)
 	cancelFn()
 	wg.Wait()
+}
+
+func TestRSS(t *testing.T) {
+	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	}
+
+	defer leaktest.Check(t)()
+
+	ydls := ydlsFromEnv(t)
+	const formatName = "rss"
+	rssFormat, _ := ydls.Config.Formats.FindByName(formatName)
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	dr, err := ydls.Download(ctx,
+		DownloadOptions{
+			MediaRawURL: soundcloudTestPlaylistURL,
+			Format:      &rssFormat,
+			BaseURL:     &url.URL{Scheme: "http", Host: "dummy"},
+		},
+		nil)
+	if err != nil {
+		cancelFn()
+		t.Fatalf("%s: download failed: %s", youtubeTestVideoURL, err)
+	}
+	defer cancelFn()
+
+	if dr.Filename != "" {
+		t.Errorf("expected no filename, got %s", dr.Filename)
+	}
+	expectedMIMEType := "text/xml"
+	if dr.MIMEType != expectedMIMEType {
+		t.Errorf("expected mimetype %s, got %s", expectedMIMEType, dr.MIMEType)
+	}
+
+	rssRoot := rss.RSS{}
+	decoder := xml.NewDecoder(dr.Media)
+	decodeErr := decoder.Decode(&rssRoot)
+	if decodeErr != nil {
+		t.Errorf("failed to parse rss: %s", decodeErr)
+		return
+	}
+	dr.Media.Close()
+	dr.Wait()
+
+	expectedTitle := "Kindred Phenomena"
+	if rssRoot.Channel.Title != expectedTitle {
+		t.Errorf("expected title \"%s\" got \"%s\"", expectedTitle, rssRoot.Channel.Title)
+	}
+
+	// TODO: description, not returned by youtube-dl?
+
+	expectedEntries := 8
+	if len(rssRoot.Channel.Items) != expectedEntries {
+		t.Errorf("expected %d entries got %d", expectedEntries, len(rssRoot.Channel.Items))
+	}
+
+	itemOne := rssRoot.Channel.Items[0]
+
+	expectedItemTitle := "A1 Mattheis - Herds"
+	if rssRoot.Channel.Items[0].Title != expectedItemTitle {
+		t.Errorf("expected title \"%s\" got \"%s\"", expectedItemTitle, itemOne.Title)
+	}
+
+	expectedItemDescriptionPrefix := "Releasing my debut"
+	if !strings.HasPrefix(rssRoot.Channel.Items[0].Description, expectedItemDescriptionPrefix) {
+		t.Errorf("expected description prefix \"%s\" got \"%s\"", expectedItemDescriptionPrefix, itemOne.Description)
+	}
+
+	expectedItemGUID := "http://dummy/mp3/https://soundcloud.com/mattheis/sets/kindred-phenomena#293285002"
+	if rssRoot.Channel.Items[0].GUID != expectedItemGUID {
+		t.Errorf("expected guid \"%s\" got \"%s\"", expectedItemGUID, itemOne.GUID)
+	}
+
+	expectedItemURL := "http://dummy/media.mp3?format=mp3&url=https%3A%2F%2Fsoundcloud.com%2Fmattheis%2Fa1-mattheis-herds"
+	if itemOne.Enclosure.URL != expectedItemURL {
+		t.Errorf("expected enclousure url \"%s\" got \"%s\"", expectedItemURL, itemOne.Enclosure.URL)
+	}
+
+	expectedItemType := "audio/mpeg"
+	if itemOne.Enclosure.Type != expectedItemType {
+		t.Errorf("expected enclousure type \"%s\" got \"%s\"", expectedItemType, itemOne.Enclosure.Type)
+	}
 }
