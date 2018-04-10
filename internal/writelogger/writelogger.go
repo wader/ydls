@@ -2,20 +2,23 @@ package writelogger
 
 import (
 	"bytes"
-	"log"
 	"unicode"
 )
 
+type Printer interface {
+	Printf(format string, v ...interface{})
+}
+
 // WriteLogger io.Writer that logs each lines with optional prefix
 type WriteLogger struct {
-	Logger *log.Logger
-	Prefix string
-	buf    bytes.Buffer
+	Printer Printer
+	Prefix  string
+	buf     bytes.Buffer
 }
 
 // New return a initialized WriteLogger
-func New(logger *log.Logger, prefix string) *WriteLogger {
-	return &WriteLogger{Logger: logger, Prefix: prefix}
+func New(printer Printer, prefix string) *WriteLogger {
+	return &WriteLogger{Printer: printer, Prefix: prefix}
 }
 
 // same as bytes.IndexByte but with set of bytes to look for
@@ -53,7 +56,7 @@ func (wl *WriteLogger) Write(p []byte) (n int, err error) {
 			}
 		}
 
-		wl.Logger.Print(wl.Prefix + string(lineRunes))
+		wl.Printer.Printf("%s%s", wl.Prefix, string(lineRunes))
 		pos += i + 1
 	}
 	wl.buf.Reset()
