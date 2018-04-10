@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"io/ioutil"
-	"log"
 	"os"
 	"os/exec"
 	"reflect"
@@ -14,6 +12,14 @@ import (
 	"strings"
 	"time"
 )
+
+type Printer interface {
+	Printf(format string, v ...interface{})
+}
+
+type nopPrinter struct{}
+
+func (nopPrinter) Printf(format string, v ...interface{}) {}
 
 // ProbeInfo ffprobe result
 type ProbeInfo struct {
@@ -163,7 +169,7 @@ type Stream struct {
 type FFmpeg struct {
 	Streams  []Stream
 	Stderr   io.Writer
-	DebugLog *log.Logger
+	DebugLog Printer
 
 	cmd       *exec.Cmd
 	cmdWaitCh chan error
@@ -243,10 +249,9 @@ func (pi ProbeInfo) String() string {
 }
 
 // Probe run ffprobe with context
-func Probe(ctx context.Context, i Input, debugLog *log.Logger, stderr io.Writer) (pi ProbeInfo, err error) {
-	log := log.New(ioutil.Discard, "", 0)
-	if debugLog != nil {
-		log = debugLog
+func Probe(ctx context.Context, i Input, debugLog Printer, stderr io.Writer) (pi ProbeInfo, err error) {
+	if debugLog == nil {
+		debugLog = nopPrinter{}
 	}
 
 	ffprobeName := "ffprobe"
@@ -272,7 +277,7 @@ func Probe(ctx context.Context, i Input, debugLog *log.Logger, stderr io.Writer)
 		return ProbeInfo{}, err
 	}
 
-	log.Printf("cmd %v", cmd.Args)
+	debugLog.Printf("cmd %v", cmd.Args)
 
 	if err := cmd.Start(); err != nil {
 		return ProbeInfo{}, err
@@ -332,12 +337,12 @@ func (a Metadata) Merge(b Metadata) Metadata {
 }
 
 func (f *FFmpeg) Start(ctx context.Context) error {
-	f.cmdWaitCh = make(chan error)
-
-	log := log.New(ioutil.Discard, "", 0)
-	if f.DebugLog != nil {
-		log = f.DebugLog
+	log := f.DebugLog
+	if log == nil {
+		log = nopPrinter{}
 	}
+
+	f.cmdWaitCh = make(chan error)
 
 	// figure out unique readers and create pipes for io.Readers
 	type ffmpegInput struct {
