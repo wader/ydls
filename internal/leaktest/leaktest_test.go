@@ -66,7 +66,7 @@ func testNoLeak(t *testing.T, fn func()) {
 func TestInfiniteForLoop(t *testing.T) {
 	testGoroutineLeak(t, func() {
 		for {
-			time.Sleep(time.Second)
+			time.Sleep(1 * time.Second)
 		}
 	})
 }
