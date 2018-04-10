@@ -71,6 +71,10 @@ func (s Set) First() (string, bool) {
 	return "", false
 }
 
+func (s Set) Strings() []string {
+	return s.ss
+}
+
 func (s Set) String() string {
 	return "[" + strings.Join(s.ss, " ") + "]"
 }

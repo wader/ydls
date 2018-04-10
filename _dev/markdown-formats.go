@@ -6,7 +6,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/wader/ydls/ydls"
+	"github.com/wader/ydls/internal/ydls"
 )
 
 func main() {
@@ -41,15 +41,16 @@ func main() {
 		var vCodecs []string
 		for _, s := range f.format.Streams {
 			if s.Media == ydls.MediaAudio {
-				aCodecs = s.Codecs.CodecNames()
+				aCodecs = s.CodecNames.Strings()
 			} else if s.Media == ydls.MediaVideo {
-				vCodecs = s.Codecs.CodecNames()
+				vCodecs = s.CodecNames.Strings()
 			}
 		}
 
+		firstFormat, _ := f.format.Formats.First()
 		fmt.Printf("|%s|%s|%s|%s|\n",
 			f.name,
-			f.format.Formats[0],
+			firstFormat,
 			strings.Join(aCodecs, ", "),
 			strings.Join(vCodecs, ", "),
 		)
