@@ -35,8 +35,9 @@ func fatalIfErrorf(err error, format string, a ...interface{}) {
 }
 
 func init() {
+	log.SetFlags(0)
 	flag.Usage = func() {
-		fmt.Fprintf(os.Stderr, "Usage of %s [flags] URL [format] [options]...:\n", os.Args[0])
+		fmt.Fprintf(os.Stderr, "Usage: %s [flags] URL [options]...\n", os.Args[0])
 		flag.PrintDefaults()
 	}
 	flag.Parse()
@@ -102,7 +103,8 @@ func download(y ydls.YDLS) {
 
 	rawURL := flag.Arg(0)
 	if rawURL == "" {
-		log.Fatalf("no URL specified")
+		flag.Usage()
+		os.Exit(1)
 	}
 
 	downloadOptions, downloadOptionsErr := ydls.NewDownloadOptionsFromOpts(flag.Args()[1:], y.Config.Formats)
