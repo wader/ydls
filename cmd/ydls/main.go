@@ -131,7 +131,7 @@ func download(y ydls.YDLS) {
 		pw := &progressWriter{fn: func(bytes uint64) {
 			fmt.Printf("\r%s %.2fMB", dr.Filename, float64(bytes)/(1024*1024))
 		}}
-		mediaWriter = io.MultiWriter(mediaWriter, pw)
+		mediaWriter = io.MultiWriter(mediaFile, pw)
 	} else {
 		mediaWriter = os.Stdout
 	}
