@@ -23,7 +23,7 @@ Docker image support all default native ffmpeg decoders and can encode to:
 |webm|webm|vorbis, opus|vp8, vp9|
 
 There is also support for `rss` format which will transform a youtube-dl
-playlist info a RSS audio podcast.
+playlist into a RSS audio podcast.
 
 See [ydls.json](ydls.json) for more details.
 
