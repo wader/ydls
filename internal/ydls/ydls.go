@@ -74,7 +74,7 @@ func firstNonEmpty(sl ...string) string {
 func metadataFromYoutubeDLInfo(yi youtubedl.Info) ffmpeg.Metadata {
 	return ffmpeg.Metadata{
 		Artist:  firstNonEmpty(yi.Artist, yi.Creator, yi.Uploader),
-		Title:   yi.Title,
+		Title:   firstNonEmpty(yi.Title, yi.Episode),
 		Comment: yi.Description,
 	}
 }

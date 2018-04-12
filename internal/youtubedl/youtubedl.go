@@ -49,15 +49,17 @@ type Info struct {
 	URL        string `json:"url"`
 	WebpageURL string `json:"webpage_url"`
 
-	Artist      string   `json:"artist"`
-	Uploader    string   `json:"uploader"`
-	UploadDate  string   `json:"upload_date"`
-	Creator     string   `json:"creator"`
-	Title       string   `json:"title"`
-	Description string   `json:"description"`
-	Duration    float64  `json:"duration"`
-	Thumbnail   string   `json:"thumbnail"`
-	Formats     []Format `json:"formats"`
+	Artist        string   `json:"artist"`
+	Uploader      string   `json:"uploader"`
+	UploadDate    string   `json:"upload_date"`
+	Creator       string   `json:"creator"`
+	Title         string   `json:"title"`
+	PlaylistTitle string   `json:"playlist_title"`
+	Episode       string   `json:"episode"`
+	Description   string   `json:"description"`
+	Duration      float64  `json:"duration"`
+	Thumbnail     string   `json:"thumbnail"`
+	Formats       []Format `json:"formats"`
 
 	// not unmarshalled, populated from image thumbnail file
 	ThumbnailBytes []byte `json:"-"`

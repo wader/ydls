@@ -10,7 +10,6 @@ import (
 
 func RSSFromYDLSInfo(options DownloadOptions, info youtubedl.Info, linkIconRawURL string) rss.RSS {
 	enclosureDownloadOptions := options.Format.EnclosureDownloadOptions
-	metadata := metadataFromYoutubeDLInfo(info)
 	baseURL := options.BaseURL
 	if baseURL == nil {
 		baseURL = &url.URL{}
@@ -21,8 +20,8 @@ func RSSFromYDLSInfo(options DownloadOptions, info youtubedl.Info, linkIconRawUR
 	)
 
 	channel := &rss.Channel{
-		Title:       firstNonEmpty(metadata.Title, metadata.Artist),
-		Description: metadata.Comment,
+		Title:       firstNonEmpty(info.Title, info.PlaylistTitle, info.Artist, info.Creator, info.Uploader),
+		Description: info.Description,
 		Link:        info.WebpageURL,
 	}
 
@@ -65,16 +64,14 @@ func RSSFromYDLSInfo(options DownloadOptions, info youtubedl.Info, linkIconRawUR
 			}
 		}
 
-		entryMetadata := metadataFromYoutubeDLInfo(entry)
-
 		channel.Items = append(channel.Items, &rss.Item{
 			GUID:         GUID,
 			PubDate:      pubDate,
-			ItunesAuthor: entryMetadata.Artist,
+			ItunesAuthor: entry.Artist,
 			ItunesImage:  entry.Thumbnail,
 			Link:         entry.WebpageURL,
-			Title:        entryMetadata.Title,
-			Description:  entryMetadata.Comment,
+			Title:        firstNonEmpty(entry.Title, entry.Episode),
+			Description:  entry.Description,
 			Enclosure:    enclosure,
 		})
 	}
