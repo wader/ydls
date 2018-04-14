@@ -1,4 +1,4 @@
-FROM alpine:3.6 as ffmpeg-builder
+FROM alpine:3.7 AS ffmpeg-builder
 
 RUN apk add --no-cache \
   coreutils \
@@ -14,8 +14,7 @@ RUN apk add --no-cache \
   openssl-dev \
   lame-dev \
   libogg-dev \
-  libvpx-dev \
-  x265-dev
+  libvpx-dev
 
 # some -dev alpine packages lack .a files in 3.6 (some fixed in edge)
 RUN \
@@ -60,6 +59,17 @@ RUN \
   CFLAGS="-fno-strict-overflow -fstack-protector-all -fPIE" LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
   ./configure --enable-pic --enable-static && make -j4 install
 
+# -static-libgcc is needed to make gcc not include gcc_s as "as-needed" shared library
+RUN \
+  X265_VERSION=2.7 \
+  wget -O - "https://bitbucket.org/multicoreware/x265/downloads/x265_$X265_VERSION.tar.gz" | tar xz && \
+  cd x265_$X265_VERSION/build/linux && \
+  CFLAGS="-static-libgcc -fno-strict-overflow -fPIE" \
+  CXXFLAGS="-static-libgcc -fno-strict-overflow -fPIE" \
+  LDFLAGS="-Wl,-z,relro -Wl,-z,now -fPIE -pie" \
+  cmake -G "Unix Makefiles" -DENABLE_SHARED=OFF -DENABLE_AGGRESSIVE_CHECKS=ON ../../source && \
+  make -j4 install
+
 # note that this will produce a "static" PIE binary with no dynamic lib deps
 ENV FFMPEG_VERSION=n3.4.2
 RUN \
@@ -71,7 +81,6 @@ RUN \
   --enable-static \
   --pkg-config-flags=--static \
   --extra-ldflags=-static \
-  --extra-cflags=-static \
   --enable-gpl \
   --enable-nonfree \
   --enable-openssl \
