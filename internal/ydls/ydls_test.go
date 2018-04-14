@@ -78,7 +78,7 @@ func TestForceCodec(t *testing.T) {
 	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
 	forceCodecs := []string{"opus", "vp9"}
 
-	// make sure codecs are not the perfered ones
+	// make sure codecs are not the perferred ones
 	for _, s := range mkvFormat.Streams {
 		for _, forceCodec := range forceCodecs {
 			if c, ok := s.CodecNames.First(); ok && c == forceCodec {
@@ -220,8 +220,8 @@ func TestFindYDLFormat(t *testing.T) {
 		{ydlFormats, MediaAudio, stringprioset.New([]string{"opus"}), "5"},
 		{ydlFormats, MediaVideo, stringprioset.New([]string{"vp9"}), "5"},
 	} {
-		actualFormat, actaulFormatFound := findYDLFormat(c.ydlFormats, c.mediaType, c.codecs)
-		if actaulFormatFound && actualFormat.FormatID != c.expectedFormatID {
+		actualFormat, actualFormatFound := findYDLFormat(c.ydlFormats, c.mediaType, c.codecs)
+		if actualFormatFound && actualFormat.FormatID != c.expectedFormatID {
 			t.Errorf("%d: expected format %s, got %s", i, c.expectedFormatID, actualFormat)
 		}
 	}
