@@ -8,6 +8,7 @@ RUN apk add --no-cache \
   autoconf \
   automake \
   libtool \
+  cmake \
   git \
   yasm \
   zlib-dev \
@@ -61,7 +62,7 @@ RUN \
 
 # -static-libgcc is needed to make gcc not include gcc_s as "as-needed" shared library
 RUN \
-  X265_VERSION=2.7 \
+  X265_VERSION=2.7 && \
   wget -O - "https://bitbucket.org/multicoreware/x265/downloads/x265_$X265_VERSION.tar.gz" | tar xz && \
   cd x265_$X265_VERSION/build/linux && \
   CFLAGS="-static-libgcc -fno-strict-overflow -fPIE" \
@@ -100,7 +101,7 @@ RUN \
   ldd /usr/local/bin/ffmpeg | grep -vq lib && \
   ldd /usr/local/bin/ffprobe | grep -vq lib
 
-FROM golang:1.10-stretch as ydls-builder
+FROM golang:1.10-stretch AS ydls-builder
 ENV YDL_VERSION=2018.04.09
 ENV CONFIG=/etc/ydls.json
 
