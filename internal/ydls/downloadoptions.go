@@ -3,6 +3,7 @@ package ydls
 import (
 	"fmt"
 	"net/url"
+	"strconv"
 	"strings"
 
 	"github.com/wader/ydls/internal/timerange"
@@ -15,6 +16,7 @@ type DownloadOptions struct {
 	Codecs      []string            // force codecs
 	Retranscode bool                // force retranscode even if same input codec
 	TimeRange   timerange.TimeRange // time range limit
+	Items       uint                // feed item limit
 	BaseURL     *url.URL            // base URL to use in rss feed etc
 }
 
@@ -59,12 +61,23 @@ func NewDownloadOptionsFromQuery(v url.Values, formats Formats) (DownloadOptions
 		}
 	}
 
+	items := uint(0)
+	itemsStr := v.Get("items")
+	if itemsStr != "" {
+		itemsN, itemsNErr := strconv.Atoi(itemsStr)
+		if itemsNErr != nil {
+			return DownloadOptions{}, fmt.Errorf("invalid items count")
+		}
+		items = uint(itemsN)
+	}
+
 	return DownloadOptions{
 		MediaRawURL: mediaRawURL,
 		Format:      format,
 		Codecs:      codecs,
 		Retranscode: v.Get("retranscode") != "",
 		TimeRange:   timeRange,
+		Items:       items,
 	}, nil
 }
 
@@ -77,8 +90,9 @@ func NewDownloadOptionsFromPath(url *url.URL, formats Formats) (DownloadOptions,
 	formatAndOpts := ""
 	mediaRawURL := ""
 
-	parts := strings.SplitN(url.Path, "/", 3)
+	// /format+opt/url -> ["/", "format", "url"]
 	// parts[0] always empty, path always starts with /
+	parts := strings.SplitN(url.Path, "/", 3)
 	parts = parts[1:]
 
 	// format? part does not contains ":" or "."
@@ -144,10 +158,19 @@ func NewDownloadOptionsFromOpts(opts []string, formats Formats) (DownloadOptions
 	}
 
 	for i, opt := range opts {
+		const itemsSuffix = "items"
+
 		if i == formatIndex {
 			// nop, skip format opt
 		} else if opt == "retranscode" {
 			d.Retranscode = true
+		} else if strings.HasSuffix(opt, itemsSuffix) {
+			itemsN, itemsNErr := strconv.Atoi(opt[0 : len(opt)-len(itemsSuffix)])
+			if itemsNErr != nil {
+				return DownloadOptions{}, fmt.Errorf("invalid items count")
+			}
+			d.Items = uint(itemsN)
+			strconv.ParseUint("", 10, 32)
 		} else if _, ok := codecNames[opt]; ok {
 			d.Codecs = append(d.Codecs, opt)
 		} else if tr, trErr := timerange.NewTimeRangeFromString(opt); trErr == nil {
@@ -176,6 +199,9 @@ func (d DownloadOptions) QueryValues() url.Values {
 	}
 	if !d.TimeRange.IsZero() {
 		v.Set("time", d.TimeRange.String())
+	}
+	if d.Items > 0 {
+		v.Set("items", strconv.Itoa(int(d.Items)))
 	}
 	return v
 }

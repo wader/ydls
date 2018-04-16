@@ -27,7 +27,6 @@ type Format struct {
 	MIMEType    string
 
 	// used by rss feeds etc
-	EntriesCount             int
 	EnclosureFormat          string
 	EnclosureFormatOptions   []string
 	EnclosureDownloadOptions DownloadOptions `json:"-"`
