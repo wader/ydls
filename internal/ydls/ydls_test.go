@@ -312,6 +312,7 @@ func TestRSS(t *testing.T) {
 			MediaRawURL: soundcloudTestPlaylistURL,
 			Format:      &rssFormat,
 			BaseURL:     &url.URL{Scheme: "http", Host: "dummy"},
+			Items:       2,
 		},
 		nil)
 	if err != nil {
@@ -345,9 +346,9 @@ func TestRSS(t *testing.T) {
 
 	// TODO: description, not returned by youtube-dl?
 
-	expectedEntries := 8
-	if len(rssRoot.Channel.Items) != expectedEntries {
-		t.Errorf("expected %d entries got %d", expectedEntries, len(rssRoot.Channel.Items))
+	expectedItemsCount := 2
+	if len(rssRoot.Channel.Items) != expectedItemsCount {
+		t.Errorf("expected %d items got %d", expectedItemsCount, len(rssRoot.Channel.Items))
 	}
 
 	itemOne := rssRoot.Channel.Items[0]
@@ -375,5 +376,28 @@ func TestRSS(t *testing.T) {
 	expectedItemType := "audio/mpeg"
 	if itemOne.Enclosure.Type != expectedItemType {
 		t.Errorf("expected enclousure type \"%s\" got \"%s\"", expectedItemType, itemOne.Enclosure.Type)
+	}
+}
+
+func TestRSSStructure(t *testing.T) {
+	rawXML := `
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
+  <channel>
+    <item>
+    </item>
+  </channel>
+</rss>
+`
+	rssRoot := rss.RSS{}
+	decodeErr := xml.Unmarshal([]byte(rawXML), &rssRoot)
+	if decodeErr != nil {
+		t.Errorf("failed to parse rss: %s", decodeErr)
+		return
+	}
+
+	expectedItemsCount := 1
+	if len(rssRoot.Channel.Items) != expectedItemsCount {
+		t.Errorf("expected %d items got %d", expectedItemsCount, len(rssRoot.Channel.Items))
 	}
 }

@@ -32,7 +32,7 @@ func RSSFromYDLSInfo(options DownloadOptions, info youtubedl.Info, linkIconRawUR
 			Title: info.Title,
 			Link:  info.WebpageURL,
 		}
-		channel.ItunesImage = thumbnail
+		channel.ItunesImage = &rss.ItunesImage{HRef: thumbnail}
 	}
 
 	for _, entry := range info.Entries {
@@ -68,7 +68,7 @@ func RSSFromYDLSInfo(options DownloadOptions, info youtubedl.Info, linkIconRawUR
 			GUID:         GUID,
 			PubDate:      pubDate,
 			ItunesAuthor: entry.Artist,
-			ItunesImage:  entry.Thumbnail,
+			ItunesImage:  &rss.ItunesImage{HRef: entry.Thumbnail},
 			Link:         entry.WebpageURL,
 			Title:        firstNonEmpty(entry.Title, entry.Episode),
 			Description:  entry.Description,
