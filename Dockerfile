@@ -5,7 +5,7 @@ ENV CONFIG=/etc/ydls.json
 RUN \
   curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
   chmod a+x /usr/local/bin/youtube-dl
-COPY --from=mwader/static-ffmpeg:3.4.2 /* /usr/local/bin/
+COPY --from=mwader/static-ffmpeg:4.0 /* /usr/local/bin/
 
 COPY cmd /go/src/github.com/wader/ydls/cmd
 COPY internal /go/src/github.com/wader/ydls/internal
