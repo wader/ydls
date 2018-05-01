@@ -1,5 +1,5 @@
 FROM golang:1.10-stretch AS ydls-builder
-ENV YDL_VERSION=2018.04.25
+ENV YDL_VERSION=2018.05.01
 ENV CONFIG=/etc/ydls.json
 
 RUN \
