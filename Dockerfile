@@ -1,11 +1,18 @@
-FROM golang:1.10-stretch AS ydls-builder
-ENV YDL_VERSION=2018.05.01
-ENV CONFIG=/etc/ydls.json
+ARG YDL_VERSION=2018.05.01
+ARG FFMPEG_VERSION=4.0
 
+FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
+
+FROM golang:1.10-stretch AS youtube-dl
+ARG YDL_VERSION
 RUN \
-  curl -L -o /usr/local/bin/youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
-  chmod a+x /usr/local/bin/youtube-dl
-COPY --from=mwader/static-ffmpeg:4.0 /* /usr/local/bin/
+  curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
+  chmod a+x /youtube-dl
+
+FROM golang:1.10-stretch AS ydls-builder
+ENV CONFIG=/etc/ydls.json
+COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
+COPY --from=youtube-dl /youtube-dl /usr/local/bin/
 
 COPY cmd /go/src/github.com/wader/ydls/cmd
 COPY internal /go/src/github.com/wader/ydls/internal
@@ -33,16 +40,16 @@ RUN apk add --no-cache \
   python \
   rtmpdump \
   mplayer
-COPY --from=mwader/static-ffmpeg:3.4.2 /* /usr/local/bin/
-COPY --from=ydls-builder \
-  /go/bin/ydls \
-  /usr/local/bin/youtube-dl \
-  /usr/local/bin/
+COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
+COPY --from=youtube-dl /youtube-dl /usr/local/bin/
+COPY --from=ydls-builder /go/bin/ydls /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin
 COPY ydls.json /etc
 
 # make sure all binaries work
 RUN \
+  ffmpeg -version && \
+  ffprobe -version && \
   youtube-dl --version && \
   ydls -version
 
