@@ -69,9 +69,10 @@ prepend the download URL with the ydls URL by hand without doing any encoding
 audio and video codec)  
 `retranscode` - Retranscode even if input codec is same as output  
 `time` - Only download specificed time range. Ex: `30s`, `20m30s`, `1h20s30s` will limit
-duration. `10s-30s` will seek 10 seconds and stop at 30 seconds (20 second output duration)
+duration. `10s-30s` will seek 10 seconds and stop at 30 seconds (20 second output duration)  
+`items` - If playlist only include this many items
 
-`option` - Codec name, time range or `retranscode`
+`option` - Codec name, time range, `retranscode` or `<N>items`
 
 ### Examples
 
@@ -95,6 +96,9 @@ Download specified time range in mp3:
 
 Download in best format:  
 `http://ydls/https://www.youtube.com/watch?v=cF1zJYkBW4A`
+
+Playlist as podcast with 3 latest items:  
+`http://ydls/rss+3items/https://www.youtube.com/watch?list=PLtLJO5JKE5YCYgIdpJPxNzWxpMuUWgbVi`
 
 ## Tricks and known issues
 
