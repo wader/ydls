@@ -39,6 +39,7 @@ func TestParseInfo(t *testing.T) {
 			cancelFn()
 
 			yi := ydlResult.Info
+			results := ydlResult.Formats()
 
 			if yi.Title != c.expectedTitle {
 				t.Errorf("%s: expected title '%s' got '%s'", c.url, c.expectedTitle, yi.Title)
@@ -53,22 +54,22 @@ func TestParseInfo(t *testing.T) {
 				t.Errorf("%s: failed to parse RawJSON", c.url)
 			}
 
-			if len(yi.Formats) == 0 {
+			if len(results) == 0 {
 				t.Errorf("%s: expected formats", c.url)
 			}
 
-			for _, f := range yi.Formats {
+			for _, f := range results {
 				if f.FormatID == "" {
 					t.Errorf("%s: %s expected FormatID not empty", c.url, f.FormatID)
 				}
-				if f.ACodec != "" && f.ACodec != "none" && f.Ext != "" && f.NormACodec == "" {
-					t.Errorf("%s: %s expected NormACodec not empty for %s", c.url, f.FormatID, f.ACodec)
+				if f.ACodec != "" && f.ACodec != "none" && f.Ext != "" && f.NormalizedACodec() == "" {
+					t.Errorf("%s: %s expected NormalizedACodec not empty for %s", c.url, f.FormatID, f.ACodec)
 				}
-				if f.VCodec != "" && f.VCodec != "none" && f.Ext != "" && f.NormVCodec == "" {
-					t.Errorf("%s: %s expected NormVCodec not empty for %s", c.url, f.FormatID, f.VCodec)
+				if f.VCodec != "" && f.VCodec != "none" && f.Ext != "" && f.NormalizedVCodec() == "" {
+					t.Errorf("%s: %s expected NormalizedVCodec not empty for %s", c.url, f.FormatID, f.VCodec)
 				}
-				if f.ABR+f.VBR+f.TBR != 0 && f.NormBR == 0 {
-					t.Errorf("%s: %s expected NormBR not zero", c.url, f.FormatID)
+				if f.ABR+f.VBR+f.TBR != 0 && f.NormalizedBR() == 0 {
+					t.Errorf("%s: %s expected NormalizedBR not zero", c.url, f.FormatID)
 				}
 			}
 

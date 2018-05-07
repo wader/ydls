@@ -198,11 +198,11 @@ func TestMissingMediaStream(t *testing.T) {
 
 func TestFindYDLFormat(t *testing.T) {
 	ydlFormats := []youtubedl.Format{
-		{FormatID: "1", Protocol: "http", NormACodec: "mp3", NormVCodec: "h264", NormBR: 1},
-		{FormatID: "2", Protocol: "http", NormACodec: "", NormVCodec: "h264", NormBR: 2},
-		{FormatID: "3", Protocol: "http", NormACodec: "aac", NormVCodec: "", NormBR: 3},
-		{FormatID: "4", Protocol: "http", NormACodec: "vorbis", NormVCodec: "vp8", NormBR: 4},
-		{FormatID: "5", Protocol: "http", NormACodec: "opus", NormVCodec: "vp9", NormBR: 5},
+		{FormatID: "1", Protocol: "http", ACodec: "mp3", VCodec: "h264", TBR: 1},
+		{FormatID: "2", Protocol: "http", ACodec: "", VCodec: "h264", TBR: 2},
+		{FormatID: "3", Protocol: "http", ACodec: "aac", VCodec: "", TBR: 3},
+		{FormatID: "4", Protocol: "http", ACodec: "vorbis", VCodec: "vp8", TBR: 4},
+		{FormatID: "5", Protocol: "http", ACodec: "opus", VCodec: "vp9", TBR: 5},
 	}
 
 	for i, c := range []struct {

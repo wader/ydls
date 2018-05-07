@@ -113,8 +113,8 @@ func findYDLFormat(formats []youtubedl.Format, mediaType mediaType, codecs strin
 
 	// filter out only audio or video formats
 	for _, f := range formats {
-		if mediaType == MediaAudio && f.NormACodec == "" ||
-			mediaType == MediaVideo && f.NormVCodec == "" {
+		if mediaType == MediaAudio && f.NormalizedACodec() == "" ||
+			mediaType == MediaVideo && f.NormalizedVCodec() == "" {
 			continue
 		}
 
@@ -137,28 +137,28 @@ func findYDLFormat(formats []youtubedl.Format, mediaType mediaType, codecs strin
 		switch mediaType {
 		case MediaAudio:
 			oi = order{
-				codec: fi.NormACodec,
+				codec: fi.NormalizedACodec(),
 				br:    fi.ABR,
-				tbr:   fi.NormBR,
+				tbr:   fi.NormalizedBR(),
 				id:    fi.FormatID,
 			}
 			oj = order{
-				codec: fj.NormACodec,
+				codec: fj.NormalizedACodec(),
 				br:    fj.ABR,
-				tbr:   fj.NormBR,
+				tbr:   fj.NormalizedBR(),
 				id:    fj.FormatID,
 			}
 		case MediaVideo:
 			oi = order{
-				codec: fi.NormVCodec,
+				codec: fi.NormalizedVCodec(),
 				br:    fi.VBR,
-				tbr:   fi.NormBR,
+				tbr:   fi.NormalizedBR(),
 				id:    fi.FormatID,
 			}
 			oj = order{
-				codec: fj.NormVCodec,
+				codec: fj.NormalizedVCodec(),
 				br:    fj.VBR,
-				tbr:   fj.NormBR,
+				tbr:   fj.NormalizedBR(),
 				id:    fj.FormatID,
 			}
 		}
@@ -356,7 +356,7 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLo
 	log.Printf("Title: %s", ydlResult.Info.Title)
 	if !ydlOptions.YesPlaylist {
 		log.Printf("Available youtubedl formats:")
-		for _, f := range ydlResult.Info.Formats {
+		for _, f := range ydlResult.Formats() {
 			log.Printf("  %s", f)
 		}
 	}
@@ -498,7 +498,7 @@ func (ydls *YDLS) downloadFormat(
 		}
 
 		if ydlFormat, ydlsFormatFound := findYDLFormat(
-			ydlResult.Info.Formats,
+			ydlResult.Formats(),
 			s.Media,
 			preferredCodecs,
 		); ydlsFormatFound {

@@ -42,30 +42,32 @@ func (e Error) Error() string {
 	return string(e)
 }
 
-// Info youtubedl json, thumbnail bytes and raw JSON
+// Info youtubedl info
 type Info struct {
 	ID         string `json:"id"`
 	Type       string `json:"_type"`
 	URL        string `json:"url"`
 	WebpageURL string `json:"webpage_url"`
 
-	Artist        string   `json:"artist"`
-	Uploader      string   `json:"uploader"`
-	UploadDate    string   `json:"upload_date"`
-	Creator       string   `json:"creator"`
-	Title         string   `json:"title"`
-	PlaylistTitle string   `json:"playlist_title"`
-	Episode       string   `json:"episode"`
-	Description   string   `json:"description"`
-	Duration      float64  `json:"duration"`
-	Thumbnail     string   `json:"thumbnail"`
-	Formats       []Format `json:"formats"`
-
+	Artist        string  `json:"artist"`
+	Uploader      string  `json:"uploader"`
+	UploadDate    string  `json:"upload_date"`
+	Creator       string  `json:"creator"`
+	Title         string  `json:"title"`
+	PlaylistTitle string  `json:"playlist_title"`
+	Episode       string  `json:"episode"`
+	Description   string  `json:"description"`
+	Duration      float64 `json:"duration"`
+	Thumbnail     string  `json:"thumbnail"`
 	// not unmarshalled, populated from image thumbnail file
-	ThumbnailBytes []byte `json:"-"`
+	ThumbnailBytes []byte   `json:"-"`
+	Formats        []Format `json:"formats"`
 
 	// Playlist entries if _type is playlist
 	Entries []Info `json:"entries"`
+
+	// Info can also be a mix of Info and one Format
+	Format
 }
 
 // Format youtubedl downloadable format
@@ -78,10 +80,6 @@ type Format struct {
 	TBR      float64 `json:"tbr"`
 	ABR      float64 `json:"abr"`
 	VBR      float64 `json:"vbr"`
-
-	NormBR     float64
-	NormACodec string
-	NormVCodec string
 }
 
 func (f Format) String() string {
@@ -89,41 +87,38 @@ func (f Format) String() string {
 		f.FormatID,
 		f.Protocol,
 		f.Ext,
-		f.NormACodec,
+		f.NormalizedACodec(),
 		f.ABR,
-		f.NormVCodec,
+		f.NormalizedVCodec(),
 		f.VBR,
 		f.TBR,
-		f.NormBR,
+		f.NormalizedBR(),
 	)
 }
 
-func (f *Format) UnmarshalJSON(b []byte) (err error) {
-	type FormatRaw Format
-	var fr FormatRaw
-	if err := json.Unmarshal(b, &fr); err != nil {
-		return err
+func (f Format) NormalizedACodec() string {
+	normCodec := normalizeCodecName(f.ACodec)
+	if normCodec != "" {
+		return normCodec
 	}
-	*f = Format(fr)
+	normCodec, _ = codecFromExt(f.Ext)
+	return normCodec
+}
 
-	f.NormACodec = normalizeCodecName(f.ACodec)
-	f.NormVCodec = normalizeCodecName(f.VCodec)
-
-	extACodec, extVCodec := codecFromExt(f.Ext)
-	if f.ACodec == "" {
-		f.NormACodec = extACodec
+func (f Format) NormalizedVCodec() string {
+	normCodec := normalizeCodecName(f.VCodec)
+	if normCodec != "" {
+		return normCodec
 	}
-	if f.VCodec == "" {
-		f.NormVCodec = extVCodec
-	}
+	_, normCodec = codecFromExt(f.Ext)
+	return normCodec
+}
 
+func (f Format) NormalizedBR() float64 {
 	if f.TBR != 0 {
-		f.NormBR = f.TBR
-	} else {
-		f.NormBR = f.ABR + f.VBR
+		return f.TBR
 	}
-
-	return nil
+	return f.ABR + f.VBR
 }
 
 // guess codec from fuzzy codec name
@@ -291,6 +286,15 @@ type DownloadResult struct {
 // Wait for resource cleanup
 func (dr *DownloadResult) Wait() {
 	<-dr.waitCh
+}
+
+// Formats return all formats
+// helper to take care of mixed info and format
+func (result Result) Formats() []Format {
+	if len(result.Info.Formats) > 0 {
+		return result.Info.Formats
+	}
+	return []Format{result.Info.Format}
 }
 
 // Download format matched by filter
