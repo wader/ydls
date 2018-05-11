@@ -9,7 +9,7 @@ import (
 )
 
 func RSSFromYDLSInfo(options DownloadOptions, info youtubedl.Info, linkIconRawURL string) rss.RSS {
-	enclosureDownloadOptions := options.Format.EnclosureDownloadOptions
+	enclosureDownloadOptions := options.RequestOptions.Format.EnclosureRequestOptions
 	baseURL := options.BaseURL
 	if baseURL == nil {
 		baseURL = &url.URL{}
@@ -45,15 +45,17 @@ func RSSFromYDLSInfo(options DownloadOptions, info youtubedl.Info, linkIconRawUR
 			Fragment: entry.ID,
 		}).String()
 
-		entryDownloadOptions := options.Format.EnclosureDownloadOptions
-		entryDownloadOptions.MediaRawURL = entry.WebpageURL
-		entryDownloadOptions.BaseURL = baseURL.ResolveReference(
-			// itunes requires url path to end with .mp3 etc
-			&url.URL{Path: "media." + enclosureDownloadOptions.Format.Ext},
-		)
+		entryRequestOptions := enclosureDownloadOptions
+		entryRequestOptions.MediaRawURL = entry.WebpageURL
 
 		enclosure := &rss.Enclosure{
-			URL:  entryDownloadOptions.URL().String(),
+			URL: baseURL.ResolveReference(
+				// itunes requires url path to end with .mp3 etc
+				&url.URL{
+					Path:     "media." + enclosureDownloadOptions.Format.Ext,
+					RawQuery: entryRequestOptions.QueryValues().Encode(),
+				},
+			).String(),
 			Type: enclosureDownloadOptions.Format.MIMEType,
 		}
 

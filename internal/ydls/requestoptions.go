@@ -9,29 +9,28 @@ import (
 	"github.com/wader/ydls/internal/timerange"
 )
 
-// DownloadOptions download options
-type DownloadOptions struct {
-	MediaRawURL string
-	Format      *Format
+// RequestOptions request options
+type RequestOptions struct {
+	MediaRawURL string              // youtubedl media URL
+	Format      *Format             // output format
 	Codecs      []string            // force codecs
 	Retranscode bool                // force retranscode even if same input codec
 	TimeRange   timerange.TimeRange // time range limit
 	Items       uint                // feed item limit
-	BaseURL     *url.URL            // base URL to use in rss feed etc
 }
 
-// NewDownloadOptionsFromQuery /?url=...&format=...
-func NewDownloadOptionsFromQuery(v url.Values, formats Formats) (DownloadOptions, error) {
+// NewRequestOptionsFromQuery /?url=...&format=...
+func NewRequestOptionsFromQuery(v url.Values, formats Formats) (RequestOptions, error) {
 	mediaRawURL := v.Get("url")
 	if mediaRawURL == "" {
-		return DownloadOptions{}, fmt.Errorf("no url")
+		return RequestOptions{}, fmt.Errorf("no url")
 	}
 	var timeRange timerange.TimeRange
 	var timeRangeErr error
 	if time := v.Get("time"); time != "" {
 		timeRange, timeRangeErr = timerange.NewTimeRangeFromString(v.Get("time"))
 		if timeRangeErr != nil {
-			return DownloadOptions{}, timeRangeErr
+			return RequestOptions{}, timeRangeErr
 		}
 	}
 
@@ -42,7 +41,7 @@ func NewDownloadOptionsFromQuery(v url.Values, formats Formats) (DownloadOptions
 	if formatName != "" {
 		qFormat, qFormatFound := formats.FindByName(formatName)
 		if !qFormatFound {
-			return DownloadOptions{}, fmt.Errorf("unknown format \"%s\"", formatName)
+			return RequestOptions{}, fmt.Errorf("unknown format \"%s\"", formatName)
 		}
 		format = &qFormat
 
@@ -55,7 +54,7 @@ func NewDownloadOptionsFromQuery(v url.Values, formats Formats) (DownloadOptions
 
 		for _, codec := range v["codec"] {
 			if _, ok := codecNames[codec]; !ok {
-				return DownloadOptions{}, fmt.Errorf("unknown codec \"%s\"", codec)
+				return RequestOptions{}, fmt.Errorf("unknown codec \"%s\"", codec)
 			}
 			codecs = append(codecs, codec)
 		}
@@ -66,12 +65,12 @@ func NewDownloadOptionsFromQuery(v url.Values, formats Formats) (DownloadOptions
 	if itemsStr != "" {
 		itemsN, itemsNErr := strconv.Atoi(itemsStr)
 		if itemsNErr != nil {
-			return DownloadOptions{}, fmt.Errorf("invalid items count")
+			return RequestOptions{}, fmt.Errorf("invalid items count")
 		}
 		items = uint(itemsN)
 	}
 
-	return DownloadOptions{
+	return RequestOptions{
 		MediaRawURL: mediaRawURL,
 		Format:      format,
 		Codecs:      codecs,
@@ -81,12 +80,12 @@ func NewDownloadOptionsFromQuery(v url.Values, formats Formats) (DownloadOptions
 	}, nil
 }
 
-// NewDownloadOptionsFromPath
+// NewRequestOptionsFromPath
 // /format+opt+opt.../schema://host.domin/path?query
 // /format+opt+opt.../host.domain/path?query
 // /schema://host.domain/path?query
 // /host.domain/path?query
-func NewDownloadOptionsFromPath(url *url.URL, formats Formats) (DownloadOptions, error) {
+func NewRequestOptionsFromPath(url *url.URL, formats Formats) (RequestOptions, error) {
 	formatAndOpts := ""
 	mediaRawURL := ""
 
@@ -102,7 +101,7 @@ func NewDownloadOptionsFromPath(url *url.URL, formats Formats) (DownloadOptions,
 	}
 
 	if len(parts) == 0 {
-		return DownloadOptions{}, fmt.Errorf("no url")
+		return RequestOptions{}, fmt.Errorf("no url")
 	}
 
 	if len(parts) == 2 {
@@ -120,17 +119,17 @@ func NewDownloadOptionsFromPath(url *url.URL, formats Formats) (DownloadOptions,
 		opts = strings.Split(formatAndOpts, "+")
 	}
 
-	d, dErr := NewDownloadOptionsFromOpts(opts, formats)
+	r, dErr := NewRequestOptionsFromOpts(opts, formats)
 	if dErr != nil {
-		return DownloadOptions{}, dErr
+		return RequestOptions{}, dErr
 	}
 
-	d.MediaRawURL = mediaRawURL
+	r.MediaRawURL = mediaRawURL
 
-	return d, nil
+	return r, nil
 }
 
-func NewDownloadOptionsFromOpts(opts []string, formats Formats) (DownloadOptions, error) {
+func NewRequestOptionsFromOpts(opts []string, formats Formats) (RequestOptions, error) {
 	var format Format
 	var formatFound bool
 	formatIndex := -1
@@ -151,10 +150,10 @@ func NewDownloadOptionsFromOpts(opts []string, formats Formats) (DownloadOptions
 		}
 	}
 
-	d := DownloadOptions{}
+	r := RequestOptions{}
 
 	if formatFound {
-		d.Format = &format
+		r.Format = &format
 	}
 
 	for i, opt := range opts {
@@ -163,57 +162,45 @@ func NewDownloadOptionsFromOpts(opts []string, formats Formats) (DownloadOptions
 		if i == formatIndex {
 			// nop, skip format opt
 		} else if opt == "retranscode" {
-			d.Retranscode = true
+			r.Retranscode = true
 		} else if strings.HasSuffix(opt, itemsSuffix) {
 			itemsN, itemsNErr := strconv.Atoi(opt[0 : len(opt)-len(itemsSuffix)])
 			if itemsNErr != nil {
-				return DownloadOptions{}, fmt.Errorf("invalid items count")
+				return RequestOptions{}, fmt.Errorf("invalid items count")
 			}
-			d.Items = uint(itemsN)
+			r.Items = uint(itemsN)
 			strconv.ParseUint("", 10, 32)
 		} else if _, ok := codecNames[opt]; ok {
-			d.Codecs = append(d.Codecs, opt)
+			r.Codecs = append(r.Codecs, opt)
 		} else if tr, trErr := timerange.NewTimeRangeFromString(opt); trErr == nil {
-			d.TimeRange = tr
+			r.TimeRange = tr
 		} else {
-			return DownloadOptions{}, fmt.Errorf("unknown opt %s", opt)
+			return RequestOptions{}, fmt.Errorf("unknown opt %s", opt)
 		}
 	}
 
-	return d, nil
+	return r, nil
 }
 
-func (d DownloadOptions) QueryValues() url.Values {
+func (r RequestOptions) QueryValues() url.Values {
 	v := url.Values{}
-	if d.MediaRawURL != "" {
-		v.Set("url", d.MediaRawURL)
+	if r.MediaRawURL != "" {
+		v.Set("url", r.MediaRawURL)
 	}
-	if d.Format != nil {
-		v.Set("format", d.Format.Name)
+	if r.Format != nil {
+		v.Set("format", r.Format.Name)
 	}
-	for _, codec := range d.Codecs {
+	for _, codec := range r.Codecs {
 		v.Add("codec", codec)
 	}
-	if d.Retranscode {
+	if r.Retranscode {
 		v.Set("retranscode", "1")
 	}
-	if !d.TimeRange.IsZero() {
-		v.Set("time", d.TimeRange.String())
+	if !r.TimeRange.IsZero() {
+		v.Set("time", r.TimeRange.String())
 	}
-	if d.Items > 0 {
-		v.Set("items", strconv.Itoa(int(d.Items)))
+	if r.Items > 0 {
+		v.Set("items", strconv.Itoa(int(r.Items)))
 	}
 	return v
-}
-
-func (d DownloadOptions) URL() *url.URL {
-	u := &url.URL{
-		RawQuery: d.QueryValues().Encode(),
-	}
-
-	if d.BaseURL == nil {
-		return u
-	}
-
-	return d.BaseURL.ResolveReference(u)
 }

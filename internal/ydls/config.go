@@ -27,9 +27,9 @@ type Format struct {
 	MIMEType    string
 
 	// used by rss feeds etc
-	EnclosureFormat          string
-	EnclosureFormatOptions   []string
-	EnclosureDownloadOptions DownloadOptions `json:"-"`
+	EnclosureFormat         string
+	EnclosureFormatOptions  []string
+	EnclosureRequestOptions RequestOptions `json:"-"`
 }
 
 func (f *Format) UnmarshalJSON(b []byte) (err error) {
@@ -131,7 +131,7 @@ func (f Format) String() string {
 	)
 }
 
-// Formats ordered list of Formats
+// Formats map name to Format
 type Formats map[string]Format
 
 func (f *Formats) UnmarshalJSON(b []byte) (err error) {
@@ -155,15 +155,15 @@ func (f *Formats) UnmarshalJSON(b []byte) (err error) {
 
 			// add format name as first option to make codec check etc work
 			options := append([]string{enclosureFormat.Name}, format.EnclosureFormatOptions...)
-			downloadOptions, downloadOptionsErr := NewDownloadOptionsFromOpts(
+			requestOptions, requestOptionsErr := NewRequestOptionsFromOpts(
 				options, Formats(fr),
 			)
-			if downloadOptionsErr != nil {
-				return fmt.Errorf("EnclosureFormatOptions %s: %s", format.EnclosureFormat, downloadOptionsErr)
+			if requestOptionsErr != nil {
+				return fmt.Errorf("EnclosureFormatOptions %s: %s", format.EnclosureFormat, requestOptionsErr)
 
-				return downloadOptionsErr
+				return requestOptionsErr
 			}
-			format.EnclosureDownloadOptions = downloadOptions
+			format.EnclosureRequestOptions = requestOptions
 		}
 
 		fr[formatName] = format

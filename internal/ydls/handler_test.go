@@ -117,7 +117,6 @@ func TestYDLSHandlerDownload(t *testing.T) {
 	defer leaktest.Check(t)()
 
 	h := ydlsHandlerFromEnv(t)
-
 	rr := httptest.NewRecorder()
 	testMediaURL := "https://www.youtube.com/watch?v=C0DPdy98e4c"
 	req := httptest.NewRequest("GET", "http://hostname/mp3/"+testMediaURL, nil)

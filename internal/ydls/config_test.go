@@ -130,11 +130,12 @@ func TestFormats(t *testing.T) {
 				dr, err := ydls.Download(
 					ctx,
 					DownloadOptions{
-						MediaRawURL: c.MediaRawURL,
-						Format:      &format,
-						TimeRange:   timerange.TimeRange{Stop: timerange.Duration(1 * time.Second)},
+						RequestOptions: RequestOptions{
+							MediaRawURL: c.MediaRawURL,
+							Format:      &format,
+							TimeRange:   timerange.TimeRange{Stop: timerange.Duration(1 * time.Second)},
+						},
 					},
-					nil,
 				)
 				if err != nil {
 					cancelFn()
@@ -198,7 +199,13 @@ func TestRawFormat(t *testing.T) {
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
-	dr, err := ydls.Download(ctx, DownloadOptions{MediaRawURL: youtubeTestVideoURL}, nil)
+	dr, err := ydls.Download(ctx,
+		DownloadOptions{
+			RequestOptions: RequestOptions{
+				MediaRawURL: youtubeTestVideoURL,
+			},
+		},
+	)
 	if err != nil {
 		cancelFn()
 		t.Errorf("%s: %s: download failed: %s", youtubeTestVideoURL, "raw", err)

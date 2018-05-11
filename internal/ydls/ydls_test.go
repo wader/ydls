@@ -8,7 +8,6 @@ import (
 	"io"
 	"io/ioutil"
 	"net/url"
-	"os"
 	"strings"
 	"sync"
 	"testing"
@@ -21,34 +20,6 @@ import (
 	"github.com/wader/ydls/internal/timerange"
 	"github.com/wader/ydls/internal/youtubedl"
 )
-
-var youtubeTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
-var youtubeLongTestVideoURL = "https://www.youtube.com/watch?v=z7VYVjR_nwE"
-var soundcloudTestAudioURL = "https://soundcloud.com/timsweeney/thedrifter"
-var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-phenomena"
-
-var testNetwork = os.Getenv("TEST_NETWORK") != ""
-var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
-var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""
-
-func stringsContains(strings []string, s string) bool {
-	for _, ss := range strings {
-		if ss == s {
-			return true
-		}
-	}
-
-	return false
-}
-
-func ydlsFromEnv(t *testing.T) YDLS {
-	ydls, err := NewFromFile(os.Getenv("CONFIG"))
-	if err != nil {
-		t.Fatalf("failed to read config: %s", err)
-	}
-
-	return ydls
-}
 
 func TestSafeFilename(t *testing.T) {
 	for _, c := range []struct {
@@ -92,11 +63,13 @@ func TestForceCodec(t *testing.T) {
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			MediaRawURL: youtubeTestVideoURL,
-			Format:      &mkvFormat,
-			Codecs:      forceCodecs,
+			RequestOptions: RequestOptions{
+				MediaRawURL: youtubeTestVideoURL,
+				Format:      &mkvFormat,
+				Codecs:      forceCodecs,
+			},
 		},
-		nil)
+	)
 	if err != nil {
 		cancelFn()
 		t.Errorf("%s: download failed: %s", youtubeTestVideoURL, err)
@@ -146,11 +119,13 @@ func TestTimeRangeOption(t *testing.T) {
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			MediaRawURL: youtubeTestVideoURL,
-			Format:      &mkvFormat,
-			TimeRange:   timeRange,
+			RequestOptions: RequestOptions{
+				MediaRawURL: youtubeTestVideoURL,
+				Format:      &mkvFormat,
+				TimeRange:   timeRange,
+			},
 		},
-		nil)
+	)
 	if err != nil {
 		cancelFn()
 		t.Fatalf("%s: download failed: %s", youtubeTestVideoURL, err)
@@ -186,10 +161,12 @@ func TestMissingMediaStream(t *testing.T) {
 
 	_, err := ydls.Download(ctx,
 		DownloadOptions{
-			MediaRawURL: soundcloudTestAudioURL,
-			Format:      &mkvFormat,
+			RequestOptions: RequestOptions{
+				MediaRawURL: soundcloudTestAudioURL,
+				Format:      &mkvFormat,
+			},
 		},
-		nil)
+	)
 	cancelFn()
 	if err == nil {
 		t.Fatal("expected download to fail")
@@ -249,10 +226,12 @@ func TestContextCloseProbe(t *testing.T) {
 	}()
 	_, err := ydls.Download(ctx,
 		DownloadOptions{
-			MediaRawURL: youtubeLongTestVideoURL,
-			Format:      &mkvFormat,
+			RequestOptions: RequestOptions{
+				MediaRawURL: youtubeLongTestVideoURL,
+				Format:      &mkvFormat,
+			},
 		},
-		nil)
+	)
 	if err == nil {
 		t.Error("expected error while probe")
 	}
@@ -275,10 +254,12 @@ func TestContextCloseDownload(t *testing.T) {
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			MediaRawURL: youtubeLongTestVideoURL,
-			Format:      &mkvFormat,
+			RequestOptions: RequestOptions{
+				MediaRawURL: youtubeLongTestVideoURL,
+				Format:      &mkvFormat,
+			},
 		},
-		nil)
+	)
 	if err != nil {
 		t.Error("expected no error while probe")
 	}
@@ -309,12 +290,14 @@ func TestRSS(t *testing.T) {
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
-			MediaRawURL: soundcloudTestPlaylistURL,
-			Format:      &rssFormat,
-			BaseURL:     &url.URL{Scheme: "http", Host: "dummy"},
-			Items:       2,
+			RequestOptions: RequestOptions{
+				MediaRawURL: soundcloudTestPlaylistURL,
+				Format:      &rssFormat,
+				Items:       2,
+			},
+			BaseURL: &url.URL{Scheme: "http", Host: "dummy"},
 		},
-		nil)
+	)
 	if err != nil {
 		cancelFn()
 		t.Fatalf("%s: download failed: %s", youtubeTestVideoURL, err)

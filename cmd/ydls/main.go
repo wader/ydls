@@ -107,14 +107,17 @@ func download(y ydls.YDLS) {
 		os.Exit(1)
 	}
 
-	downloadOptions, downloadOptionsErr := ydls.NewDownloadOptionsFromOpts(flag.Args()[1:], y.Config.Formats)
-	downloadOptions.MediaRawURL = flag.Arg(0)
-	fatalIfErrorf(downloadOptionsErr, "format and options")
+	requestOptions, requestOptionsErr := ydls.NewRequestOptionsFromOpts(flag.Args()[1:], y.Config.Formats)
+	requestOptions.MediaRawURL = flag.Arg(0)
+	fatalIfErrorf(requestOptionsErr, "format and options")
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 	defer cancelFn()
 
-	dr, err := y.Download(ctx, downloadOptions, debugLog)
+	dr, err := y.Download(ctx, ydls.DownloadOptions{
+		RequestOptions: requestOptions,
+		DebugLog:       debugLog,
+	})
 	fatalIfErrorf(err, "download failed")
 	defer dr.Media.Close()
 	defer dr.Wait()

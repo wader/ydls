@@ -101,32 +101,36 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var downloadOptions DownloadOptions
-	var downloadOptionsErr error
+	var requestOptions RequestOptions
+	var requestOptionsErr error
 	if r.URL.Query().Get("url") != "" {
 		// ?url=url&format=format&codec=&codec=...
-		downloadOptions, downloadOptionsErr = NewDownloadOptionsFromQuery(r.URL.Query(), yh.YDLS.Config.Formats)
+		requestOptions, requestOptionsErr = NewRequestOptionsFromQuery(r.URL.Query(), yh.YDLS.Config.Formats)
 	} else {
 		// /opt+opt.../http://...
-		downloadOptions, downloadOptionsErr = NewDownloadOptionsFromPath(r.URL, yh.YDLS.Config.Formats)
+		requestOptions, requestOptionsErr = NewRequestOptionsFromPath(r.URL, yh.YDLS.Config.Formats)
 	}
-	if downloadOptionsErr != nil {
-		infoLog.Printf("%s Invalid request %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, downloadOptionsErr.Error())
-		http.Error(w, downloadOptionsErr.Error(), http.StatusBadRequest)
+	if requestOptionsErr != nil {
+		infoLog.Printf("%s Invalid request %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, requestOptionsErr.Error())
+		http.Error(w, requestOptionsErr.Error(), http.StatusBadRequest)
 		return
 	}
-	downloadOptions.BaseURL = baseURLFromRequest(r, trustXHeaders)
+
+	downloadOptions := DownloadOptions{
+		RequestOptions: requestOptions,
+		BaseURL:        baseURLFromRequest(r, trustXHeaders),
+		DebugLog:       debugLog,
+	}
 
 	formatName := "best"
-	if downloadOptions.Format != nil {
-		formatName = downloadOptions.Format.Name
+	if requestOptions.Format != nil {
+		formatName = requestOptions.Format.Name
 	}
-	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, formatName, downloadOptions.MediaRawURL)
+	infoLog.Printf("%s Downloading (%s) %s", r.RemoteAddr, formatName, requestOptions.MediaRawURL)
 
 	dr, err := yh.YDLS.Download(
 		r.Context(),
 		downloadOptions,
-		debugLog,
 	)
 	if err != nil {
 		infoLog.Printf("%s Download failed %s %s (%s)", r.RemoteAddr, r.Method, r.URL.Path, err.Error())

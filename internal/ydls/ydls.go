@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"os"
 	"sort"
 	"strings"
@@ -32,14 +33,6 @@ type Printer interface {
 type nopPrinter struct{}
 
 func (nopPrinter) Printf(format string, v ...interface{}) {}
-
-var httpClient = &http.Client{
-	Timeout: 10 * time.Second,
-	Transport: &http.Transport{
-		// TODO: reuse messes up leaktests
-		DisableKeepAlives: true,
-	},
-}
 
 const maxProbeBytes = 20 * 1024 * 1024
 
@@ -250,7 +243,7 @@ func downloadAndProbeFormat(
 
 // YDLS youtubedl downloader with some extras
 type YDLS struct {
-	Config Config
+	Config Config // parsed config
 }
 
 // NewFromFile new YDLs using config file
@@ -266,6 +259,14 @@ func NewFromFile(configPath string) (YDLS, error) {
 	}
 
 	return YDLS{Config: config}, nil
+}
+
+// DownloadOptions dowload options
+type DownloadOptions struct {
+	RequestOptions RequestOptions
+	BaseURL        *url.URL
+	DebugLog       Printer
+	HTTPClient     *http.Client
 }
 
 // DownloadResult download result
@@ -321,33 +322,38 @@ func codecsFromProbeInfo(pi ffmpeg.ProbeInfo) []string {
 }
 
 // Download downloads media from URL using context and makes sure output is in specified format
-func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLog Printer) (DownloadResult, error) {
-	log := debugLog
-	if log == nil {
-		log = nopPrinter{}
+func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions) (DownloadResult, error) {
+	if options.DebugLog == nil {
+		options.DebugLog = nopPrinter{}
+	}
+	if options.HTTPClient == nil {
+		options.HTTPClient = http.DefaultClient
 	}
 
-	log.Printf("URL: %s", options.MediaRawURL)
+	log := options.DebugLog
+
+	log.Printf("URL: %s", options.RequestOptions.MediaRawURL)
 
 	ydlOptions := youtubedl.Options{
-		DebugLog: debugLog,
+		DebugLog:   log,
+		HTTPClient: options.HTTPClient,
 	}
 
-	if options.Format != nil {
-		log.Printf("Output format: %s", options.Format.Name)
+	if options.RequestOptions.Format != nil {
+		log.Printf("Output format: %s", options.RequestOptions.Format.Name)
 	}
 
 	var firstFormats string
-	if options.Format != nil {
-		firstFormats, _ = options.Format.Formats.First()
+	if options.RequestOptions.Format != nil {
+		firstFormats, _ = options.RequestOptions.Format.Formats.First()
 		if firstFormats == "rss" {
 			ydlOptions.YesPlaylist = true
 			ydlOptions.SkipThumbnails = true
-			ydlOptions.PlaylistEnd = options.Items
+			ydlOptions.PlaylistEnd = options.RequestOptions.Items
 		}
 	}
 
-	ydlResult, err := youtubedl.NewFromURL(ctx, options.MediaRawURL, ydlOptions)
+	ydlResult, err := youtubedl.New(ctx, options.RequestOptions.MediaRawURL, ydlOptions)
 	if err != nil {
 		log.Printf("Failed to download: %s", err)
 		return DownloadResult{}, err
@@ -361,7 +367,7 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions, debugLo
 		}
 	}
 
-	if options.Format == nil {
+	if options.RequestOptions.Format == nil {
 		return ydls.downloadRaw(ctx, log, ydlResult)
 	} else if firstFormats == "rss" {
 		return ydls.downloadRSS(ctx, log, options, ydlResult)
@@ -380,7 +386,7 @@ func (ydls *YDLS) downloadRSS(
 	linkIconRawURL := ""
 	webpageRawURL := ydlResult.Info.WebpageURL
 	if ydlResult.Info.Thumbnail == "" && webpageRawURL != "" {
-		resp, respErr := httpClient.Get(webpageRawURL)
+		resp, respErr := options.HTTPClient.Get(webpageRawURL)
 		if respErr == nil {
 			body, _ := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
@@ -484,15 +490,15 @@ func (ydls *YDLS) downloadFormat(
 		}
 	}()
 
-	dr.MIMEType = options.Format.MIMEType
-	dr.Filename = safeFilename(ydlResult.Info.Title + "." + options.Format.Ext)
+	dr.MIMEType = options.RequestOptions.Format.MIMEType
+	dr.Filename = safeFilename(ydlResult.Info.Title + "." + options.RequestOptions.Format.Ext)
 
 	log.Printf("Best format for streams:")
 
 	streamDownloads := []streamDownloadMap{}
-	for _, s := range options.Format.Streams {
+	for _, s := range options.RequestOptions.Format.Streams {
 		preferredCodecs := s.CodecNames
-		optionsCodecCommon := stringprioset.New(options.Codecs).Intersect(s.CodecNames)
+		optionsCodecCommon := stringprioset.New(options.RequestOptions.Codecs).Intersect(s.CodecNames)
 		if !optionsCodecCommon.Empty() {
 			preferredCodecs = optionsCodecCommon
 		}
@@ -562,8 +568,8 @@ func (ydls *YDLS) downloadFormat(
 	log.Printf("Stream mapping:")
 
 	var ffmpegMaps []ffmpeg.Map
-	ffmpegFormatFlags := make([]string, len(options.Format.FormatFlags))
-	copy(ffmpegFormatFlags, options.Format.FormatFlags)
+	ffmpegFormatFlags := make([]string, len(options.RequestOptions.Format.FormatFlags))
+	copy(ffmpegFormatFlags, options.RequestOptions.Format.FormatFlags)
 
 	for _, sdm := range streamDownloads {
 		var ffmpegCodec ffmpeg.Codec
@@ -571,18 +577,18 @@ func (ydls *YDLS) downloadFormat(
 
 		codec = chooseCodec(
 			sdm.stream.Codecs,
-			options.Codecs,
+			options.RequestOptions.Codecs,
 			codecsFromProbeInfo(sdm.download.probeInfo),
 		)
 
 		if sdm.stream.Media == MediaAudio {
-			if !options.Retranscode && codec.Name == sdm.download.probeInfo.AudioCodec() {
+			if !options.RequestOptions.Retranscode && codec.Name == sdm.download.probeInfo.AudioCodec() {
 				ffmpegCodec = ffmpeg.AudioCodec("copy")
 			} else {
 				ffmpegCodec = ffmpeg.AudioCodec(firstNonEmpty(ydls.Config.CodecMap[codec.Name], codec.Name))
 			}
 		} else if sdm.stream.Media == MediaVideo {
-			if !options.Retranscode && codec.Name == sdm.download.probeInfo.VideoCodec() {
+			if !options.RequestOptions.Retranscode && codec.Name == sdm.download.probeInfo.VideoCodec() {
 				ffmpegCodec = ffmpeg.VideoCodec("copy")
 			} else {
 				ffmpegCodec = ffmpeg.VideoCodec(firstNonEmpty(ydls.Config.CodecMap[codec.Name], codec.Name))
@@ -617,13 +623,13 @@ func (ydls *YDLS) downloadFormat(
 	var outputFlags []string
 	inputFlags = append(inputFlags, ydls.Config.InputFlags...)
 
-	if !options.TimeRange.IsZero() {
-		if !options.TimeRange.Start.IsZero() {
+	if !options.RequestOptions.TimeRange.IsZero() {
+		if !options.RequestOptions.TimeRange.Start.IsZero() {
 			inputFlags = append(inputFlags,
-				"-ss", ffmpeg.DurationToPosition(time.Duration(options.TimeRange.Start)),
+				"-ss", ffmpeg.DurationToPosition(time.Duration(options.RequestOptions.TimeRange.Start)),
 			)
 		}
-		outputFlags = []string{"-to", ffmpeg.DurationToPosition(options.TimeRange.Duration())}
+		outputFlags = []string{"-to", ffmpeg.DurationToPosition(options.RequestOptions.TimeRange.Duration())}
 	}
 
 	metadata := metadataFromYoutubeDLInfo(ydlResult.Info)
@@ -631,7 +637,7 @@ func (ydls *YDLS) downloadFormat(
 		metadata = metadata.Merge(sdm.download.probeInfo.Format.Tags)
 	}
 
-	firstOutFormat, _ := options.Format.Formats.First()
+	firstOutFormat, _ := options.RequestOptions.Format.Formats.First()
 	ffmpegP := &ffmpeg.FFmpeg{
 		Streams: []ffmpeg.Stream{
 			ffmpeg.Stream{
@@ -664,7 +670,7 @@ func (ydls *YDLS) downloadFormat(
 	go func() {
 		// TODO: ffmpeg mp3enc id3 writer does not work with streamed output
 		// (id3v2 header length update requires seek)
-		if options.Format.Prepend == "id3v2" {
+		if options.RequestOptions.Format.Prepend == "id3v2" {
 			id3v2.Write(w, id3v2FramesFromMetadata(metadata, ydlResult.Info))
 		}
 		log.Printf("Starting to copy")
