@@ -27,6 +27,7 @@ package leaktest
 import (
 	"fmt"
 	"io/ioutil"
+	"net/http"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -35,6 +36,9 @@ import (
 	"strings"
 	"time"
 )
+
+// Timeout how long to wait for resource cleanups
+var Timeout = time.Second * 5
 
 func stringSetMinus(as []string, bs []string) []string {
 	nmap := map[string]struct{}{}
@@ -216,9 +220,15 @@ func checkLeak(
 	return nil
 }
 
-// Check check for leaked fds and child processes
-// use defer osleaktest.Check(t)() first in test function
+// Check for leaked fds, child processes, goroutines and temp files
+// use defer leaktest.Check(t)() first in test function
 func Check(t ErrorReporter) func() {
+	httpTransport, _ := http.DefaultTransport.(*http.Transport)
+	return CheckWithTransport(t, httpTransport)
+}
+
+// CheckWithTransport same as check but with own Transport
+func CheckWithTransport(t ErrorReporter, transport *http.Transport) func() {
 	goroutinesBefore := interestingGoroutines()
 
 	fdsBefore, fdsBeforeErr := fdsForCurrentProcess()
@@ -283,6 +293,11 @@ func Check(t ErrorReporter) func() {
 			{
 				name: "goroutines",
 				fn: func() (interface{}, bool) {
+					// could be done here or in file descriptors check
+					if transport != nil {
+						transport.CloseIdleConnections()
+					}
+
 					leaked := stringSetMinus(interestingGoroutines(), goroutinesBefore)
 					return leaked, len(leaked) == 0
 				}},
@@ -307,7 +322,7 @@ func Check(t ErrorReporter) func() {
 		for _, check := range checks {
 			check := check
 			go func() {
-				checkWaitCh <- checkLeak(t, 5*time.Second, check.name, check.fn)
+				checkWaitCh <- checkLeak(t, Timeout, check.name, check.fn)
 			}()
 		}
 		for range checks {
