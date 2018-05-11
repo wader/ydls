@@ -14,18 +14,9 @@ import (
 	"path"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/wader/ydls/internal/writelogger"
 )
-
-var httpClient = &http.Client{
-	Timeout: 10 * time.Second,
-	Transport: &http.Transport{
-		// TODO: reuse messes up leaktests
-		DisableKeepAlives: true,
-	},
-}
 
 type Printer interface {
 	Printf(format string, v ...interface{})
@@ -164,10 +155,18 @@ type Options struct {
 	PlaylistEnd    uint
 	SkipThumbnails bool
 	DebugLog       Printer
+	HTTPClient     *http.Client
 }
 
-// NewFromURL new Info downloaded from URL using context
-func NewFromURL(ctx context.Context, rawURL string, options Options) (result Result, err error) {
+// New downloads metadata for URL
+func New(ctx context.Context, rawURL string, options Options) (result Result, err error) {
+	if options.DebugLog == nil {
+		options.DebugLog = nopPrinter{}
+	}
+	if options.HTTPClient == nil {
+		options.HTTPClient = http.DefaultClient
+	}
+
 	info, rawJSON, err := infoFromURL(ctx, rawURL, options)
 	if err != nil {
 		return Result{}, err
@@ -183,13 +182,7 @@ func NewFromURL(ctx context.Context, rawURL string, options Options) (result Res
 	}, nil
 }
 
-// NewFromURL new Info downloaded from URL using context
 func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info, rawJSON []byte, err error) {
-	debugLog := options.DebugLog
-	if debugLog == nil {
-		debugLog = nopPrinter{}
-	}
-
 	cmd := exec.CommandContext(
 		ctx,
 		"youtube-dl",
@@ -224,7 +217,7 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 	stdoutBuf := &bytes.Buffer{}
 	stderrBuf := &bytes.Buffer{}
 
-	ydlStderr := writelogger.New(debugLog, "ydl-info stderr> ")
+	ydlStderr := writelogger.New(options.DebugLog, "ydl-info stderr> ")
 	stderrWriter := io.MultiWriter(stderrBuf, ydlStderr)
 
 	cmd.Dir = tempPath
@@ -232,7 +225,7 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 	cmd.Stderr = stderrWriter
 	cmd.Stdin = bytes.NewBufferString(rawURL + "\n")
 
-	debugLog.Printf("cmd %v", cmd.Args)
+	options.DebugLog.Printf("cmd %v", cmd.Args)
 	cmdErr := cmd.Run()
 
 	stderrLineScanner := bufio.NewScanner(stderrBuf)
@@ -260,7 +253,7 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 	}
 
 	if !options.SkipThumbnails && info.Thumbnail != "" {
-		resp, respErr := httpClient.Get(info.Thumbnail)
+		resp, respErr := options.HTTPClient.Get(info.Thumbnail)
 		if respErr == nil {
 			thumbnailBuf, _ := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
@@ -271,10 +264,11 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 	return info, stdoutBuf.Bytes(), nil
 }
 
+// Result metadata for a URL
 type Result struct {
 	Info    Info
 	RawJSON []byte  // saved raw JSON. Used later when downloading
-	Options Options // options to NewFromURL
+	Options Options // options passed to New
 }
 
 // DownloadResult download result
@@ -300,9 +294,6 @@ func (result Result) Formats() []Format {
 // Download format matched by filter
 func (result Result) Download(ctx context.Context, filter string) (*DownloadResult, error) {
 	debugLog := result.Options.DebugLog
-	if debugLog == nil {
-		debugLog = nopPrinter{}
-	}
 
 	if result.Info.Type == "playlist" || result.Info.Type == "multi_video" {
 		return nil, fmt.Errorf("is a playlist")

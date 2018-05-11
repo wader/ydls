@@ -30,7 +30,7 @@ func TestParseInfo(t *testing.T) {
 			defer leaktest.Check(t)()
 
 			ctx, cancelFn := context.WithCancel(context.Background())
-			ydlResult, err := NewFromURL(ctx, c.url, Options{})
+			ydlResult, err := New(ctx, c.url, Options{})
 			if err != nil {
 				cancelFn()
 				t.Errorf("failed to parse %s: %v", c.url, err)
@@ -86,7 +86,7 @@ func TestFail(t *testing.T) {
 	defer leaktest.Check(t)()
 
 	geoBlockedURL := "https://www.youtube.com/watch?v=aaaaaaaaaaa"
-	_, err := NewFromURL(context.Background(), geoBlockedURL, Options{})
+	_, err := New(context.Background(), geoBlockedURL, Options{})
 
 	if err == nil {
 		t.Errorf("%s: should fail", geoBlockedURL)
@@ -106,7 +106,7 @@ func TestPlaylist(t *testing.T) {
 	defer leaktest.Check(t)()
 
 	playlistRawURL := "https://soundcloud.com/mattheis/sets/kindred-phenomena"
-	ydlResult, ydlResultErr := NewFromURL(context.Background(), playlistRawURL, Options{
+	ydlResult, ydlResultErr := New(context.Background(), playlistRawURL, Options{
 		YesPlaylist:    true,
 		SkipThumbnails: true,
 	})
@@ -139,7 +139,7 @@ func TestPlaylistBadURL(t *testing.T) {
 	defer leaktest.Check(t)()
 
 	playlistRawURL := "https://soundcloud.com/timsweeney/thedrifter"
-	_, ydlResultErr := NewFromURL(context.Background(), playlistRawURL, Options{
+	_, ydlResultErr := New(context.Background(), playlistRawURL, Options{
 		YesPlaylist:    true,
 		SkipThumbnails: true,
 	})
