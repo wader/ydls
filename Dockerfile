@@ -38,6 +38,7 @@ RUN apk add --no-cache \
   ca-certificates \
   tini \
   python \
+  py2-crypto \
   rtmpdump \
   mplayer
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
