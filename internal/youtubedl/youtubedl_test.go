@@ -85,14 +85,14 @@ func TestFail(t *testing.T) {
 
 	defer leaktest.Check(t)()
 
-	geoBlockedURL := "https://www.youtube.com/watch?v=aaaaaaaaaaa"
+	geoBlockedURL := "https://www.youtube.com/watch?v=wAsBta25OGQ"
 	_, err := New(context.Background(), geoBlockedURL, Options{})
 
 	if err == nil {
 		t.Errorf("%s: should fail", geoBlockedURL)
 	}
 
-	expectedError := "aaaaaaaaaaa: YouTube said: This video is unavailable."
+	expectedError := "The uploader has not made this video available in your country."
 	if err.Error() != expectedError {
 		t.Errorf("%s: expected '%s' got '%s'", geoBlockedURL, expectedError, err.Error())
 	}
