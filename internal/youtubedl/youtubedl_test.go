@@ -78,26 +78,6 @@ func TestParseInfo(t *testing.T) {
 	}
 }
 
-func TestFail(t *testing.T) {
-	if !testNetwork || !testYoutubeldl {
-		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
-	}
-
-	defer leaktest.Check(t)()
-
-	geoBlockedURL := "https://www.youtube.com/watch?v=wAsBta25OGQ"
-	_, err := New(context.Background(), geoBlockedURL, Options{})
-
-	if err == nil {
-		t.Errorf("%s: should fail", geoBlockedURL)
-	}
-
-	expectedError := "The uploader has not made this video available in your country."
-	if err.Error() != expectedError {
-		t.Errorf("%s: expected '%s' got '%s'", geoBlockedURL, expectedError, err.Error())
-	}
-}
-
 func TestPlaylist(t *testing.T) {
 	if !testNetwork || !testYoutubeldl {
 		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
