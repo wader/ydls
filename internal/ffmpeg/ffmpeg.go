@@ -460,7 +460,7 @@ func (f *FFmpeg) Start(ctx context.Context) error {
 	}
 
 	ffmpegName := "ffmpeg"
-	ffmpegArgs := []string{"-hide_banner", "-y"}
+	ffmpegArgs := []string{"-nostdin", "-hide_banner", "-y"}
 
 	for _, fi := range inputs {
 		ffmpegArgs = append(ffmpegArgs, fi.flags...)
