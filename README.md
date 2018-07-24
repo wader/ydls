@@ -97,7 +97,7 @@ Download specified time range in mp3:
 Download in best format:  
 `http://ydls/https://www.youtube.com/watch?v=cF1zJYkBW4A`
 
-Playlist as podcast with 3 latest items:  
+Playlist as audio podcast with 3 latest items:  
 `http://ydls/rss+3items/https://www.youtube.com/watch?list=PLtLJO5JKE5YCYgIdpJPxNzWxpMuUWgbVi`
 
 ## Tricks and known issues
@@ -112,7 +112,7 @@ Download with curl and save to filename provided by response header:
 Docker image can download from command line. This will download in mp3 format
 to current directory:
 
-`docker run --rm -v "$PWD:/media" -w /media mwader/ydls https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
+`docker run --rm -v "$PWD:$PWD" -w "$PWD" mwader/ydls https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
 
 youtube-dl URL can point to a plain media file.
 
