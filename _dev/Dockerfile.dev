@@ -3,5 +3,5 @@ COPY --from=ydls /usr/local/bin/* /usr/local/bin/
 RUN \
   apt-get update && \
   apt-get -y install less jq bsdmainutils
-WORKDIR /go/src/github.com/wader/ydls
+WORKDIR /src
 ENTRYPOINT bash

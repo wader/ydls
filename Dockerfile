@@ -14,12 +14,12 @@ ENV CONFIG=/etc/ydls.json
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=youtube-dl /youtube-dl /usr/local/bin/
 
-COPY cmd /go/src/github.com/wader/ydls/cmd
-COPY internal /go/src/github.com/wader/ydls/internal
-COPY .git /go/src/github.com/wader/ydls/.git
+WORKDIR /src
+COPY go.mod /src
+COPY cmd /src/cmd
+COPY internal /src/internal
+COPY .git /src/.git
 COPY ydls.json /etc
-
-WORKDIR /go/src/github.com/wader/ydls
 
 RUN TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 go test -v -cover -race ./...
 RUN go install -installsuffix netgo -tags netgo -ldflags "-X main.gitCommit=$(git describe --always)" ./cmd/ydls
