@@ -24,11 +24,10 @@ type testReporter struct {
 
 func (tr *testReporter) Errorf(format string, args ...interface{}) {
 	tr.failed = true
-	tr.msg = fmt.Sprintf(format, args)
+	tr.msg = fmt.Sprintf(format, args...)
 }
 
-func (tr *testReporter) Fatal(...interface{}) {
-}
+func (tr *testReporter) Fatal(...interface{}) {}
 
 func tesFn(t *testing.T, inGorutine bool, shouldFail bool, fn func()) {
 	checker := &testReporter{}
