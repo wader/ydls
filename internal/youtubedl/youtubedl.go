@@ -92,7 +92,7 @@ func (f Format) NormalizedACodec() string {
 	if normCodec != "" {
 		return normCodec
 	}
-	normCodec, _ = codecFromExt(f.Ext)
+	normCodec, _ = guessCodecFromExt(f.Ext)
 	return normCodec
 }
 
@@ -101,7 +101,7 @@ func (f Format) NormalizedVCodec() string {
 	if normCodec != "" {
 		return normCodec
 	}
-	_, normCodec = codecFromExt(f.Ext)
+	_, normCodec = guessCodecFromExt(f.Ext)
 	return normCodec
 }
 
@@ -136,17 +136,28 @@ func normalizeCodecName(c string) string {
 }
 
 // guess codecs based on ext
-func codecFromExt(ext string) (acodec string, vcodec string) {
+func guessCodecFromExt(ext string) (acodec string, vcodec string) {
 	switch strings.ToLower(ext) {
+	case "wav":
+		return "wav", ""
 	case "mp3":
 		return "mp3", ""
-	case "mp4":
+	case "ogg":
+		return "vorbis", ""
+	case "m4a",
+		"aac":
+		return "aac", ""
+	case "mp4",
+		"m4v",
+		"mov",
+		"3gp":
 		return "aac", "h264"
+	case "webm":
+		return "opus", "vp9"
 	case "flv":
 		return "aac", "h264"
-	default:
-		return "", ""
 	}
+	return "", ""
 }
 
 type Options struct {
