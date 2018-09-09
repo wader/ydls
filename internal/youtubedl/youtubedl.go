@@ -39,6 +39,7 @@ type Info struct {
 	Type       string `json:"_type"`
 	URL        string `json:"url"`
 	WebpageURL string `json:"webpage_url"`
+	Direct     bool   `json:"direct"`
 
 	Artist        string  `json:"artist"`
 	Uploader      string  `json:"uploader"`
@@ -331,9 +332,14 @@ func (result Result) Download(ctx context.Context, filter string) (*DownloadResu
 		"--no-cache-dir",
 		"--restrict-filenames",
 		"--load-info", jsonTempPath,
-		"-f", filter,
 		"-o", "-",
 	)
+	// don't need to specify if direct as there is only one
+	// also seems to be issues when using filter with generic extractor
+	if !result.Info.Direct {
+		cmd.Args = append(cmd.Args, "-f", filter)
+	}
+
 	cmd.Dir = tempPath
 	var w io.WriteCloser
 	dr.Reader, w = io.Pipe()
