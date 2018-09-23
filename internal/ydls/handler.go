@@ -90,7 +90,7 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	if r.URL.Path == "/" && r.URL.RawQuery == "" {
 		if yh.IndexTmpl != nil {
-			w.Header().Set("Content-Security-Policy", "default-src 'none'; img-src 'self'; style-src 'unsafe-inline'; form-action 'self'")
+			w.Header().Set("Content-Security-Policy", "default-src 'self'; style-src 'unsafe-inline'; form-action 'self'")
 			yh.IndexTmpl.Execute(w, yh.YDLS.Config.Formats)
 		} else {
 			http.Error(w, "Not found", http.StatusNotFound)
