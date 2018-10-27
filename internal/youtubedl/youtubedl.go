@@ -89,8 +89,8 @@ func (f Format) String() string {
 }
 
 func (f Format) NormalizedACodec() string {
-	normCodec := normalizeCodecName(f.ACodec)
-	if normCodec != "" {
+	normCodec, normCodecFound := normalizeCodecName(f.ACodec)
+	if normCodecFound {
 		return normCodec
 	}
 	normCodec, _ = guessCodecFromExt(f.Ext)
@@ -98,8 +98,8 @@ func (f Format) NormalizedACodec() string {
 }
 
 func (f Format) NormalizedVCodec() string {
-	normCodec := normalizeCodecName(f.VCodec)
-	if normCodec != "" {
+	normCodec, normCodecFound := normalizeCodecName(f.VCodec)
+	if normCodecFound {
 		return normCodec
 	}
 	_, normCodec = guessCodecFromExt(f.Ext)
@@ -114,7 +114,7 @@ func (f Format) NormalizedBR() float64 {
 }
 
 // guess codec from fuzzy codec name
-func normalizeCodecName(c string) string {
+func normalizeCodecName(c string) (string, bool) {
 	codecNameNormalizeMap := map[string]string{
 		"none": "",
 		"avc1": "h264",
@@ -130,10 +130,10 @@ func normalizeCodecName(c string) string {
 	c = p[0]
 
 	if n, ok := codecNameNormalizeMap[c]; ok {
-		return n
+		return n, true
 	}
 
-	return c
+	return c, false
 }
 
 // guess codecs based on ext
