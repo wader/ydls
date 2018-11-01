@@ -348,8 +348,9 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions) (Downlo
 		firstFormats, _ = options.RequestOptions.Format.Formats.First()
 		if firstFormats == "rss" {
 			ydlOptions.YesPlaylist = true
-			ydlOptions.SkipThumbnails = true
 			ydlOptions.PlaylistEnd = options.RequestOptions.Items
+		} else {
+			ydlOptions.DownloadThumbnail = true
 		}
 	}
 

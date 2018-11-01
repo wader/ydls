@@ -162,12 +162,12 @@ func guessCodecFromExt(ext string) (acodec string, vcodec string) {
 }
 
 type Options struct {
-	YesPlaylist    bool // prefer playlist
-	PlaylistStart  uint
-	PlaylistEnd    uint
-	SkipThumbnails bool
-	DebugLog       Printer
-	HTTPClient     *http.Client
+	YesPlaylist       bool // prefer playlist
+	PlaylistStart     uint
+	PlaylistEnd       uint
+	DownloadThumbnail bool
+	DebugLog          Printer
+	HTTPClient        *http.Client
 }
 
 // New downloads metadata for URL
@@ -264,7 +264,7 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 		return Info{}, nil, fmt.Errorf("not a playlist")
 	}
 
-	if !options.SkipThumbnails && info.Thumbnail != "" {
+	if options.DownloadThumbnail && info.Thumbnail != "" {
 		resp, respErr := options.HTTPClient.Get(info.Thumbnail)
 		if respErr == nil {
 			thumbnailBuf, _ := ioutil.ReadAll(resp.Body)
