@@ -7,6 +7,7 @@ import (
 )
 
 // TODO: make icon types/guess table arguments?
+// TODO: proper parser?
 
 var linkIconRe = regexp.MustCompile(`` +
 	`<\s*link\s+` +
