@@ -316,7 +316,7 @@ func (result Result) Download(ctx context.Context, filter string) (*DownloadResu
 		return nil, tempErr
 	}
 	jsonTempPath := path.Join(tempPath, "info.json")
-	if err := ioutil.WriteFile(jsonTempPath, result.RawJSON, 0644); err != nil {
+	if err := ioutil.WriteFile(jsonTempPath, result.RawJSON, 0600); err != nil {
 		os.RemoveAll(tempPath)
 		return nil, err
 	}
