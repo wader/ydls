@@ -363,6 +363,10 @@ func TestRSS(t *testing.T) {
 }
 
 func TestRSSStructure(t *testing.T) {
+	if !testNetwork || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	}
+
 	rawXML := `
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd">
@@ -382,5 +386,58 @@ func TestRSSStructure(t *testing.T) {
 	expectedItemsCount := 1
 	if len(rssRoot.Channel.Items) != expectedItemsCount {
 		t.Errorf("expected %d items got %d", expectedItemsCount, len(rssRoot.Channel.Items))
+	}
+}
+
+func TestSubtitles(t *testing.T) {
+	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	}
+
+	subtitlesTestVideoURL := "https://www.youtube.com/watch?v=QRS8MkLhQmM"
+	timeRange, timeRangeErr := timerange.NewTimeRangeFromString("5s")
+	if timeRangeErr != nil {
+		t.Fatalf("failed to parse time range")
+	}
+
+	ydls := ydlsFromEnv(t)
+
+	for _, f := range ydls.Config.Formats {
+		if f.SubtitleCodecs.Empty() {
+			continue
+		}
+
+		dr, drErr := ydls.Download(context.Background(),
+			DownloadOptions{
+				RequestOptions: RequestOptions{
+					MediaRawURL: subtitlesTestVideoURL,
+					Format:      &f,
+					TimeRange:   timeRange,
+				},
+			},
+		)
+		if drErr != nil {
+			t.Fatalf("%s: download failed: %s", subtitlesTestVideoURL, drErr)
+		}
+
+		pi, piErr := ffmpeg.Probe(context.Background(), ffmpeg.Reader{Reader: dr.Media}, nil, nil)
+		dr.Media.Close()
+		dr.Wait()
+		if piErr != nil {
+			t.Errorf("%s: %s: probe failed: %s", subtitlesTestVideoURL, f.Name, piErr)
+			return
+		}
+
+		subtitlesStreamCount := 0
+		expectedSubtitlesStreamCount := 13
+		for _, s := range pi.Streams {
+			if s.CodecType == "subtitle" {
+				subtitlesStreamCount++
+			}
+		}
+
+		if subtitlesStreamCount != expectedSubtitlesStreamCount {
+			t.Errorf("%s: %s: expected %d got %d", subtitlesTestVideoURL, f.Name, expectedSubtitlesStreamCount, subtitlesStreamCount)
+		}
 	}
 }

@@ -113,6 +113,12 @@ func (c AudioCodec) codecArgs() []string {
 	return []string{"-codec:a", string(c)}
 }
 
+type SubtitleCodec string
+
+func (c SubtitleCodec) codecArgs() []string {
+	return []string{"-codec:s", string(c)}
+}
+
 type Input interface {
 	input()
 }
@@ -220,6 +226,14 @@ func (pi ProbeInfo) VideoCodec() string {
 // AudioCodec probed audio codec
 func (pi ProbeInfo) AudioCodec() string {
 	if s, ok := pi.FindStreamType("audio"); ok {
+		return s.CodecName
+	}
+	return ""
+}
+
+// SubtitleCodec probed audio codec
+func (pi ProbeInfo) SubtitleCodec() string {
+	if s, ok := pi.FindStreamType("subtitle"); ok {
 		return s.CodecName
 	}
 	return ""

@@ -52,8 +52,10 @@ type Info struct {
 	Duration      float64 `json:"duration"`
 	Thumbnail     string  `json:"thumbnail"`
 	// not unmarshalled, populated from image thumbnail file
-	ThumbnailBytes []byte   `json:"-"`
-	Formats        []Format `json:"formats"`
+	ThumbnailBytes []byte `json:"-"`
+
+	Formats   []Format              `json:"formats"`
+	Subtitles map[string][]Subtitle `json:"subtitles"`
 
 	// Playlist entries if _type is playlist
 	Entries []Info `json:"entries"`
@@ -72,6 +74,14 @@ type Format struct {
 	TBR      float64 `json:"tbr"`
 	ABR      float64 `json:"abr"`
 	VBR      float64 `json:"vbr"`
+}
+
+type Subtitle struct {
+	URL      string `json:"url"`
+	Ext      string `json:"ext"`
+	Language string `json:"-"`
+	// not unmarshalled, populated from subtitle file
+	Bytes []byte `json:"-"`
 }
 
 func (f Format) String() string {
@@ -166,6 +176,7 @@ type Options struct {
 	PlaylistStart     uint
 	PlaylistEnd       uint
 	DownloadThumbnail bool
+	DownloadSubtitles bool
 	DebugLog          Printer
 	HTTPClient        *http.Client
 }
@@ -204,6 +215,7 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 		"--restrict-filenames",
 		// provide URL via stdin for security, youtube-dl has some run command args
 		"--batch-file", "-",
+		"--all-subs",
 		"-J",
 	)
 	if options.YesPlaylist {
@@ -267,9 +279,28 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 	if options.DownloadThumbnail && info.Thumbnail != "" {
 		resp, respErr := options.HTTPClient.Get(info.Thumbnail)
 		if respErr == nil {
-			thumbnailBuf, _ := ioutil.ReadAll(resp.Body)
+			buf, _ := ioutil.ReadAll(resp.Body)
 			resp.Body.Close()
-			info.ThumbnailBytes = thumbnailBuf
+			info.ThumbnailBytes = buf
+		}
+	}
+
+	for language, subtitles := range info.Subtitles {
+		for i := range subtitles {
+			subtitles[i].Language = language
+		}
+	}
+
+	if options.DownloadSubtitles {
+		for _, subtitles := range info.Subtitles {
+			for i, subtitle := range subtitles {
+				resp, respErr := options.HTTPClient.Get(subtitle.URL)
+				if respErr == nil {
+					buf, _ := ioutil.ReadAll(resp.Body)
+					resp.Body.Close()
+					subtitles[i].Bytes = buf
+				}
+			}
 		}
 	}
 

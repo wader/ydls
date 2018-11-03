@@ -130,3 +130,39 @@ func TestPlaylistBadURL(t *testing.T) {
 		t.Error("expected error")
 	}
 }
+
+func TestSubtitles(t *testing.T) {
+	if !testNetwork || !testYoutubeldl {
+		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	}
+
+	subtitlesTestVideoURL := "https://www.youtube.com/watch?v=QRS8MkLhQmM"
+
+	ydlResult, ydlResultErr := New(
+		context.Background(),
+		subtitlesTestVideoURL,
+		Options{
+			DownloadSubtitles: true,
+		})
+
+	if ydlResultErr != nil {
+		t.Errorf("failed to download: %s", ydlResultErr)
+	}
+
+	for _, subtitles := range ydlResult.Info.Subtitles {
+		for _, subtitle := range subtitles {
+			if subtitle.Ext == "" {
+				t.Errorf("%s: %s: expected extension", ydlResult.Info.URL, subtitle.Language)
+			}
+			if subtitle.Language == "" {
+				t.Errorf("%s: %s: expected language", ydlResult.Info.URL, subtitle.Language)
+			}
+			if subtitle.URL == "" {
+				t.Errorf("%s: %s: expected url", ydlResult.Info.URL, subtitle.Language)
+			}
+			if len(subtitle.Bytes) == 0 {
+				t.Errorf("%s: %s: expected bytes", ydlResult.Info.URL, subtitle.Language)
+			}
+		}
+	}
+}

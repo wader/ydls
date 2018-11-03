@@ -8,19 +8,19 @@ from various site like youtube, vimeo etc.
 
 Docker image support all default native ffmpeg decoders and can encode to:
 
-|Format name|Container|Audio codecs|Video codecs|
+|Format name|Container|Audio codecs|Video codecs|Subtitle codecs
 |-|-|-|-|
-|alac|mov|alac||
-|flac|flac|flac||
-|m4a|mov|aac||
-|mp3|mp3|mp3||
-|ogg|ogg|vorbis, opus||
-|wav|wav|pcm_s16le||
-|mkv|matroska|aac, mp3, vorbis, opus, flac, alac, ac3|h264, hevc, vp8, vp9, theora|
-|mp4|mov|aac, mp3, vorbis, flac, alac|h264, hevc|
-|mxf|mxf|pcm_s16le|mpeg2video|
-|ts|mpegts|aac, mp3, ac3|h264, hevc|
-|webm|webm|vorbis, opus|vp8, vp9|
+|alac|mov|alac|||
+|flac|flac|flac|||
+|m4a|mov|aac|||
+|mp3|mp3|mp3|||
+|ogg|ogg|vorbis, opus|||
+|wav|wav|pcm_s16le|||
+|mkv|matroska|aac, ac3, mp3, vorbis, opus, flac, alac|h264, hevc, vp8, vp9, theora|subrip, ass|
+|mp4|mov|aac, flac, alac, mp3, vorbis|h264, hevc|mov_text|
+|mxf|mxf|pcm_s16le|mpeg2video||
+|ts|mpegts|aac, mp3, ac3|h264, hevc||
+|webm|webm|vorbis, opus|vp8, vp9|webvtt|
 
 There is also support for `rss` format which will transform a youtube-dl
 playlist into a RSS audio podcast.
