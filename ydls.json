@@ -1,7 +1,11 @@
 {
   "InputFlags": [
     "-thread_queue_size",
-    "512"
+    "10000"
+  ],
+  "OutputFlags": [
+    "-max_muxing_queue_size",
+    "10000"
   ],
   "CodecMap": {
     "mp3": "libmp3lame",

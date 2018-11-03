@@ -623,6 +623,7 @@ func (ydls *YDLS) downloadFormat(
 	var inputFlags []string
 	var outputFlags []string
 	inputFlags = append(inputFlags, ydls.Config.InputFlags...)
+	outputFlags = append(outputFlags, ydls.Config.OutputFlags...)
 
 	if !options.RequestOptions.TimeRange.IsZero() {
 		if !options.RequestOptions.TimeRange.Start.IsZero() {
