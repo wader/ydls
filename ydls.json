@@ -163,6 +163,9 @@
           ]
         }
       ],
+      "SubtitleCodecs": [
+        "mov_text"
+      ],
       "Ext": "mp4",
       "MIMEType": "video/mp4"
     },
@@ -186,6 +189,9 @@
             "vp9"
           ]
         }
+      ],
+      "SubtitleCodecs": [
+        "webvtt"
       ],
       "Ext": "webm",
       "MIMEType": "video/webm"
@@ -217,6 +223,10 @@
             "theora"
           ]
         }
+      ],
+      "SubtitleCodecs": [
+        "subrip",
+        "ass"
       ],
       "Ext": "mkv",
       "MIMEType": "video/x-matroska"

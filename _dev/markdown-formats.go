@@ -34,11 +34,12 @@ func main() {
 		return false
 	})
 
-	fmt.Print("|Format name|Container|Audio codecs|Video codecs|\n")
+	fmt.Print("|Format name|Container|Audio codecs|Video codecs|Subtitle codecs\n")
 	fmt.Print("|-|-|-|-|\n")
 	for _, f := range formats {
 		var aCodecs []string
 		var vCodecs []string
+
 		for _, s := range f.format.Streams {
 			if s.Media == ydls.MediaAudio {
 				aCodecs = s.CodecNames.Strings()
@@ -48,11 +49,12 @@ func main() {
 		}
 
 		firstFormat, _ := f.format.Formats.First()
-		fmt.Printf("|%s|%s|%s|%s|\n",
+		fmt.Printf("|%s|%s|%s|%s|%s|\n",
 			f.name,
 			firstFormat,
 			strings.Join(aCodecs, ", "),
 			strings.Join(vCodecs, ", "),
+			strings.Join(f.format.SubtitleCodecs.Strings(), ", "),
 		)
 	}
 }

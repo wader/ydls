@@ -19,13 +19,14 @@ type Config struct {
 
 // Format media container format, possible codecs, extension and mime
 type Format struct {
-	Name        string
-	Formats     stringprioset.Set
-	FormatFlags []string
-	Streams     []Stream
-	Ext         string
-	Prepend     string
-	MIMEType    string
+	Name           string
+	Formats        stringprioset.Set
+	FormatFlags    []string
+	Streams        []Stream
+	SubtitleCodecs stringprioset.Set
+	Ext            string
+	Prepend        string
+	MIMEType       string
 
 	// used by rss feeds etc
 	EnclosureFormat         string

@@ -1,6 +1,7 @@
 package ydls
 
 import (
+	"bytes"
 	"context"
 	"encoding/xml"
 	"fmt"
@@ -10,6 +11,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 	"sync"
@@ -17,6 +19,7 @@ import (
 
 	"github.com/wader/ydls/internal/ffmpeg"
 	"github.com/wader/ydls/internal/id3v2"
+	"github.com/wader/ydls/internal/iso639"
 	"github.com/wader/ydls/internal/linkicon"
 	"github.com/wader/ydls/internal/rereader"
 	"github.com/wader/ydls/internal/rss"
@@ -352,6 +355,10 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions) (Downlo
 		} else {
 			ydlOptions.DownloadThumbnail = true
 		}
+
+		if !options.RequestOptions.Format.SubtitleCodecs.Empty() {
+			ydlOptions.DownloadSubtitles = true
+		}
 	}
 
 	ydlResult, err := youtubedl.New(ctx, options.RequestOptions.MediaRawURL, ydlOptions)
@@ -478,12 +485,16 @@ func (ydls *YDLS) downloadFormat(
 	}
 
 	var closeOnDone []io.Closer
-	closeOnDoneFn := func() {
+	var subtitlesTempDir string
+	cleanupOnDoneFn := func() {
 		for _, c := range closeOnDone {
 			c.Close()
 		}
+		if subtitlesTempDir != "" {
+			os.RemoveAll(subtitlesTempDir)
+		}
 	}
-	deferCloseFn := closeOnDoneFn
+	deferCloseFn := cleanupOnDoneFn
 	defer func() {
 		// will be nil if cmd starts and goroutine takes care of closing instead
 		if deferCloseFn != nil {
@@ -615,6 +626,67 @@ func (ydls *YDLS) downloadFormat(
 		)
 	}
 
+	log.Printf("Subtitles:")
+
+	subtitleFfprobeStderr := writelogger.New(log, "subtitle ffprobe stderr> ")
+	subtitleCount := 0
+	for _, subtitles := range ydlResult.Info.Subtitles {
+
+		for _, subtitle := range subtitles {
+			subtitleProbeInfo, subtitleProbErr := ffmpeg.Probe(
+				ctx,
+				ffmpeg.Reader{Reader: bytes.NewReader(subtitle.Bytes)},
+				log,
+				subtitleFfprobeStderr)
+
+			if subtitleProbErr != nil {
+				log.Printf("  %s %s: error skipping: %s", subtitle.Language, subtitle.Ext, subtitleProbErr)
+				continue
+			} else {
+				log.Printf("  %s %s: probed: %s", subtitle.Language, subtitle.Ext, subtitleProbeInfo.SubtitleCodec())
+			}
+
+			if subtitlesTempDir == "" {
+				tempDir, tempDirErr := ioutil.TempDir("", "ydls-subtitle")
+				if tempDirErr != nil {
+					return DownloadResult{}, fmt.Errorf("failed to create subtitles tempdir: %s", tempDirErr)
+				}
+				subtitlesTempDir = tempDir
+			}
+
+			subtitleFile := filepath.Join(subtitlesTempDir, fmt.Sprintf("%s.%s", subtitle.Language, subtitle.Ext))
+			if err := ioutil.WriteFile(subtitleFile, subtitle.Bytes, 0600); err != nil {
+				return DownloadResult{}, fmt.Errorf("failed to write subtitle file: %s", err)
+			}
+
+			var subtitleCodec ffmpeg.Codec
+			if options.RequestOptions.Format.SubtitleCodecs.Member(subtitleProbeInfo.SubtitleCodec()) {
+				subtitleCodec = ffmpeg.SubtitleCodec("copy")
+			} else {
+				firstSubtitleCodecName, _ := options.RequestOptions.Format.SubtitleCodecs.First()
+				subtitleCodec = ffmpeg.SubtitleCodec(firstSubtitleCodecName)
+			}
+
+			subtitleMap := ffmpeg.Map{
+				Input: ffmpeg.URL(subtitleFile),
+				Codec: subtitleCodec,
+			}
+
+			// ffmpeg expects 3 letter iso639 language code
+			if longCode, ok := iso639.ShortToLong[subtitle.Language]; ok {
+				subtitleMap.CodecFlags = []string{
+					fmt.Sprintf("-metadata:s:s:%d", subtitleCount), "language=" + longCode,
+				}
+			}
+
+			ffmpegMaps = append(ffmpegMaps, subtitleMap)
+
+			subtitleCount++
+			break
+		}
+
+	}
+
 	var ffmpegStderr io.Writer
 	ffmpegStderr = writelogger.New(log, "ffmpeg stderr> ")
 	ffmpegR, ffmpegW := io.Pipe()
@@ -680,7 +752,7 @@ func (ydls *YDLS) downloadFormat(
 
 		log.Printf("Copy ffmpeg done (n=%v err=%v)", n, err)
 
-		closeOnDoneFn()
+		cleanupOnDoneFn()
 		ffmpegP.Wait()
 
 		log.Printf("Done")
