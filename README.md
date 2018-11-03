@@ -8,8 +8,8 @@ from various site like youtube, vimeo etc.
 
 Docker image support all default native ffmpeg decoders and can encode to:
 
-|Format name|Container|Audio codecs|Video codecs|Subtitle codecs
-|-|-|-|-|
+|Format name|Container|Audio codecs|Video codecs|Subtitle codecs|
+|-|-|-|-|-|
 |alac|mov|alac|||
 |flac|flac|flac|||
 |m4a|mov|aac|||
