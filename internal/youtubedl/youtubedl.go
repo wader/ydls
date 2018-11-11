@@ -215,7 +215,6 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 		"--restrict-filenames",
 		// provide URL via stdin for security, youtube-dl has some run command args
 		"--batch-file", "-",
-		"--all-subs",
 		"-J",
 	)
 	if options.YesPlaylist {
@@ -232,7 +231,10 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 			)
 		}
 	} else {
-		cmd.Args = append(cmd.Args, "--no-playlist")
+		cmd.Args = append(cmd.Args,
+			"--no-playlist",
+			"--all-subs",
+		)
 	}
 
 	tempPath, _ := ioutil.TempDir("", "ydls-youtubedl")
