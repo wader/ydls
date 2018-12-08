@@ -10,10 +10,10 @@ import (
 )
 
 var testNetwork = os.Getenv("TEST_NETWORK") != ""
-var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
+var testYoutubedl = os.Getenv("TEST_YOUTUBEDL") != ""
 
 func TestParseInfo(t *testing.T) {
-	if !testNetwork || !testYoutubeldl {
+	if !testNetwork || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
 	}
 
@@ -81,7 +81,7 @@ func TestParseInfo(t *testing.T) {
 }
 
 func TestPlaylist(t *testing.T) {
-	if !testNetwork || !testYoutubeldl {
+	if !testNetwork || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
 	}
 
@@ -114,7 +114,7 @@ func TestPlaylist(t *testing.T) {
 }
 
 func TestPlaylistBadURL(t *testing.T) {
-	if !testNetwork || !testYoutubeldl {
+	if !testNetwork || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
 	}
 
@@ -132,7 +132,7 @@ func TestPlaylistBadURL(t *testing.T) {
 }
 
 func TestSubtitles(t *testing.T) {
-	if !testNetwork || !testYoutubeldl {
+	if !testNetwork || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
 	}
 

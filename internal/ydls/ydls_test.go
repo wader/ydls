@@ -38,7 +38,7 @@ func TestSafeFilename(t *testing.T) {
 }
 
 func TestForceCodec(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
@@ -100,7 +100,7 @@ func TestForceCodec(t *testing.T) {
 }
 
 func TestTimeRangeOption(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
@@ -147,7 +147,7 @@ func TestTimeRangeOption(t *testing.T) {
 }
 
 func TestMissingMediaStream(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
@@ -205,7 +205,7 @@ func TestFindYDLFormat(t *testing.T) {
 }
 
 func TestContextCloseProbe(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
@@ -240,7 +240,7 @@ func TestContextCloseProbe(t *testing.T) {
 }
 
 func TestContextCloseDownload(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
@@ -276,7 +276,7 @@ func TestContextCloseDownload(t *testing.T) {
 }
 
 func TestRSS(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
@@ -363,7 +363,7 @@ func TestRSS(t *testing.T) {
 }
 
 func TestRSSStructure(t *testing.T) {
-	if !testNetwork || !testYoutubeldl {
+	if !testNetwork || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
 	}
 
@@ -390,7 +390,7 @@ func TestRSSStructure(t *testing.T) {
 }
 
 func TestSubtitles(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 

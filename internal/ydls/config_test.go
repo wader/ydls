@@ -90,7 +90,7 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 }
 
 func TestFormats(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
@@ -189,7 +189,7 @@ func TestFormats(t *testing.T) {
 }
 
 func TestRawFormat(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 

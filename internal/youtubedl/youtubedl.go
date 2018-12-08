@@ -274,7 +274,7 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 		return Info{}, nil, infoErr
 	}
 
-	if options.YesPlaylist && (info.Type != "playlist" || info.Type == "mutli_video") {
+	if options.YesPlaylist && (info.Type != "playlist" || info.Type == "multi_video") {
 		return Info{}, nil, fmt.Errorf("not a playlist")
 	}
 

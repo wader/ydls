@@ -11,7 +11,7 @@ var soundcloudTestAudioURL = "https://soundcloud.com/timsweeney/thedrifter"
 var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-phenomena"
 
 var testNetwork = os.Getenv("TEST_NETWORK") != ""
-var testYoutubeldl = os.Getenv("TEST_YOUTUBEDL") != ""
+var testYoutubedl = os.Getenv("TEST_YOUTUBEDL") != ""
 var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""
 
 func stringsContains(strings []string, s string) bool {

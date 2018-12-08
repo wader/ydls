@@ -110,7 +110,7 @@ func ydlsHandlerFromEnv(t *testing.T) *Handler {
 }
 
 func TestYDLSHandlerDownload(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubeldl {
+	if !testNetwork || !testFfmpeg || !testYoutubedl {
 		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
 	}
 
