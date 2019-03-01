@@ -3,13 +3,13 @@ ARG FFMPEG_VERSION=4.1
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
-FROM golang:1.11-stretch AS youtube-dl
+FROM golang:1.12-stretch AS youtube-dl
 ARG YDL_VERSION
 RUN \
   curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
   chmod a+x /youtube-dl
 
-FROM golang:1.11-stretch AS ydls-builder
+FROM golang:1.12-stretch AS ydls-builder
 ENV CONFIG=/etc/ydls.json
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=youtube-dl /youtube-dl /usr/local/bin/
