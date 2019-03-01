@@ -101,7 +101,7 @@ func TestFormats(t *testing.T) {
 		audioOnly        bool
 		expectedFilename string
 	}{
-		{soundcloudTestAudioURL, true, "BIS Radio Show #793 with The Drifter"},
+		{soundcloudTestAudioURL, true, "Avalon Emerson Live at Printworks London"},
 		{youtubeTestVideoURL, false, "TEST VIDEO"},
 	} {
 		for formatName, format := range ydls.Config.Formats {

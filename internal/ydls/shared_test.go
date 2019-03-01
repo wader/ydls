@@ -7,7 +7,7 @@ import (
 
 var youtubeTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
 var youtubeLongTestVideoURL = "https://www.youtube.com/watch?v=z7VYVjR_nwE"
-var soundcloudTestAudioURL = "https://soundcloud.com/timsweeney/thedrifter"
+var soundcloudTestAudioURL = "https://soundcloud.com/avalonemerson/avalon-emerson-live-at-printworks-london-march-2017"
 var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-phenomena"
 
 var testNetwork = os.Getenv("TEST_NETWORK") != ""

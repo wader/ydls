@@ -21,7 +21,7 @@ func TestParseInfo(t *testing.T) {
 		url           string
 		expectedTitle string
 	}{
-		{"https://soundcloud.com/timsweeney/thedrifter", "BIS Radio Show #793 with The Drifter"},
+		{"https://soundcloud.com/avalonemerson/avalon-emerson-live-at-printworks-london-march-2017", "Avalon Emerson Live at Printworks London"},
 		{"https://vimeo.com/129701495", "Ben Nagy Fuzzing OSX At Scale"},
 		{"https://www.infoq.com/presentations/Simple-Made-Easy", "Simple Made Easy"},
 		{"https://www.youtube.com/watch?v=uVYWQJ5BB_w", "A Radiolab Producer on the Making of a Podcast"},
@@ -120,7 +120,7 @@ func TestPlaylistBadURL(t *testing.T) {
 
 	defer leaktest.Check(t)()
 
-	playlistRawURL := "https://soundcloud.com/timsweeney/thedrifter"
+	playlistRawURL := "https://soundcloud.com/avalonemerson/avalon-emerson-live-at-printworks-london-march-2017"
 	_, ydlResultErr := New(context.Background(), playlistRawURL, Options{
 		YesPlaylist:       true,
 		DownloadThumbnail: false,
