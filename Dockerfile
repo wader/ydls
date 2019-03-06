@@ -28,7 +28,7 @@ RUN \
   cmd/ydls/ydls_server_test.sh && \
   cmd/ydls/ydls_get_test.sh
 
-FROM alpine:3.8
+FROM alpine:3.9
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
 ENV PORT=8080
 ENV LISTEN=:$PORT
