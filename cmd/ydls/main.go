@@ -26,6 +26,7 @@ var infoFlag = flag.Bool("info", false, "Info output")
 var serverFlag = flag.Bool("server", false, "Start server")
 var listenFlag = flag.String("listen", ":8080", "Listen address")
 var indexFlag = flag.String("index", "", "Path to index template")
+var noProgressFlag = flag.Bool("noprogress", false, "Don't print download progress")
 
 func fatalIfErrorf(err error, format string, a ...interface{}) {
 	if err != nil {
@@ -133,10 +134,15 @@ func download(y ydls.YDLS) {
 		mediaFile, err := os.OpenFile(path, os.O_CREATE|os.O_TRUNC|os.O_WRONLY, 0644)
 		fatalIfErrorf(err, "failed to open file")
 		defer mediaFile.Close()
-		pw := &progressWriter{fn: func(bytes uint64) {
-			fmt.Printf("\r%s %.2fMB", dr.Filename, float64(bytes)/(1024*1024))
-		}}
-		mediaWriter = io.MultiWriter(mediaFile, pw)
+		if *noProgressFlag {
+			fmt.Println(dr.Filename)
+			mediaWriter = mediaFile
+		} else {
+			pw := &progressWriter{fn: func(bytes uint64) {
+				fmt.Printf("\r%s %.2fMB", dr.Filename, float64(bytes)/(1024*1024))
+			}}
+			mediaWriter = io.MultiWriter(mediaFile, pw)
+		}
 	} else {
 		mediaWriter = os.Stdout
 	}
