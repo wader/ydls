@@ -16,7 +16,7 @@ type RequestOptions struct {
 	Codecs      []string            // force codecs
 	Retranscode bool                // force retranscode even if same input codec
 	TimeRange   timerange.TimeRange // time range limit
-	Items       uint                // feed item limit
+	Items       uint                // feed item count limit
 }
 
 // NewRequestOptionsFromQuery /?url=...&format=...
