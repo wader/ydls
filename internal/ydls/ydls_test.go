@@ -261,7 +261,7 @@ func TestContextCloseDownload(t *testing.T) {
 		},
 	)
 	if err != nil {
-		t.Error("expected no error while probe")
+		t.Error("expected no error while download")
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(1)
