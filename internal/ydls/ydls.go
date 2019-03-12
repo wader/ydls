@@ -626,65 +626,68 @@ func (ydls *YDLS) downloadFormat(
 		)
 	}
 
-	log.Printf("Subtitles:")
+	if len(ydlResult.Info.Subtitles) > 0 {
+		log.Printf("Subtitles:")
 
-	subtitleFfprobeStderr := writelogger.New(log, "subtitle ffprobe stderr> ")
-	subtitleCount := 0
-	for _, subtitles := range ydlResult.Info.Subtitles {
+		subtitleFfprobeStderr := writelogger.New(log, "subtitle ffprobe stderr> ")
+		subtitleCount := 0
+		for _, subtitles := range ydlResult.Info.Subtitles {
 
-		for _, subtitle := range subtitles {
-			subtitleProbeInfo, subtitleProbErr := ffmpeg.Probe(
-				ctx,
-				ffmpeg.Reader{Reader: bytes.NewReader(subtitle.Bytes)},
-				log,
-				subtitleFfprobeStderr)
+			for _, subtitle := range subtitles {
+				subtitleProbeInfo, subtitleProbErr := ffmpeg.Probe(
+					ctx,
+					ffmpeg.Reader{Reader: bytes.NewReader(subtitle.Bytes)},
+					log,
+					subtitleFfprobeStderr)
 
-			if subtitleProbErr != nil {
-				log.Printf("  %s %s: error skipping: %s", subtitle.Language, subtitle.Ext, subtitleProbErr)
-				continue
-			} else {
-				log.Printf("  %s %s: probed: %s", subtitle.Language, subtitle.Ext, subtitleProbeInfo.SubtitleCodec())
-			}
-
-			if subtitlesTempDir == "" {
-				tempDir, tempDirErr := ioutil.TempDir("", "ydls-subtitle")
-				if tempDirErr != nil {
-					return DownloadResult{}, fmt.Errorf("failed to create subtitles tempdir: %s", tempDirErr)
+				if subtitleProbErr != nil {
+					log.Printf("  %s %s: error skipping: %s", subtitle.Language, subtitle.Ext, subtitleProbErr)
+					continue
+				} else {
+					log.Printf("  %s %s: probed: %s", subtitle.Language, subtitle.Ext, subtitleProbeInfo.SubtitleCodec())
 				}
-				subtitlesTempDir = tempDir
-			}
 
-			subtitleFile := filepath.Join(subtitlesTempDir, fmt.Sprintf("%s.%s", subtitle.Language, subtitle.Ext))
-			if err := ioutil.WriteFile(subtitleFile, subtitle.Bytes, 0600); err != nil {
-				return DownloadResult{}, fmt.Errorf("failed to write subtitle file: %s", err)
-			}
-
-			var subtitleCodec ffmpeg.Codec
-			if options.RequestOptions.Format.SubtitleCodecs.Member(subtitleProbeInfo.SubtitleCodec()) {
-				subtitleCodec = ffmpeg.SubtitleCodec("copy")
-			} else {
-				firstSubtitleCodecName, _ := options.RequestOptions.Format.SubtitleCodecs.First()
-				subtitleCodec = ffmpeg.SubtitleCodec(firstSubtitleCodecName)
-			}
-
-			subtitleMap := ffmpeg.Map{
-				Input: ffmpeg.URL(subtitleFile),
-				Codec: subtitleCodec,
-			}
-
-			// ffmpeg expects 3 letter iso639 language code
-			if longCode, ok := iso639.ShortToLong[subtitle.Language]; ok {
-				subtitleMap.CodecFlags = []string{
-					fmt.Sprintf("-metadata:s:s:%d", subtitleCount), "language=" + longCode,
+				if subtitlesTempDir == "" {
+					tempDir, tempDirErr := ioutil.TempDir("", "ydls-subtitle")
+					if tempDirErr != nil {
+						return DownloadResult{}, fmt.Errorf("failed to create subtitles tempdir: %s", tempDirErr)
+					}
+					subtitlesTempDir = tempDir
 				}
+
+				subtitleFile := filepath.Join(subtitlesTempDir, fmt.Sprintf("%s.%s", subtitle.Language, subtitle.Ext))
+				if err := ioutil.WriteFile(subtitleFile, subtitle.Bytes, 0600); err != nil {
+					return DownloadResult{}, fmt.Errorf("failed to write subtitle file: %s", err)
+				}
+
+				var subtitleCodec ffmpeg.Codec
+				if options.RequestOptions.Format.SubtitleCodecs.Member(subtitleProbeInfo.SubtitleCodec()) {
+					subtitleCodec = ffmpeg.SubtitleCodec("copy")
+				} else {
+					firstSubtitleCodecName, _ := options.RequestOptions.Format.SubtitleCodecs.First()
+					subtitleCodec = ffmpeg.SubtitleCodec(firstSubtitleCodecName)
+				}
+
+				subtitleMap := ffmpeg.Map{
+					Input: ffmpeg.URL(subtitleFile),
+					Codec: subtitleCodec,
+				}
+
+				// ffmpeg expects 3 letter iso639 language code
+				if longCode, ok := iso639.ShortToLong[subtitle.Language]; ok {
+					subtitleMap.CodecFlags = []string{
+						fmt.Sprintf("-metadata:s:s:%d", subtitleCount), "language=" + longCode,
+					}
+				}
+
+				ffmpegMaps = append(ffmpegMaps, subtitleMap)
+
+				subtitleCount++
+				break
 			}
-
-			ffmpegMaps = append(ffmpegMaps, subtitleMap)
-
-			subtitleCount++
-			break
 		}
-
+	} else {
+		log.Printf("No subtitles found")
 	}
 
 	var ffmpegStderr io.Writer
