@@ -395,11 +395,6 @@ func TestSubtitles(t *testing.T) {
 	}
 
 	subtitlesTestVideoURL := "https://www.youtube.com/watch?v=QRS8MkLhQmM"
-	timeRange, timeRangeErr := timerange.NewTimeRangeFromString("5s")
-	if timeRangeErr != nil {
-		t.Fatalf("failed to parse time range")
-	}
-
 	ydls := ydlsFromEnv(t)
 
 	for _, f := range ydls.Config.Formats {
@@ -412,7 +407,7 @@ func TestSubtitles(t *testing.T) {
 				RequestOptions: RequestOptions{
 					MediaRawURL: subtitlesTestVideoURL,
 					Format:      &f,
-					TimeRange:   timeRange,
+					TimeRange:   timerange.TimeRange{Stop: timerange.Duration(time.Second * 2)},
 				},
 			},
 		)
