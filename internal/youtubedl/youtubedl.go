@@ -377,7 +377,7 @@ func (result Result) Download(ctx context.Context, filter string) (*DownloadResu
 	var w io.WriteCloser
 	dr.Reader, w = io.Pipe()
 	cmd.Stdout = w
-	cmd.Stderr = writelogger.New(debugLog, "ydl-dl stderr> ")
+	cmd.Stderr = writelogger.New(debugLog, fmt.Sprintf("ydl-dl %s stderr> ", filter))
 
 	debugLog.Printf("cmd %v", cmd.Args)
 	if err := cmd.Start(); err != nil {
