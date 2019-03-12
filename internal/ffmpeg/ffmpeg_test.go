@@ -16,7 +16,7 @@ import (
 	"github.com/wader/ydls/internal/leaktest"
 )
 
-var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""
+var testExternal = os.Getenv("TEST_EXTERNAL") != ""
 
 func TestDurationToPosition(t *testing.T) {
 	for _, tc := range []struct {
@@ -47,8 +47,8 @@ func mustDummy(t *testing.T, format string, acodec string, vcodec string) io.Rea
 }
 
 func TestProbe(t *testing.T) {
-	if !testFfmpeg {
-		t.Skip("TEST_FFMPEG env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -83,8 +83,8 @@ func (closeBuffer) Close() error {
 }
 
 func TestReader(t *testing.T) {
-	if !testFfmpeg {
-		t.Skip("TEST_FFMPEG env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -138,8 +138,8 @@ func TestReader(t *testing.T) {
 }
 
 func TestURLInput(t *testing.T) {
-	if !testFfmpeg {
-		t.Skip("TEST_FFMPEG env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -209,8 +209,8 @@ func TestURLInput(t *testing.T) {
 }
 
 func TestWriterOutput(t *testing.T) {
-	if !testFfmpeg {
-		t.Skip("TEST_FFMPEG env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()

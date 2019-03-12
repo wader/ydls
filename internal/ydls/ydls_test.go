@@ -38,8 +38,8 @@ func TestSafeFilename(t *testing.T) {
 }
 
 func TestForceCodec(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -100,8 +100,8 @@ func TestForceCodec(t *testing.T) {
 }
 
 func TestTimeRangeOption(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -147,8 +147,8 @@ func TestTimeRangeOption(t *testing.T) {
 }
 
 func TestMissingMediaStream(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -205,8 +205,8 @@ func TestFindYDLFormat(t *testing.T) {
 }
 
 func TestContextCloseProbe(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -240,8 +240,8 @@ func TestContextCloseProbe(t *testing.T) {
 }
 
 func TestContextCloseDownload(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -276,8 +276,8 @@ func TestContextCloseDownload(t *testing.T) {
 }
 
 func TestRSS(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -363,8 +363,8 @@ func TestRSS(t *testing.T) {
 }
 
 func TestRSSStructure(t *testing.T) {
-	if !testNetwork || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	rawXML := `
@@ -390,8 +390,8 @@ func TestRSSStructure(t *testing.T) {
 }
 
 func TestSubtitles(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	subtitlesTestVideoURL := "https://www.youtube.com/watch?v=QRS8MkLhQmM"

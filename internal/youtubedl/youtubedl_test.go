@@ -9,12 +9,11 @@ import (
 	"github.com/wader/ydls/internal/leaktest"
 )
 
-var testNetwork = os.Getenv("TEST_NETWORK") != ""
-var testYoutubedl = os.Getenv("TEST_YOUTUBEDL") != ""
+var testExternal = os.Getenv("TEST_EXTERNAL") != ""
 
 func TestParseInfo(t *testing.T) {
-	if !testNetwork || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	for _, c := range []struct {
@@ -81,8 +80,8 @@ func TestParseInfo(t *testing.T) {
 }
 
 func TestPlaylist(t *testing.T) {
-	if !testNetwork || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -114,8 +113,8 @@ func TestPlaylist(t *testing.T) {
 }
 
 func TestPlaylistBadURL(t *testing.T) {
-	if !testNetwork || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	defer leaktest.Check(t)()
@@ -132,8 +131,8 @@ func TestPlaylistBadURL(t *testing.T) {
 }
 
 func TestSubtitles(t *testing.T) {
-	if !testNetwork || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	subtitlesTestVideoURL := "https://www.youtube.com/watch?v=QRS8MkLhQmM"

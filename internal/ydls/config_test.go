@@ -24,8 +24,8 @@ func (bc *bufferCloser) Close() error {
 }
 
 func TestFFmpegHasFormatsCodecs(t *testing.T) {
-	if !testFfmpeg {
-		t.Skip("TEST_FFMPEG env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	codecs := map[ffmpeg.Codec]string{}
@@ -90,8 +90,8 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 }
 
 func TestFormats(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	ydls := ydlsFromEnv(t)
@@ -189,8 +189,8 @@ func TestFormats(t *testing.T) {
 }
 
 func TestRawFormat(t *testing.T) {
-	if !testNetwork || !testFfmpeg || !testYoutubedl {
-		t.Skip("TEST_NETWORK, TEST_FFMPEG, TEST_YOUTUBEDL env not set")
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
 	}
 
 	ydls := ydlsFromEnv(t)

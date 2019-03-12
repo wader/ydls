@@ -10,9 +10,7 @@ var youtubeLongTestVideoURL = "https://www.youtube.com/watch?v=z7VYVjR_nwE"
 var soundcloudTestAudioURL = "https://soundcloud.com/avalonemerson/avalon-emerson-live-at-printworks-london-march-2017"
 var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-phenomena"
 
-var testNetwork = os.Getenv("TEST_NETWORK") != ""
-var testYoutubedl = os.Getenv("TEST_YOUTUBEDL") != ""
-var testFfmpeg = os.Getenv("TEST_FFMPEG") != ""
+var testExternal = os.Getenv("TEST_EXTERNAL") != ""
 
 func stringsContains(strings []string, s string) bool {
 	for _, ss := range strings {
