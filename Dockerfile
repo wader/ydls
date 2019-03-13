@@ -10,7 +10,14 @@ RUN \
   chmod a+x /youtube-dl
 
 FROM golang:1.12-stretch AS ydls-builder
-ENV CONFIG=/etc/ydls.json
+RUN \
+  apt-get update -q && \
+  apt-get install -qy \
+  python \
+  python-crypto \
+  rtmpdump \
+  mplayer
+
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=youtube-dl /youtube-dl /usr/local/bin/
 
@@ -18,15 +25,27 @@ WORKDIR /src
 COPY go.mod /src
 COPY cmd /src/cmd
 COPY internal /src/internal
-COPY .git /src/.git
+COPY ydls.json /src
 COPY ydls.json /etc
 
-RUN TEST_FFMPEG=1 TEST_YOUTUBEDL=1 TEST_NETWORK=1 go test -v -cover -race ./...
-RUN go install -installsuffix netgo -tags netgo -ldflags "-X main.gitCommit=$(git describe --always)" ./cmd/ydls
+# hack to conditionally get git commit if possible 
+COPY Dockerfile .git* /src/.git/
+RUN echo $(git describe --always 2>/dev/null || echo nogit) > .GIT_COMMIT
+
 RUN \
-  ldd /go/bin/ydls | grep -q "not a dynamic executable" && \
-  cmd/ydls/ydls_server_test.sh && \
-  cmd/ydls/ydls_get_test.sh
+  CONFIG=/src/ydls.json \
+  TEST_EXTERNAL=1 \
+  go test -v -cover -race ./...
+
+RUN \
+  go install \
+  -installsuffix netgo \
+  -tags netgo \
+  -ldflags "-X main.gitCommit=$(cat .GIT_COMMIT)" \
+  ./cmd/ydls
+RUN \
+  CONFIG=/etc/ydls.json cmd/ydls/ydls_server_test.sh && \
+  CONFIG=/etc/ydls.json cmd/ydls/ydls_get_test.sh
 
 FROM alpine:3.9
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
@@ -45,7 +64,7 @@ COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=youtube-dl /youtube-dl /usr/local/bin/
 COPY --from=ydls-builder /go/bin/ydls /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin
-COPY ydls.json /etc
+COPY ydls.json $CONFIG
 
 # make sure all binaries work
 RUN \

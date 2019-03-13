@@ -23,6 +23,7 @@ import (
 	"github.com/wader/ydls/internal/linkicon"
 	"github.com/wader/ydls/internal/rereader"
 	"github.com/wader/ydls/internal/rss"
+	"github.com/wader/ydls/internal/singleflight"
 	"github.com/wader/ydls/internal/stringprioset"
 	"github.com/wader/ydls/internal/writelogger"
 	"github.com/wader/ydls/internal/youtubedl"
@@ -104,7 +105,7 @@ func safeFilename(filename string) string {
 	return r.Replace(filename)
 }
 
-func findYDLFormat(formats []youtubedl.Format, mediaType mediaType, codecs stringprioset.Set) (youtubedl.Format, bool) {
+func sortYDLFormats(formats []youtubedl.Format, mediaType mediaType, codecs stringprioset.Set) []youtubedl.Format {
 	var sorted []youtubedl.Format
 
 	// filter out only audio or video formats
@@ -188,14 +189,11 @@ func findYDLFormat(formats []youtubedl.Format, mediaType mediaType, codecs strin
 		return true
 	})
 
-	if len(sorted) > 0 {
-		return sorted[0], true
-	}
-
-	return youtubedl.Format{}, false
+	return sorted
 }
 
 type downloadProbeReadCloser struct {
+	filter         string
 	downloadResult *youtubedl.DownloadResult
 	probeInfo      ffmpeg.ProbeInfo
 	reader         io.ReadCloser
@@ -222,6 +220,7 @@ func downloadAndProbeFormat(
 	rr := rereader.NewReReadCloser(dr.Reader)
 
 	dprc := &downloadProbeReadCloser{
+		filter:         filter,
 		downloadResult: dr,
 		reader:         rr,
 	}
@@ -342,10 +341,6 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions) (Downlo
 		HTTPClient: options.HTTPClient,
 	}
 
-	if options.RequestOptions.Format != nil {
-		log.Printf("Output format: %s", options.RequestOptions.Format.Name)
-	}
-
 	var firstFormats string
 	if options.RequestOptions.Format != nil {
 		firstFormats, _ = options.RequestOptions.Format.Formats.First()
@@ -368,12 +363,6 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions) (Downlo
 	}
 
 	log.Printf("Title: %s", ydlResult.Info.Title)
-	if !ydlOptions.YesPlaylist {
-		log.Printf("Available youtubedl formats:")
-		for _, f := range ydlResult.Formats() {
-			log.Printf("  %s", f)
-		}
-	}
 
 	if options.RequestOptions.Format == nil {
 		return ydls.downloadRaw(ctx, log, ydlResult)
@@ -475,9 +464,9 @@ func (ydls *YDLS) downloadFormat(
 	options DownloadOptions,
 	ydlResult youtubedl.Result) (DownloadResult, error) {
 	type streamDownloadMap struct {
-		stream    Stream
-		ydlFormat youtubedl.Format
-		download  *downloadProbeReadCloser
+		stream     Stream
+		ydlFormats []youtubedl.Format
+		download   *downloadProbeReadCloser
 	}
 
 	dr := DownloadResult{
@@ -505,7 +494,16 @@ func (ydls *YDLS) downloadFormat(
 	dr.MIMEType = options.RequestOptions.Format.MIMEType
 	dr.Filename = safeFilename(ydlResult.Info.Title + "." + options.RequestOptions.Format.Ext)
 
-	log.Printf("Best format for streams:")
+	if options.RequestOptions.Format != nil {
+		log.Printf("Output format: %s", options.RequestOptions.Format.Name)
+	}
+
+	log.Printf("Available youtubedl formats:")
+	for _, f := range ydlResult.Formats() {
+		log.Printf("  %s", f)
+	}
+
+	log.Printf("Sorted youtubedl formats for streams:")
 
 	streamDownloads := []streamDownloadMap{}
 	for _, s := range options.RequestOptions.Format.Streams {
@@ -515,25 +513,23 @@ func (ydls *YDLS) downloadFormat(
 			preferredCodecs = optionsCodecCommon
 		}
 
-		if ydlFormat, ydlsFormatFound := findYDLFormat(
+		if ydlFormats := sortYDLFormats(
 			ydlResult.Formats(),
 			s.Media,
 			preferredCodecs,
-		); ydlsFormatFound {
+		); len(ydlFormats) > 0 {
 			streamDownloads = append(streamDownloads, streamDownloadMap{
-				stream:    s,
-				ydlFormat: ydlFormat,
+				stream:     s,
+				ydlFormats: ydlFormats,
 			})
 
-			log.Printf("  %s: %s", preferredCodecs, ydlFormat)
+			log.Printf("  %s %s:", s.Media, preferredCodecs)
+			for _, ydlFormat := range ydlFormats {
+				log.Printf("    %s", ydlFormat)
+			}
 		} else {
 			return DownloadResult{}, fmt.Errorf("no %s stream found", s.Media)
 		}
-	}
-
-	uniqueFormatIDs := map[string]bool{}
-	for _, sdm := range streamDownloads {
-		uniqueFormatIDs[sdm.ydlFormat.FormatID] = true
 	}
 
 	type downloadProbeResult struct {
@@ -544,16 +540,34 @@ func (ydls *YDLS) downloadFormat(
 	downloads := map[string]downloadProbeResult{}
 	var downloadsMutex sync.Mutex
 	var downloadsWG sync.WaitGroup
+	// uses singleflight as more than one stream can select the same formats
+	var downloadSFG singleflight.Group
 
-	downloadsWG.Add(len(uniqueFormatIDs))
-	for formatID := range uniqueFormatIDs {
-		go func(formatID string) {
-			dprc, err := downloadAndProbeFormat(ctx, ydlResult, formatID, log)
-			downloadsMutex.Lock()
-			downloads[formatID] = downloadProbeResult{err: err, download: dprc}
-			downloadsMutex.Unlock()
-			downloadsWG.Done()
-		}(formatID)
+	downloadsWG.Add(len(streamDownloads))
+	for _, sd := range streamDownloads {
+		go func(ydlFormats []youtubedl.Format) {
+			defer downloadsWG.Done()
+
+			for _, ydlFormat := range ydlFormats {
+				dprcVal, dprcErr := downloadSFG.Do(ydlFormat.FormatID, func() (interface{}, error) {
+					return downloadAndProbeFormat(ctx, ydlResult, ydlFormat.FormatID, log)
+				})
+				dprc := dprcVal.(*downloadProbeReadCloser)
+
+				// might assign same values again due to how singleflight works
+				downloadsMutex.Lock()
+				downloads[ydlFormat.FormatID] = downloadProbeResult{
+					download: dprc,
+					err:      dprcErr,
+				}
+				downloadsMutex.Unlock()
+
+				// stop if we found a working format for stream
+				if dprcErr == nil {
+					break
+				}
+			}
+		}(sd.ydlFormats)
 	}
 	downloadsWG.Wait()
 
@@ -563,21 +577,27 @@ func (ydls *YDLS) downloadFormat(
 		}
 	}
 
-	for formatID, d := range downloads {
-		// TODO: more than one error?
-		if d.err != nil {
-			return DownloadResult{}, fmt.Errorf("failed to probe: %s: %s", formatID, d.err)
-		}
-		if d.download == nil {
-			return DownloadResult{}, fmt.Errorf("failed to download: %s", formatID)
+	downloadErrors := map[string]error{}
+	streamsReadyCount := 0
+	for sdI, sd := range streamDownloads {
+		for _, ydlFormat := range sd.ydlFormats {
+			dprc, _ := downloads[ydlFormat.FormatID]
+			if dprc.err != nil {
+				downloadErrors[ydlFormat.FormatID] = dprc.err
+				continue
+			}
+			streamDownloads[sdI].download = dprc.download
+			streamsReadyCount++
+			break
 		}
 	}
-
-	for i, sdm := range streamDownloads {
-		streamDownloads[i].download = downloads[sdm.ydlFormat.FormatID].download
+	if streamsReadyCount != len(streamDownloads) {
+		return DownloadResult{}, fmt.Errorf("failed download or probe: %s", downloadErrors)
 	}
 
-	log.Printf("Stream mapping:")
+	log.Printf("Skipped download errors: %v", downloadErrors)
+
+	log.Printf("Stream to format mapping:")
 
 	var ffmpegMaps []ffmpeg.Map
 	ffmpegFormatFlags := make([]string, len(options.RequestOptions.Format.FormatFlags))
@@ -617,9 +637,10 @@ func (ydls *YDLS) downloadFormat(
 		})
 		ffmpegFormatFlags = append(ffmpegFormatFlags, codec.FormatFlags...)
 
-		log.Printf(" %s ydl:%s probed:%s -> %s (%s)",
+		log.Printf("  %s (%s) ydl:%s probed:%s -> %s (%s)",
+			sdm.stream.Media,
 			sdm.stream.Specifier,
-			sdm.ydlFormat,
+			sdm.download.filter,
 			sdm.download.probeInfo,
 			codec.Name,
 			ydls.Config.CodecMap[codec.Name],

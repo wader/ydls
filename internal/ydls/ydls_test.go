@@ -173,7 +173,7 @@ func TestMissingMediaStream(t *testing.T) {
 	}
 }
 
-func TestFindYDLFormat(t *testing.T) {
+func TestSortYDLFormats(t *testing.T) {
 	ydlFormats := []youtubedl.Format{
 		{FormatID: "1", Protocol: "http", ACodec: "mp3", VCodec: "h264", TBR: 1},
 		{FormatID: "2", Protocol: "http", ACodec: "", VCodec: "h264", TBR: 2},
@@ -197,9 +197,9 @@ func TestFindYDLFormat(t *testing.T) {
 		{ydlFormats, MediaAudio, stringprioset.New([]string{"opus"}), "5"},
 		{ydlFormats, MediaVideo, stringprioset.New([]string{"vp9"}), "5"},
 	} {
-		actualFormat, actualFormatFound := findYDLFormat(c.ydlFormats, c.mediaType, c.codecs)
-		if actualFormatFound && actualFormat.FormatID != c.expectedFormatID {
-			t.Errorf("%d: expected format %s, got %s", i, c.expectedFormatID, actualFormat)
+		actualFormats := sortYDLFormats(c.ydlFormats, c.mediaType, c.codecs)
+		if len(actualFormats) > 0 && actualFormats[0].FormatID != c.expectedFormatID {
+			t.Errorf("%d: expected format %s, got %s", i, c.expectedFormatID, actualFormats)
 		}
 	}
 }
@@ -435,4 +435,34 @@ func TestSubtitles(t *testing.T) {
 			t.Errorf("%s: %s: expected %d got %d", subtitlesTestVideoURL, f.Name, expectedSubtitlesStreamCount, subtitlesStreamCount)
 		}
 	}
+}
+
+func TestDownloadFormatFallback(t *testing.T) {
+	if !testExternal {
+		t.Skip("TEST_EXTERNAL")
+	}
+
+	defer leaktest.Check(t)()
+
+	ydls := ydlsFromEnv(t)
+	const formatName = "mp3"
+	const formatFallbackTestURL = "https://www.infoq.com/presentations/rust-thread-safety"
+	format, _ := ydls.Config.Formats.FindByName(formatName)
+
+	ctx, cancelFn := context.WithCancel(context.Background())
+
+	dr, err := ydls.Download(ctx,
+		DownloadOptions{
+			RequestOptions: RequestOptions{
+				MediaRawURL: formatFallbackTestURL,
+				Format:      &format,
+				TimeRange:   timerange.TimeRange{Stop: timerange.Duration(time.Second * 2)},
+			},
+		},
+	)
+	if err != nil {
+		t.Error("expected no error while download")
+	}
+	io.Copy(ioutil.Discard, dr.Media)
+	cancelFn()
 }
