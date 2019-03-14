@@ -162,8 +162,6 @@ func (f *Formats) UnmarshalJSON(b []byte) (err error) {
 			)
 			if requestOptionsErr != nil {
 				return fmt.Errorf("EnclosureFormatOptions %s: %s", format.EnclosureFormat, requestOptionsErr)
-
-				return requestOptionsErr
 			}
 			format.EnclosureRequestOptions = requestOptions
 		}
