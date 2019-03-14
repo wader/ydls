@@ -114,6 +114,10 @@ func NewRequestOptionsFromPath(url *url.URL, formats Formats) (RequestOptions, e
 		mediaRawURL += "?" + url.RawQuery
 	}
 
+	if mediaRawURL == "" {
+		return RequestOptions{}, fmt.Errorf("no url")
+	}
+
 	opts := []string{}
 	if formatAndOpts != "" {
 		opts = strings.Split(formatAndOpts, "+")
