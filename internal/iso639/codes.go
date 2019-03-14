@@ -1,6 +1,6 @@
 package iso639
 
-// ShortToLong map 2 letter to 3 letter langauge code
+// ShortToLong map 2 letter to 3 letter language code
 // Based on https://www.loc.gov/standards/iso639-2/ISO-639-2_utf-8.txt
 // Generated with:
 // cat ISO-639-2_utf-8.txt | awk '-F|' '{ printf "\"%s\": \"%s\",\n",$3,$1 }' | grep -v '^"":'
