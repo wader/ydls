@@ -363,6 +363,8 @@ func (result Result) Download(ctx context.Context, filter string) (*DownloadResu
 		"youtube-dl",
 		"--no-call-home",
 		"--no-cache-dir",
+		"--ignore-errors",
+		"--newline",
 		"--restrict-filenames",
 		"--load-info", jsonTempPath,
 		"-o", "-",
