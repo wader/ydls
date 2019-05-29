@@ -647,13 +647,12 @@ func (ydls *YDLS) downloadFormat(
 		)
 	}
 
-	if len(ydlResult.Info.Subtitles) > 0 {
+	if !options.RequestOptions.Format.SubtitleCodecs.Empty() && len(ydlResult.Info.Subtitles) > 0 {
 		log.Printf("Subtitles:")
 
 		subtitleFfprobeStderr := writelogger.New(log, "subtitle ffprobe stderr> ")
 		subtitleCount := 0
 		for _, subtitles := range ydlResult.Info.Subtitles {
-
 			for _, subtitle := range subtitles {
 				subtitleProbeInfo, subtitleProbErr := ffmpeg.Probe(
 					ctx,
