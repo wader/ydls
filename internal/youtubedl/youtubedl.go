@@ -295,9 +295,13 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 			)
 		}
 	} else {
+		if options.DownloadSubtitles {
+			cmd.Args = append(cmd.Args,
+				"--all-subs",
+			)
+		}
 		cmd.Args = append(cmd.Args,
 			"--no-playlist",
-			"--all-subs",
 		)
 	}
 
