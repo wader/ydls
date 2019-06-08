@@ -5,8 +5,9 @@ import (
 	"unicode"
 )
 
+// Printer is something that can print, e.g. log.Logger
 type Printer interface {
-	Printf(format string, v ...interface{})
+	Print(v ...interface{})
 }
 
 // WriteLogger io.Writer that logs each lines with optional prefix
@@ -56,7 +57,7 @@ func (wl *WriteLogger) Write(p []byte) (n int, err error) {
 			}
 		}
 
-		wl.Printer.Printf("%s%s", wl.Prefix, string(lineRunes))
+		wl.Printer.Print(wl.Prefix + string(lineRunes))
 		pos += i + 1
 	}
 	wl.buf.Reset()
