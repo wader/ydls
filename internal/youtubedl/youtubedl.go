@@ -19,11 +19,13 @@ import (
 )
 
 type Printer interface {
+	Print(v ...interface{})
 	Printf(format string, v ...interface{})
 }
 
 type nopPrinter struct{}
 
+func (nopPrinter) Print(v ...interface{})                 {}
 func (nopPrinter) Printf(format string, v ...interface{}) {}
 
 // Error youtubedl specific error
@@ -311,8 +313,8 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 	stdoutBuf := &bytes.Buffer{}
 	stderrBuf := &bytes.Buffer{}
 
-	ydlStderr := writelogger.New(options.DebugLog, "ydl-info stderr> ")
-	stderrWriter := io.MultiWriter(stderrBuf, ydlStderr)
+	stderrWL := writelogger.New(options.DebugLog, "ydl-info stderr> ")
+	stderrWriter := io.MultiWriter(stderrBuf, stderrWL)
 
 	cmd.Dir = tempPath
 	cmd.Stdout = stdoutBuf
@@ -321,6 +323,7 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 
 	options.DebugLog.Printf("cmd %v", cmd.Args)
 	cmdErr := cmd.Run()
+	stderrWL.Close()
 
 	stderrLineScanner := bufio.NewScanner(stderrBuf)
 	errMessage := ""
@@ -446,8 +449,9 @@ func (result Result) Download(ctx context.Context, filter string) (*DownloadResu
 	cmd.Dir = tempPath
 	var w io.WriteCloser
 	dr.Reader, w = io.Pipe()
+	stderrWL := writelogger.New(debugLog, fmt.Sprintf("ydl-dl %s stderr> ", filter))
 	cmd.Stdout = w
-	cmd.Stderr = writelogger.New(debugLog, fmt.Sprintf("ydl-dl %s stderr> ", filter))
+	cmd.Stderr = stderrWL
 
 	debugLog.Printf("cmd %v", cmd.Args)
 	if err := cmd.Start(); err != nil {
@@ -457,6 +461,7 @@ func (result Result) Download(ctx context.Context, filter string) (*DownloadResu
 
 	go func() {
 		cmd.Wait()
+		stderrWL.Close()
 		w.Close()
 		os.RemoveAll(tempPath)
 		close(dr.waitCh)

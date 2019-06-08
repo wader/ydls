@@ -31,11 +31,13 @@ import (
 
 // Printer used for log and debug
 type Printer interface {
+	Print(v ...interface{})
 	Printf(format string, v ...interface{})
 }
 
 type nopPrinter struct{}
 
+func (nopPrinter) Print(v ...interface{})                 {}
 func (nopPrinter) Printf(format string, v ...interface{}) {}
 
 const maxProbeBytes = 20 * 1024 * 1024
@@ -225,16 +227,17 @@ func downloadAndProbeFormat(
 		reader:         rr,
 	}
 
-	ffprobeStderr := writelogger.New(debugLog, fmt.Sprintf("ffprobe %s stderr> ", filter))
+	ffprobeStderrWL := writelogger.New(debugLog, fmt.Sprintf("ffprobe %s stderr> ", filter))
 	dprc.probeInfo, err = ffmpeg.Probe(
 		ctx,
 		ffmpeg.Reader{Reader: io.LimitReader(rr, maxProbeBytes)},
 		debugLog,
-		ffprobeStderr,
+		ffprobeStderrWL,
 	)
 	if err != nil {
 		dr.Reader.Close()
 		dr.Wait()
+		ffprobeStderrWL.Close()
 		return nil, err
 	}
 	// restart and replay buffer data used when probing
@@ -710,8 +713,7 @@ func (ydls *YDLS) downloadFormat(
 		log.Printf("No subtitles found")
 	}
 
-	var ffmpegStderr io.Writer
-	ffmpegStderr = writelogger.New(log, "ffmpeg stderr> ")
+	ffmpegStderrWL := writelogger.New(log, "ffmpeg stderr> ")
 	ffmpegR, ffmpegW := io.Pipe()
 	closeOnDone = append(closeOnDone, ffmpegR)
 
@@ -750,7 +752,7 @@ func (ydls *YDLS) downloadFormat(
 			},
 		},
 		DebugLog: log,
-		Stderr:   ffmpegStderr,
+		Stderr:   ffmpegStderrWL,
 	}
 
 	if err := ffmpegP.Start(ctx); err != nil {
@@ -777,6 +779,7 @@ func (ydls *YDLS) downloadFormat(
 
 		cleanupOnDoneFn()
 		ffmpegP.Wait()
+		ffmpegStderrWL.Close()
 
 		log.Printf("Done")
 
