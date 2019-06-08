@@ -63,15 +63,23 @@ func TestWriteLogger(t *testing.T) {
 			},
 			[]byte(">🐹\n"),
 		},
+		{
+			[][]byte{
+				[]byte("a\n"),
+				[]byte("b"),
+			},
+			[]byte(">a\n>b\n"),
+		},
 	} {
 
 		actualBuf := &bytes.Buffer{}
 		log := log.New(actualBuf, "", 0)
-		lw := New(log, ">")
+		wl := New(log, ">")
 
 		for _, w := range c.writes {
-			lw.Write(w)
+			wl.Write(w)
 		}
+		wl.Close()
 
 		if !reflect.DeepEqual(actualBuf.Bytes(), c.expected) {
 			t.Errorf("writes %#v, expected %#v, actual %#v", c.writes, string(c.expected), string(actualBuf.Bytes()))

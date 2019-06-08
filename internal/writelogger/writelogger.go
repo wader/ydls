@@ -64,3 +64,10 @@ func (wl *WriteLogger) Write(p []byte) (n int, err error) {
 
 	return len(p), nil
 }
+
+func (wl *WriteLogger) Close() error {
+	if wl.buf.Len() > 0 {
+		wl.Write([]byte{'\n'})
+	}
+	return nil
+}
