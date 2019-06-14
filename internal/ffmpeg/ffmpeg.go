@@ -177,8 +177,7 @@ type FFmpeg struct {
 	Stderr   io.Writer
 	DebugLog Printer
 
-	cmd       *exec.Cmd
-	cmdWaitCh chan error
+	cmd *exec.Cmd
 	// design borrowed from go src/exec/exec.go
 	copyErrCh chan error
 	copyFns   []func() error
@@ -356,8 +355,6 @@ func (f *FFmpeg) Start(ctx context.Context) error {
 		log = nopPrinter{}
 	}
 
-	f.cmdWaitCh = make(chan error)
-
 	// figure out unique readers and create pipes for io.Readers
 	type ffmpegInput struct {
 		flags []string
@@ -521,10 +518,6 @@ func (f *FFmpeg) Start(ctx context.Context) error {
 		}(fn)
 	}
 
-	go func() {
-		f.cmdWaitCh <- f.cmd.Wait()
-	}()
-
 	return nil
 }
 
@@ -537,7 +530,8 @@ func (f *FFmpeg) Wait() error {
 		}
 	}
 
-	cmdErr := <-f.cmdWaitCh
+	// done after io copy as we use *os.File (see exec docs)
+	cmdErr := f.cmd.Wait()
 	if cmdErr != nil {
 		return cmdErr
 	}
