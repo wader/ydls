@@ -82,7 +82,7 @@ func TestWriteLogger(t *testing.T) {
 		wl.Close()
 
 		if !reflect.DeepEqual(actualBuf.Bytes(), c.expected) {
-			t.Errorf("writes %#v, expected %#v, actual %#v", c.writes, string(c.expected), string(actualBuf.Bytes()))
+			t.Errorf("writes %#v, expected %#v, actual %#v", c.writes, string(c.expected), actualBuf.String())
 		}
 	}
 }

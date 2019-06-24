@@ -12,16 +12,6 @@ var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-ph
 
 var testExternal = os.Getenv("TEST_EXTERNAL") != ""
 
-func stringsContains(strings []string, s string) bool {
-	for _, ss := range strings {
-		if ss == s {
-			return true
-		}
-	}
-
-	return false
-}
-
 func ydlsFromEnv(t *testing.T) YDLS {
 	ydls, err := NewFromFile(os.Getenv("CONFIG"))
 	if err != nil {

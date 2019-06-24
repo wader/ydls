@@ -33,7 +33,7 @@ func Dummy(format string, acodec string, vcodec string) (io.Reader, error) {
 		return nil, fmt.Errorf(
 			"cmd failed: %s: %s",
 			strings.Join(dummyFileCmd.Args, " "),
-			string(stderrBuf.Bytes()),
+			stderrBuf.String(),
 		)
 	}
 

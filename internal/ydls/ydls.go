@@ -184,11 +184,7 @@ func sortYDLFormats(formats []youtubedl.Format, mediaType mediaType, codecs stri
 			return false
 		}
 
-		if strings.Compare(oi.id, oj.id) > 0 {
-			return false
-		}
-
-		return true
+		return strings.Compare(oi.id, oj.id) > 0
 	})
 
 	return sorted
@@ -584,7 +580,7 @@ func (ydls *YDLS) downloadFormat(
 	streamsReadyCount := 0
 	for sdI, sd := range streamDownloads {
 		for _, ydlFormat := range sd.ydlFormats {
-			dprc, _ := downloads[ydlFormat.FormatID]
+			dprc := downloads[ydlFormat.FormatID]
 			if dprc.err != nil {
 				downloadErrors[ydlFormat.FormatID] = dprc.err
 				continue
@@ -608,9 +604,8 @@ func (ydls *YDLS) downloadFormat(
 
 	for _, sdm := range streamDownloads {
 		var ffmpegCodec ffmpeg.Codec
-		var codec Codec
 
-		codec = chooseCodec(
+		codec := chooseCodec(
 			sdm.stream.Codecs,
 			options.RequestOptions.Codecs,
 			codecsFromProbeInfo(sdm.download.probeInfo),

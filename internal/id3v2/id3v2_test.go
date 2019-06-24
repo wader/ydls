@@ -30,6 +30,6 @@ func TestWrite(t *testing.T) {
 	)
 
 	if !reflect.DeepEqual(actual.Bytes(), expected) {
-		t.Errorf("expected '%#v' actual '%#v'", string(expected), string(actual.Bytes()))
+		t.Errorf("expected '%#v' actual '%#v'", string(expected), actual.String())
 	}
 }

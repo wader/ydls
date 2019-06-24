@@ -214,7 +214,7 @@ func checkLeak(
 			continue
 		}
 
-		return fmt.Errorf("Leaked %s: %v", resource, leaked)
+		return fmt.Errorf("leaked %s: %v", resource, leaked)
 	}
 
 	return nil
