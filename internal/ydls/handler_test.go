@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"os"
 	"testing"
-
-	"github.com/wader/ydls/internal/leaktest"
 )
 
 func TestBaseURLFromRequest(t *testing.T) {
@@ -114,7 +112,7 @@ func TestYDLSHandlerDownload(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	h := ydlsHandlerFromEnv(t)
 	rr := httptest.NewRecorder()
@@ -143,7 +141,7 @@ func TestYDLSHandlerDownload(t *testing.T) {
 }
 
 func TestYDLSHandlerBadURL(t *testing.T) {
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	h := ydlsHandlerFromEnv(t)
 
@@ -158,7 +156,7 @@ func TestYDLSHandlerBadURL(t *testing.T) {
 }
 
 func TestYDLSHandlerIndexTemplate(t *testing.T) {
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	h := ydlsHandlerFromEnv(t)
 	h.IndexTmpl, _ = template.New("index").Parse("hello")

@@ -11,7 +11,6 @@ import (
 	"time"
 
 	"github.com/wader/ydls/internal/ffmpeg"
-	"github.com/wader/ydls/internal/leaktest"
 	"github.com/wader/ydls/internal/timerange"
 )
 
@@ -28,7 +27,11 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	codecs := map[ffmpeg.Codec]string{}
+	type codec struct {
+		codec     string
+		specifier string
+	}
+	codecs := map[ffmpeg.Codec]codec{}
 
 	ydls := ydlsFromEnv(t)
 
@@ -38,9 +41,9 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 			for _, c := range s.Codecs {
 				codecName := firstNonEmpty(ydls.Config.CodecMap[c.Name], c.Name)
 				if s.Media == MediaAudio {
-					codecs[ffmpeg.AudioCodec(codecName)] = "a"
+					codecs[ffmpeg.AudioCodec(codecName)] = codec{codec: codecName, specifier: "a"}
 				} else if s.Media == MediaVideo {
-					codecs[ffmpeg.VideoCodec(codecName)] = "v"
+					codecs[ffmpeg.VideoCodec(codecName)] = codec{codec: codecName, specifier: "v"}
 				}
 			}
 		}
@@ -55,36 +58,36 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 		log.Fatal(dummyBufErr)
 	}
 
-	for codec, specifier := range codecs {
-		t.Logf("Testing: %v", codec)
+	for ffcodec, codec := range codecs {
+		t.Run(codec.codec, func(t *testing.T) {
+			dummyReader := bytes.NewReader(dummyBuf)
 
-		dummyReader := bytes.NewReader(dummyBuf)
+			output := &bufferCloser{}
 
-		output := &bufferCloser{}
-
-		ffmpegP := &ffmpeg.FFmpeg{
-			Streams: []ffmpeg.Stream{
-				ffmpeg.Stream{
-					Maps: []ffmpeg.Map{
-						ffmpeg.Map{
-							Input:     ffmpeg.Reader{Reader: dummyReader},
-							Specifier: specifier,
-							Codec:     codec,
+			ffmpegP := &ffmpeg.FFmpeg{
+				Streams: []ffmpeg.Stream{
+					ffmpeg.Stream{
+						Maps: []ffmpeg.Map{
+							ffmpeg.Map{
+								Input:     ffmpeg.Reader{Reader: dummyReader},
+								Specifier: codec.specifier,
+								Codec:     ffcodec,
+							},
 						},
+						Format: ffmpeg.Format{Name: "matroska"},
+						Output: ffmpeg.Writer{Writer: output},
 					},
-					Format: ffmpeg.Format{Name: "matroska"},
-					Output: ffmpeg.Writer{Writer: output},
 				},
-			},
-			DebugLog: nil, //log.New(os.Stdout, "debug> ", 0),
-			Stderr:   nil, //writelogger.New(log.New(os.Stdout, "stderr> ", 0), ""),
-		}
+				DebugLog: nil, //log.New(os.Stdout, "debug> ", 0),
+				Stderr:   nil, //printwriter.New(log.New(os.Stdout, "stderr> ", 0), ""),
+			}
 
-		if err := ffmpegP.Start(context.Background()); err != nil {
-			t.Errorf("ffmpeg start failed for %s: %v", codec, err)
-		} else if err := ffmpegP.Wait(); err != nil {
-			t.Errorf("ffmpeg wait failed for %s: %v", codec, err)
-		}
+			if err := ffmpegP.Start(context.Background()); err != nil {
+				t.Errorf("ffmpeg start failed for %s: %v", codec, err)
+			} else if err := ffmpegP.Wait(); err != nil {
+				t.Errorf("ffmpeg wait failed for %s: %v", codec, err)
+			}
+		})
 	}
 
 }
@@ -109,8 +112,8 @@ func TestFormats(t *testing.T) {
 				continue
 			}
 
-			func() {
-				defer leaktest.Check(t)()
+			t.Run(formatName+"-"+c.MediaRawURL, func(t *testing.T) {
+				defer leakChecks(t)()
 
 				hasVideo := false
 				for _, s := range format.Streams {
@@ -121,7 +124,7 @@ func TestFormats(t *testing.T) {
 				}
 
 				if c.audioOnly && hasVideo {
-					t.Logf("%s: %s: skip, test stream is audio only\n", c.MediaRawURL, formatName)
+					t.Logf("skip, test stream is audio only\n")
 					return
 				}
 
@@ -139,7 +142,7 @@ func TestFormats(t *testing.T) {
 				)
 				if err != nil {
 					cancelFn()
-					t.Errorf("%s: %s: download failed: %s", c.MediaRawURL, formatName, err)
+					t.Errorf("download failed: %s", err)
 					return
 				}
 
@@ -149,20 +152,20 @@ func TestFormats(t *testing.T) {
 				dr.Wait()
 				cancelFn()
 				if err != nil {
-					t.Errorf("%s: %s: probe failed: %s", c.MediaRawURL, formatName, err)
+					t.Errorf("probe failed: %s", err)
 					return
 				}
 
 				if !strings.HasPrefix(dr.Filename, c.expectedFilename) {
-					t.Errorf("%s: %s: expected filename '%s' found '%s'", c.MediaRawURL, formatName, c.expectedFilename, dr.Filename)
+					t.Errorf("expected filename '%s' found '%s'", c.expectedFilename, dr.Filename)
 					return
 				}
 				if format.MIMEType != dr.MIMEType {
-					t.Errorf("%s: %s: expected MIME type '%s' found '%s'", c.MediaRawURL, formatName, format.MIMEType, dr.MIMEType)
+					t.Errorf("expected MIME type '%s' found '%s'", format.MIMEType, dr.MIMEType)
 					return
 				}
 				if !format.Formats.Member(pi.FormatName()) {
-					t.Errorf("%s: %s: expected format %s found %s", c.MediaRawURL, formatName, format.Formats, pi.FormatName())
+					t.Errorf("expected format %s found %s", format.Formats, pi.FormatName())
 					return
 				}
 
@@ -171,19 +174,19 @@ func TestFormats(t *testing.T) {
 					probeStream := pi.Streams[i]
 
 					if !formatStream.CodecNames.Member(probeStream.CodecName) {
-						t.Errorf("%s: %s: expected codec %s found %s", c.MediaRawURL, formatName, formatStream.CodecNames, probeStream.CodecName)
+						t.Errorf("expected codec %s found %s", formatStream.CodecNames, probeStream.CodecName)
 						return
 					}
 				}
 
 				if format.Prepend == "id3v2" {
 					if pi.Format.Tags.Title == "" {
-						t.Errorf("%s: %s: expected id3v2 title tag", c.MediaRawURL, formatName)
+						t.Errorf("expected id3v2 title tag")
 					}
 				}
 
-				t.Logf("%s: %s: OK (probed %s)\n", c.MediaRawURL, formatName, pi)
-			}()
+				t.Logf("OK (probed %s)", pi)
+			})
 		}
 	}
 }
@@ -195,7 +198,7 @@ func TestRawFormat(t *testing.T) {
 
 	ydls := ydlsFromEnv(t)
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 

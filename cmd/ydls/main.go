@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/wader/goutubedl"
 	"github.com/wader/ydls/internal/ydls"
 )
 
@@ -53,6 +54,10 @@ func init() {
 }
 
 func server(y ydls.YDLS) {
+	youtubedlVersion, err := goutubedl.Version(context.Background())
+	fatalIfErrorf(err, "failed to get youteube-dl version")
+	log.Printf("youtube-dl %s", youtubedlVersion)
+
 	yh := &ydls.Handler{YDLS: y}
 
 	if *infoFlag {

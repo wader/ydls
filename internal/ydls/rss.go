@@ -4,11 +4,11 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/wader/goutubedl"
 	"github.com/wader/ydls/internal/rss"
-	"github.com/wader/ydls/internal/youtubedl"
 )
 
-func RSSFromYDLSInfo(options DownloadOptions, info youtubedl.Info, linkIconRawURL string) rss.RSS {
+func RSSFromYDLSInfo(options DownloadOptions, info goutubedl.Info, linkIconRawURL string) rss.RSS {
 	enclosureDownloadOptions := options.RequestOptions.Format.EnclosureRequestOptions
 	baseURL := options.BaseURL
 	if baseURL == nil {

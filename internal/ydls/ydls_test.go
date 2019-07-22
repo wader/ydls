@@ -13,12 +13,12 @@ import (
 	"testing"
 	"time"
 
+	"github.com/wader/goutubedl"
+
 	"github.com/wader/ydls/internal/ffmpeg"
-	"github.com/wader/ydls/internal/leaktest"
 	"github.com/wader/ydls/internal/rss"
 	"github.com/wader/ydls/internal/stringprioset"
 	"github.com/wader/ydls/internal/timerange"
-	"github.com/wader/ydls/internal/youtubedl"
 )
 
 func TestSafeFilename(t *testing.T) {
@@ -30,10 +30,12 @@ func TestSafeFilename(t *testing.T) {
 		{"a/a", "a_a"},
 		{"a\\a", "a_a"},
 	} {
-		actual := safeFilename(c.s)
-		if actual != c.expect {
-			t.Errorf("%s, got %v expected %v", c.s, actual, c.expect)
-		}
+		t.Run(c.s, func(t *testing.T) {
+			actual := safeFilename(c.s)
+			if actual != c.expect {
+				t.Errorf("got %v expected %v", actual, c.expect)
+			}
+		})
 	}
 }
 
@@ -42,7 +44,7 @@ func TestForceCodec(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
 	const formatName = "mkv"
@@ -104,7 +106,7 @@ func TestTimeRangeOption(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
 	const formatName = "mkv"
@@ -151,7 +153,7 @@ func TestMissingMediaStream(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
 	const formatName = "mkv"
@@ -174,7 +176,7 @@ func TestMissingMediaStream(t *testing.T) {
 }
 
 func TestSortYDLFormats(t *testing.T) {
-	ydlFormats := []youtubedl.Format{
+	ydlFormats := []goutubedl.Format{
 		{FormatID: "1", Protocol: "http", ACodec: "mp3", VCodec: "h264", TBR: 1},
 		{FormatID: "2", Protocol: "http", ACodec: "", VCodec: "h264", TBR: 2},
 		{FormatID: "3", Protocol: "http", ACodec: "aac", VCodec: "", TBR: 3},
@@ -183,7 +185,7 @@ func TestSortYDLFormats(t *testing.T) {
 	}
 
 	for i, c := range []struct {
-		ydlFormats       []youtubedl.Format
+		ydlFormats       []goutubedl.Format
 		mediaType        mediaType
 		codecs           stringprioset.Set
 		expectedFormatID string
@@ -209,7 +211,7 @@ func TestContextCloseProbe(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
 	const formatName = "mkv"
@@ -244,7 +246,7 @@ func TestContextCloseDownload(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
 	const formatName = "mkv"
@@ -280,7 +282,7 @@ func TestRSS(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
 	const formatName = "rss"
@@ -442,7 +444,7 @@ func TestDownloadFormatFallback(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
 	const formatName = "mp3"

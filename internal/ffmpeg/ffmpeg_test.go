@@ -13,10 +13,21 @@ import (
 	"testing"
 	"time"
 
-	"github.com/wader/ydls/internal/leaktest"
+	"github.com/fortytw2/leaktest"
+	"github.com/wader/osleaktest"
 )
 
 var testExternal = os.Getenv("TEST_EXTERNAL") != ""
+
+func leakChecks(t *testing.T) func() {
+	leakFn := leaktest.Check(t)
+	osLeakFn := osleaktest.Check(t)
+
+	return func() {
+		leakFn()
+		osLeakFn()
+	}
+}
 
 func TestDurationToPosition(t *testing.T) {
 	for _, tc := range []struct {
@@ -51,7 +62,7 @@ func TestProbe(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	dummy := mustDummy(t, "matroska", "mp3", "h264")
 
@@ -87,7 +98,7 @@ func TestReader(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	dummy1 := mustDummy(t, "matroska", "mp3", "h264")
 	dummy2 := mustDummy(t, "matroska", "mp3", "h264")
@@ -113,7 +124,7 @@ func TestReader(t *testing.T) {
 			},
 		},
 		// DebugLog: log.New(os.Stdout, "debug> ", 0),
-		// Stderr:   writelogger.New(log.New(os.Stdout, "stderr> ", 0), ""),
+		// Stderr:   printwriter.New(log.New(os.Stdout, "stderr> ", 0), ""),
 	}
 
 	if err := ffmpegP.Start(context.Background()); err != nil {
@@ -142,7 +153,7 @@ func TestURLInput(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	dummy1 := mustDummy(t, "matroska", "mp3", "h264")
 	tempFile1, tempFile1Err := ioutil.TempFile("", "TestURLInput")
@@ -184,7 +195,7 @@ func TestURLInput(t *testing.T) {
 			},
 		},
 		// DebugLog: log.New(os.Stdout, "debug> ", 0),
-		// Stderr:   writelogger.New(log.New(os.Stdout, "stderr> ", 0), ""),
+		// Stderr:   printwriter.New(log.New(os.Stdout, "stderr> ", 0), ""),
 	}
 
 	if err := ffmpegP.Start(context.Background()); err != nil {
@@ -213,7 +224,7 @@ func TestWriterOutput(t *testing.T) {
 		t.Skip("TEST_EXTERNAL")
 	}
 
-	defer leaktest.Check(t)()
+	defer leakChecks(t)()
 
 	dummy1 := mustDummy(t, "matroska", "mp3", "h264")
 	outputAudio := &closeBuffer{}
@@ -245,7 +256,7 @@ func TestWriterOutput(t *testing.T) {
 			},
 		},
 		// DebugLog: log.New(os.Stdout, "debug> ", 0),
-		// Stderr:   writelogger.New(log.New(os.Stdout, "stderr> ", 0), ""),
+		// Stderr:   printwriter.New(log.New(os.Stdout, "stderr> ", 0), ""),
 	}
 
 	if err := ffmpegP.Start(context.Background()); err != nil {

@@ -1,0 +1,14 @@
+github.com/fortytw2/leaktest v1.3.0 h1:u8491cBMTQ8ft8aeV+adlcytMZylmA5nnwwkRZjI8vw=
+github.com/fortytw2/leaktest v1.3.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
+github.com/wader/goutubedl v0.0.0-20191031230207-042aba554ce9 h1:BGDKVEkJSAVIrJNGRJiJU3PjzuhtWFByPJ50NDGg3y4=
+github.com/wader/goutubedl v0.0.0-20191031230207-042aba554ce9/go.mod h1:TEOvzRw4YvTeOdSvGyoZD9KbKK4xbx0EJoSqj4v6yAs=
+github.com/wader/goutubedl v0.0.0-20191031232512-4bc99db15d24 h1:n+uDOcGfsRBHujwSrpJo4Pq2pgrnJxi40zhy/K17n24=
+github.com/wader/goutubedl v0.0.0-20191031232512-4bc99db15d24/go.mod h1:TEOvzRw4YvTeOdSvGyoZD9KbKK4xbx0EJoSqj4v6yAs=
+github.com/wader/logutils v0.0.0-20190904144142-6d88a3144654 h1:/H3pKDa/IP88aOSLuF+9b4Sc7hBVX4TCEBMwzsYKYv0=
+github.com/wader/logutils v0.0.0-20190904144142-6d88a3144654/go.mod h1:6+XZabA9xCm6iA5xt7uBVUY9/j+kbPeEgtR2a1lRjKo=
+github.com/wader/osleaktest v0.0.0-20190723190525-c53af4cfc4a3 h1:4WTMRnBIat+s9D1PIpzh2UUZrEjxzRjJI85IdWePjCI=
+github.com/wader/osleaktest v0.0.0-20190723190525-c53af4cfc4a3/go.mod h1:XD6emOFPHVzb0+qQpiNOdPL2XZ0SRUM0N5JHuq6OmXo=
+github.com/wader/osleaktest v0.0.0-20190905222028-e83c06de5292 h1:s/tj4m7QWKUjG1ZkNfJ8IZqL8Zuh/RUCl+JPvDxNrE4=
+github.com/wader/osleaktest v0.0.0-20190905222028-e83c06de5292/go.mod h1:XD6emOFPHVzb0+qQpiNOdPL2XZ0SRUM0N5JHuq6OmXo=
+golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e h1:vcxGaoTs7kV8m5Np9uUNQin4BrLOthgV7252N8V+FwY=
+golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e/go.mod h1:RxMgew5VJxzue5/jJTE5uejpjVlOe/izrB70Jof72aM=
