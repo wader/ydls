@@ -1,6 +1,5 @@
-# bump: youtube-dl YDL_VERSION=2019.08.02
 ARG YDL_VERSION=2019.08.02
-ARG FFMPEG_VERSION=4.1.4
+ARG FFMPEG_VERSION=4.2
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
@@ -48,7 +47,7 @@ RUN \
   CONFIG=/etc/ydls.json cmd/ydls/ydls_server_test.sh && \
   CONFIG=/etc/ydls.json cmd/ydls/ydls_get_test.sh
 
-FROM alpine:3.10
+FROM alpine:3.10.1
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
 ENV PORT=8080
 ENV LISTEN=:$PORT
