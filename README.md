@@ -124,9 +124,7 @@ issues with some sites like youtube.
 When fiddling with ffmpeg and youtube-dl related code I usually do this:
 
 ```sh
-docker build -t ydls .
-docker build -f _dev/Dockerfile.dev -t ydls-dev .
-docker run --rm -ti -v "$PWD:/src" ydls-dev
+docker build --target ydls-builder -t ydls-dev . && docker run --rm -ti -v "$PWD:/src" ydls-dev
 ```
 
 Then inside dev container:
@@ -137,10 +135,14 @@ go run cmd/ydls/main.go -config ./ydls.json ...
 
 ## TODO
 
-- Bitrate factor per codec when sorting
-- youtubedl info, just url no formats?
+- Download playlist as zip archive.
+- JSON output?
+- Refactor messy downloadFormat function. Maybe a media interface with audio, video and subtitle
+implementations that select best format and return reader and mappings? should share a common
+format picker so formats can be shared and not re-downloaded.
+- Make download part into an interface to support more than youtube-dl.
+- Bitrate factor per codec when sorting formats (prefer aac over mp3 at same bitrate etc)
 - X-Remote IP header?
-- seccomp and chroot things
 
 ## License
 

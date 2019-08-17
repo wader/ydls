@@ -3,16 +3,19 @@ ARG FFMPEG_VERSION=4.2
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
-FROM golang:1.12-stretch AS youtube-dl
+FROM golang:1.12.9-buster AS youtube-dl
 ARG YDL_VERSION
 RUN \
   curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
   chmod a+x /youtube-dl
 
-FROM golang:1.12-stretch AS ydls-builder
+FROM golang:1.12.9-buster AS ydls-builder
 RUN \
   apt-get update -q && \
-  apt-get install -qy \
+  apt-get install --no-install-recommends -qy \
+  less \
+  jq \
+  bsdmainutils \
   python \
   python-crypto \
   rtmpdump \
