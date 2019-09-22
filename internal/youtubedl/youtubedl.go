@@ -382,6 +382,18 @@ func infoFromURL(ctx context.Context, rawURL string, options Options) (info Info
 		}
 	}
 
+	// as we ignore errors some entries might show up as null
+	if options.YesPlaylist {
+		var filteredEntrise []Info
+		for _, e := range info.Entries {
+			if e.ID == "" {
+				continue
+			}
+			filteredEntrise = append(filteredEntrise, e)
+		}
+		info.Entries = filteredEntrise
+	}
+
 	return info, stdoutBuf.Bytes(), nil
 }
 
