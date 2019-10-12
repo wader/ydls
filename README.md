@@ -124,7 +124,7 @@ issues with some sites like youtube.
 When fiddling with ffmpeg and youtube-dl related code I usually do this:
 
 ```sh
-docker build --target ydls-builder -t ydls-dev . && docker run --rm -ti -v "$PWD:/src" ydls-dev
+docker build --target ydls-dev -t ydls-dev . && docker run --rm -ti -v "$PWD:/src" ydls-dev
 ```
 
 Then inside dev container:

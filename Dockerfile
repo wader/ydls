@@ -9,13 +9,11 @@ RUN \
   curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
   chmod a+x /youtube-dl
 
-FROM golang:1.13.0-buster AS ydls-builder
+FROM golang:1.13.0-buster AS ydls-base
+WORKDIR /src
 RUN \
   apt-get update -q && \
   apt-get install --no-install-recommends -qy \
-  less \
-  jq \
-  bsdmainutils \
   python \
   python-crypto \
   rtmpdump \
@@ -24,7 +22,14 @@ RUN \
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=youtube-dl /youtube-dl /usr/local/bin/
 
-WORKDIR /src
+FROM ydls-base AS ydls-dev
+RUN \
+  apt-get install --no-install-recommends -qy \
+  less \
+  jq \
+  bsdmainutils
+
+FROM ydls-base AS ydls-builder
 COPY go.mod /src
 COPY cmd /src/cmd
 COPY internal /src/internal
