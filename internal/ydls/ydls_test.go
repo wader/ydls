@@ -300,7 +300,7 @@ func TestRSS(t *testing.T) {
 	)
 	if err != nil {
 		cancelFn()
-		t.Fatalf("%s: download failed: %s", youtubeTestVideoURL, err)
+		t.Fatalf("%s: download failed: %s", soundcloudTestPlaylistURL, err)
 	}
 	defer cancelFn()
 
