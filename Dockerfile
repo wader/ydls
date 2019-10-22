@@ -1,9 +1,13 @@
+# bump: youtube-dl /YDL_VERSION=([\d.]+)/ https://github.com/ytdl-org/youtube-dl.git|*
 ARG YDL_VERSION=2019.10.22
+# bump: /FFMPEG_VERSION=([\d.]+)/ docker:mwader/static-ffmpeg|*
 ARG FFMPEG_VERSION=4.2.1
+# bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
+ARG GOLANG_VERSION=1.13.0
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
-FROM golang:1.13.0-buster AS youtube-dl
+FROM golang:$GOLANG_VERSION-buster AS youtube-dl
 ARG YDL_VERSION
 RUN \
   curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
