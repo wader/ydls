@@ -3,7 +3,7 @@ ARG YDL_VERSION=2019.10.22
 # bump: /FFMPEG_VERSION=([\d.]+)/ docker:mwader/static-ffmpeg|*
 ARG FFMPEG_VERSION=4.2.1
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
-ARG GOLANG_VERSION=1.13.0
+ARG GOLANG_VERSION=1.13.3
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
