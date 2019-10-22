@@ -1,9 +1,11 @@
-# bump: youtube-dl /YDL_VERSION=([\d.]+)/ https://github.com/ytdl-org/youtube-dl.git|*
+# bump: youtube-dl /YDL_VERSION=([\d.]+)/ https://github.com/ytdl-org/youtube-dl.git|/^\d/|sort
 ARG YDL_VERSION=2019.10.22
-# bump: /FFMPEG_VERSION=([\d.]+)/ docker:mwader/static-ffmpeg|*
+# bump: ffmpeg /FFMPEG_VERSION=([\d.]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
 ARG FFMPEG_VERSION=4.2.1
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
 ARG GOLANG_VERSION=1.13.3
+# bump: alpine /ALPINE_VERSION=([\d.]+)/ docker:alpine|^3
+ARG ALPINE_VERSION=3.10.3
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
@@ -59,7 +61,7 @@ RUN \
   CONFIG=/etc/ydls.json cmd/ydls/ydls_server_test.sh && \
   CONFIG=/etc/ydls.json cmd/ydls/ydls_get_test.sh
 
-FROM alpine:3.10.1
+FROM alpine:$ALPINE_VERSION
 LABEL maintainer="Mattias Wadman mattias.wadman@gmail.com"
 ENV PORT=8080
 ENV LISTEN=:$PORT
