@@ -15,7 +15,7 @@ RUN \
   curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
   chmod a+x /youtube-dl
 
-FROM golang:1.13.0-buster AS ydls-base
+FROM golang:$GOLANG_VERSION-buster AS ydls-base
 WORKDIR /src
 RUN \
   apt-get update -q && \
