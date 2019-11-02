@@ -3,7 +3,7 @@ ARG YDL_VERSION=2019.10.29
 # bump: ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
 ARG FFMPEG_VERSION=4.2.1-1
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
-ARG GOLANG_VERSION=1.13.3
+ARG GOLANG_VERSION=1.13.4
 # bump: alpine /ALPINE_VERSION=([\d.]+)/ docker:alpine|^3
 ARG ALPINE_VERSION=3.10.3
 
