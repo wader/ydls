@@ -45,7 +45,7 @@ installed and in `PATH`.
 Copy and edit [ydls.json](ydls.json) to match your ffmpeg builds
 supported formats and codecs.
 
-Start with `ydls-server -config /path/to/ydls.json` and it default will listen
+Start with `ydls -server -config /path/to/ydls.json` and it default will listen
 on port 8080.
 
 ## Endpoints
