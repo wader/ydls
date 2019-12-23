@@ -20,8 +20,8 @@ WORKDIR /src
 RUN \
   apt-get update -q && \
   apt-get install --no-install-recommends -qy \
-  python \
-  python-crypto \
+  python3 \
+  python3-pycryptodome \
   rtmpdump \
   mplayer
 
@@ -70,10 +70,13 @@ ENV CONFIG=/etc/ydls.json
 RUN apk add --no-cache \
   ca-certificates \
   tini \
-  python \
-  py2-crypto \
+  python3 \
+  py3-pycryptodome \
   rtmpdump \
   mplayer
+# make python3 default python, symlink seems to be the way the official python alpine
+# image does it https://github.com/docker-library/python/blob/master/3.8/alpine3.10/Dockerfile
+RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=youtube-dl /youtube-dl /usr/local/bin/
 COPY --from=ydls-builder /go/bin/ydls /usr/local/bin/
