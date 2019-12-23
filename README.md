@@ -130,11 +130,15 @@ docker build --target ydls-dev -t ydls-dev . && docker run --rm -ti -v "$PWD:/sr
 Then inside dev container:
 
 ```sh
-go run cmd/ydls/main.go -config ./ydls.json ...
+# run cli version
+go run cmd/ydls/main.go -config ./ydls.json -debug
+# run all tests
+CONFIG=$PWD/ydls.json TEST_EXTERNAL=1 go test -v -cover -race ./...
 ```
 
 ## TODO
 
+- Optional stream for format? example mp4 at least video or audio?
 - Download playlist as zip archive.
 - JSON output?
 - Refactor messy downloadFormat function. Maybe a media interface with audio, video and subtitle
