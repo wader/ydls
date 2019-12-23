@@ -600,18 +600,19 @@ func (ydls *YDLS) downloadFormat(
 			defer downloadsWG.Done()
 
 			for _, ydlFormat := range ydlFormats {
-				dprcVal, dprcErr, dprcShared := downloadSFG.Do(ydlFormat.FormatID, func() (interface{}, error) {
+				dprcVal, dprcErr, _ := downloadSFG.Do(ydlFormat.FormatID, func() (interface{}, error) {
 					return downloadAndProbeFormat(ctx, ydlResult, ydlFormat.FormatID, log)
 				})
-				if !dprcShared {
-					dprc := dprcVal.(*downloadProbeReadCloser)
-					downloadsMutex.Lock()
+				dprc := dprcVal.(*downloadProbeReadCloser)
+
+				downloadsMutex.Lock()
+				if _, found := downloads[ydlFormat.FormatID]; !found {
 					downloads[ydlFormat.FormatID] = downloadProbeResult{
 						download: dprc,
 						err:      dprcErr,
 					}
-					downloadsMutex.Unlock()
 				}
+				downloadsMutex.Unlock()
 
 				// stop if we found a working format for stream
 				if dprcErr == nil {
@@ -663,20 +664,24 @@ func (ydls *YDLS) downloadFormat(
 			codecsFromProbeInfo(sdm.download.probeInfo),
 		)
 
-		if sdm.stream.Media == MediaAudio {
-			if !options.RequestOptions.Retranscode && codec.Name == sdm.download.probeInfo.AudioCodec() {
+		probeAudioCodec := sdm.download.probeInfo.AudioCodec()
+		probeVideoCodec := sdm.download.probeInfo.VideoCodec()
+
+		if sdm.stream.Media == MediaAudio && probeAudioCodec != "" {
+			if !options.RequestOptions.Retranscode && codec.Name == probeAudioCodec {
 				ffmpegCodec = ffmpeg.AudioCodec("copy")
 			} else {
 				ffmpegCodec = ffmpeg.AudioCodec(firstNonEmpty(ydls.Config.CodecMap[codec.Name], codec.Name))
 			}
-		} else if sdm.stream.Media == MediaVideo {
-			if !options.RequestOptions.Retranscode && codec.Name == sdm.download.probeInfo.VideoCodec() {
+		} else if sdm.stream.Media == MediaVideo && probeVideoCodec != "" {
+			if !options.RequestOptions.Retranscode && codec.Name == probeVideoCodec {
 				ffmpegCodec = ffmpeg.VideoCodec("copy")
 			} else {
 				ffmpegCodec = ffmpeg.VideoCodec(firstNonEmpty(ydls.Config.CodecMap[codec.Name], codec.Name))
 			}
 		} else {
-			return DownloadResult{}, fmt.Errorf("unknown media type %v", sdm.stream.Media)
+			return DownloadResult{}, fmt.Errorf("no media found for %v stream (%s:%s)",
+				sdm.stream.Media, probeAudioCodec, probeVideoCodec)
 		}
 
 		ffmpegMaps = append(ffmpegMaps, ffmpeg.Map{
