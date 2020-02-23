@@ -1,14 +1,15 @@
 ## youtube-dl HTTP service
 
-HTTP service for [youtube-dl](https://yt-dl.org) that downloads media for
-requested URL and transmuxes and transcodes to requested format if needed.
+HTTP service for [youtube-dl](https://yt-dl.org) that downloads media from
+requested URL and streams, transmux and transcode to requested format if needed.
 
 It can be used to convert media, create podcasts and audio only versions of media
 from various site like youtube, vimeo etc.
 
-Docker image support all default native ffmpeg decoders and can encode to:
+Docker image uses [ffmpeg from wader/static-ffmpeg](https://github.com/wader/static-ffmpeg) which
+can handle most format and codecs. Default configuration can transcode to these format, container and codecs:
 
-|Format name|Container|Audio codecs|Video codecs|Subtitle codecs|
+|Format|Container|Audio|Video|Subtitle|
 |-|-|-|-|-|
 |alac|mov|alac|||
 |flac|flac|flac|||
