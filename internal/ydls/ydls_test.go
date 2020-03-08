@@ -263,7 +263,7 @@ func TestContextCloseDownload(t *testing.T) {
 		},
 	)
 	if err != nil {
-		t.Error("expected no error while download")
+		t.Fatalf("expected no error while download, got %v", err)
 	}
 	wg := sync.WaitGroup{}
 	wg.Add(1)
