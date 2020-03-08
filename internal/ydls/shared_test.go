@@ -9,7 +9,7 @@ import (
 )
 
 var youtubeTestVideoURL = "https://www.youtube.com/watch?v=C0DPdy98e4c"
-var youtubeLongTestVideoURL = "https://www.youtube.com/watch?v=z7VYVjR_nwE"
+var youtubeLongTestVideoURL = "https://www.youtube.com/watch?v=aqz-KE-bpKQ"
 var soundcloudTestAudioURL = "https://soundcloud.com/avalonemerson/avalon-emerson-live-at-printworks-london-march-2017"
 var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-phenomena"
 
