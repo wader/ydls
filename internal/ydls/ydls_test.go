@@ -440,6 +440,8 @@ func TestSubtitles(t *testing.T) {
 }
 
 func TestDownloadFormatFallback(t *testing.T) {
+	t.Skip("infoq rtmp seems broken")
+
 	if !testExternal {
 		t.Skip("TEST_EXTERNAL")
 	}
