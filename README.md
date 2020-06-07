@@ -22,9 +22,9 @@ can handle most format and codecs. Default configuration can transcode to these 
 |mxf|mxf|pcm_s16le|mpeg2video||
 |ts|mpegts|aac, mp3, ac3|h264, hevc||
 |webm|webm|vorbis, opus|vp8, vp9|webvtt|
+|rss|mp3|mp3|||
 
-There is also support for `rss` format which will transform a youtube-dl
-playlist into a RSS audio podcast.
+The `rss` format transforms a playlist into a RSS audio podcast.
 
 See [ydls.json](ydls.json) for more details.
 
