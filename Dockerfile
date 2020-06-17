@@ -1,7 +1,7 @@
 # bump: youtube-dl /YDL_VERSION=([\d.]+)/ https://github.com/ytdl-org/youtube-dl.git|/^\d/|sort
 ARG YDL_VERSION=2020.06.16.1
 # bump: ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
-ARG FFMPEG_VERSION=4.2.3
+ARG FFMPEG_VERSION=4.3.0
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
 ARG GOLANG_VERSION=1.14.4
 # bump: alpine /ALPINE_VERSION=([\d.]+)/ docker:alpine|^3
