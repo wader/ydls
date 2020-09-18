@@ -5,7 +5,7 @@ ARG FFMPEG_VERSION=4.3.1-1
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
 ARG GOLANG_VERSION=1.15.2
 # bump: alpine /ALPINE_VERSION=([\d.]+)/ docker:alpine|^3
-ARG ALPINE_VERSION=3.12.0
+ARG ALPINE_VERSION=3.12
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
