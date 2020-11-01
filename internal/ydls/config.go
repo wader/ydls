@@ -197,7 +197,7 @@ func (fs Formats) FindByFormatCodecs(format string, codecs []string) (Format, st
 	codecsSet := stringprioset.New(codecs)
 
 	for name, f := range fs {
-		if v, ok := f.Formats.First(); !ok || v != format {
+		if !f.Formats.Member(format) {
 			continue
 		}
 

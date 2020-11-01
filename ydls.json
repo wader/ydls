@@ -11,7 +11,8 @@
     "mp3": "libmp3lame",
     "vorbis": "libvorbis",
     "opus": "libopus",
-    "aac": "libfdk_aac"
+    "aac": "libfdk_aac",
+    "av1": "libsvtav1"
   },
   "Formats": {
     "rss": {
@@ -42,6 +43,7 @@
     },
     "m4a": {
       "Formats": [
+        "mp4",
         "mov"
       ],
       "FormatFlags": [
@@ -98,6 +100,7 @@
     },
     "alac": {
       "Formats": [
+        "mp4",
         "mov"
       ],
       "FormatFlags": [
@@ -132,11 +135,12 @@
     },
     "mp4": {
       "Formats": [
+        "mp4",
         "mov"
       ],
       "FormatFlags": [
         "-movflags",
-        "isml+frag_keyframe"
+        "+isml+frag_keyframe"
       ],
       "Streams": [
         {
@@ -159,7 +163,8 @@
           "Specifier": "v:0",
           "Codecs": [
             "h264",
-            "hevc"
+            "hevc",
+            "av1"
           ]
         }
       ],
@@ -186,7 +191,8 @@
           "Specifier": "v:0",
           "Codecs": [
             "vp8",
-            "vp9"
+            "vp9",
+            "av1"
           ]
         }
       ],
@@ -220,7 +226,8 @@
             "hevc",
             "vp8",
             "vp9",
-            "theora"
+            "theora",
+            "av1"
           ]
         }
       ],

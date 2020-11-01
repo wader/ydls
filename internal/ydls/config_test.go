@@ -66,9 +66,9 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 
 			ffmpegP := &ffmpeg.FFmpeg{
 				Streams: []ffmpeg.Stream{
-					ffmpeg.Stream{
+					{
 						Maps: []ffmpeg.Map{
-							ffmpeg.Map{
+							{
 								Input:     ffmpeg.Reader{Reader: dummyReader},
 								Specifier: codec.specifier,
 								Codec:     ffcodec,
@@ -78,8 +78,8 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 						Output: ffmpeg.Writer{Writer: output},
 					},
 				},
-				DebugLog: nil, //log.New(os.Stdout, "debug> ", 0),
-				Stderr:   nil, //printwriter.New(log.New(os.Stdout, "stderr> ", 0), ""),
+				// DebugLog: log.New(os.Stdout, "debug> ", 0),
+				// Stderr:   printwriter.New(log.New(os.Stdout, "stderr> ", 0)),
 			}
 
 			if err := ffmpegP.Start(context.Background()); err != nil {
