@@ -117,6 +117,7 @@ func ffmpegCodecFromYDLCodec(c string) (string, bool) {
 		"mp4a": "aac",
 		"mp4v": "h264",
 		"h265": "hevc",
+		"av01": "av1",
 	}
 
 	// "  NAME.something  " -> "name"

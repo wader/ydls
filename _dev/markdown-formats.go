@@ -34,8 +34,8 @@ func main() {
 		return false
 	})
 
-	fmt.Print("|Format name|Container|Audio codecs|Video codecs|Subtitle codecs\n")
-	fmt.Print("|-|-|-|-|\n")
+	fmt.Print("|Format|Container|Audio|Video|Subtitle|\n")
+	fmt.Print("|-|-|-|-|-|\n")
 	for _, f := range formats {
 		var aCodecs []string
 		var vCodecs []string
