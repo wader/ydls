@@ -138,6 +138,7 @@ func TestFormats(t *testing.T) {
 							Format:      &format,
 							TimeRange:   timerange.TimeRange{Stop: timerange.Duration(1 * time.Second)},
 						},
+						Retries: ydlsLRetries,
 					},
 				)
 				if err != nil {
@@ -207,6 +208,7 @@ func TestRawFormat(t *testing.T) {
 			RequestOptions: RequestOptions{
 				MediaRawURL: youtubeTestVideoURL,
 			},
+			Retries: ydlsLRetries,
 		},
 	)
 	if err != nil {

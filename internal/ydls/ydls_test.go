@@ -70,6 +70,7 @@ func TestForceCodec(t *testing.T) {
 				Format:      &mkvFormat,
 				Codecs:      forceCodecs,
 			},
+			Retries: ydlsLRetries,
 		},
 	)
 	if err != nil {
@@ -126,6 +127,7 @@ func TestTimeRangeOption(t *testing.T) {
 				Format:      &mkvFormat,
 				TimeRange:   timeRange,
 			},
+			Retries: ydlsLRetries,
 		},
 	)
 	if err != nil {
@@ -167,6 +169,7 @@ func TestMissingMediaStream(t *testing.T) {
 				MediaRawURL: soundcloudTestAudioURL,
 				Format:      &mkvFormat,
 			},
+			Retries: ydlsLRetries,
 		},
 	)
 	cancelFn()
@@ -232,6 +235,7 @@ func TestContextCloseProbe(t *testing.T) {
 				MediaRawURL: youtubeLongTestVideoURL,
 				Format:      &mkvFormat,
 			},
+			Retries: ydlsLRetries,
 		},
 	)
 	if err == nil {
@@ -260,6 +264,7 @@ func TestContextCloseDownload(t *testing.T) {
 				MediaRawURL: youtubeLongTestVideoURL,
 				Format:      &mkvFormat,
 			},
+			Retries: ydlsLRetries,
 		},
 	)
 	if err != nil {
@@ -298,6 +303,7 @@ func TestRSS(t *testing.T) {
 				Items:       2,
 			},
 			BaseURL: &url.URL{Scheme: "http", Host: "dummy"},
+			Retries: ydlsLRetries,
 		},
 	)
 	if err != nil {
@@ -411,6 +417,7 @@ func TestSubtitles(t *testing.T) {
 					Format:      &f,
 					TimeRange:   timerange.TimeRange{Stop: timerange.Duration(time.Second * 2)},
 				},
+				Retries: ydlsLRetries,
 			},
 		)
 		if drErr != nil {
@@ -462,6 +469,7 @@ func TestDownloadFormatFallback(t *testing.T) {
 				Format:      &format,
 				TimeRange:   timerange.TimeRange{Stop: timerange.Duration(time.Second * 2)},
 			},
+			Retries: ydlsLRetries,
 		},
 	)
 	if err != nil {

@@ -15,6 +15,8 @@ var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-ph
 
 var testExternal = os.Getenv("TEST_EXTERNAL") != ""
 
+var ydlsLRetries = 3
+
 func leakChecks(t *testing.T) func() {
 	leakFn := leaktest.Check(t)
 	osLeakFn := osleaktest.Check(t)
@@ -30,6 +32,8 @@ func ydlsFromEnv(t *testing.T) YDLS {
 	if err != nil {
 		t.Fatalf("failed to read config: %s", err)
 	}
+
+	ydls.Config.DownloadRetries = ydlsLRetries
 
 	return ydls
 }
