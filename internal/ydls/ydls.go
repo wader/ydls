@@ -320,6 +320,7 @@ type DownloadOptions struct {
 	BaseURL        *url.URL
 	DebugLog       Printer
 	HTTPClient     *http.Client
+	Retries        int
 }
 
 // DownloadResult download result
@@ -376,6 +377,20 @@ func codecsFromProbeInfo(pi ffmpeg.ProbeInfo) []string {
 
 // Download downloads media from URL using context and makes sure output is in specified format
 func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions) (DownloadResult, error) {
+	attempts := options.Retries + 1
+	var err error
+	var dr DownloadResult
+
+	for i := 0; i < attempts; i++ {
+		dr, err = ydls.download(ctx, options, i)
+		if err == nil || ctx.Err() != nil {
+			break
+		}
+	}
+	return dr, err
+}
+
+func (ydls *YDLS) download(ctx context.Context, options DownloadOptions, attempt int) (DownloadResult, error) {
 	if options.DebugLog == nil {
 		options.DebugLog = nopPrinter{}
 	}
@@ -385,7 +400,7 @@ func (ydls *YDLS) Download(ctx context.Context, options DownloadOptions) (Downlo
 
 	log := options.DebugLog
 
-	log.Printf("URL: %s", options.RequestOptions.MediaRawURL)
+	log.Printf("URL: %s attempt %d", options.RequestOptions.MediaRawURL, attempt)
 
 	ydlOptions := goutubedl.Options{
 		DebugLog:   log,

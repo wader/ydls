@@ -11,10 +11,11 @@ import (
 
 // YDLS config
 type Config struct {
-	InputFlags  []string
-	OutputFlags []string
-	CodecMap    map[string]string
-	Formats     Formats
+	InputFlags      []string
+	OutputFlags     []string
+	CodecMap        map[string]string
+	Formats         Formats
+	DownloadRetries int
 }
 
 // Format media container format, possible codecs, extension and mime

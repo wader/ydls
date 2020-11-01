@@ -120,6 +120,7 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		RequestOptions: requestOptions,
 		BaseURL:        baseURLFromRequest(r, trustXHeaders),
 		DebugLog:       debugLog,
+		Retries:        yh.YDLS.Config.DownloadRetries,
 	}
 
 	formatName := "best"
