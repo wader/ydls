@@ -36,7 +36,7 @@ RUN \
   bsdmainutils
 
 FROM ydls-base AS ydls-builder
-COPY go.mod go.sum /src
+COPY go.mod go.sum /src/
 COPY cmd /src/cmd
 COPY internal /src/internal
 COPY ydls.json /src
