@@ -10,6 +10,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-      - uses: wader/bump:go@master
+      - uses: wader/bump/action/go@master
         env:
           GITHUB_TOKEN: ${{ secrets.BUMP_TOKEN }}
