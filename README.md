@@ -125,7 +125,7 @@ issues with some sites like youtube.
 When fiddling with ffmpeg and youtube-dl related code I usually do this:
 
 ```sh
-docker build --target ydls-dev -t ydls-dev . && docker run --rm -ti -v "$PWD:/src" ydls-dev
+docker build --target ydls-dev -t ydls-dev . && docker run --rm -ti -v "$PWD:/$PWD" -w "$PWD" ydls-dev
 ```
 
 Then inside dev container:
@@ -134,7 +134,7 @@ Then inside dev container:
 # run cli version
 go run cmd/ydls/main.go -config ./ydls.json -debug
 # run all tests
-CONFIG=$PWD/ydls.json TEST_EXTERNAL=1 go test -v -cover -race ./...
+CONFIG="$PWD/ydls.json" TEST_EXTERNAL=1 go test -v -cover -race ./...
 ```
 
 ## TODO
