@@ -5,7 +5,7 @@ ARG YDL_VERSION=2021.04.01
 ARG FFMPEG_VERSION=4.3.2
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
 # bump: golang link "Release notes" https://golang.org/doc/devel/release.html
-ARG GOLANG_VERSION=1.16.2
+ARG GOLANG_VERSION=1.16.3
 # bump: alpine /ALPINE_VERSION=([\d.]+)/ docker:alpine|^3
 # bump: alpine link "Release notes" https://alpinelinux.org/posts/Alpine-$LATEST-released.html
 ARG ALPINE_VERSION=3.13.4
