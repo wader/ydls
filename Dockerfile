@@ -2,7 +2,7 @@
 # bump: youtube-dl link "Release notes" https://github.com/ytdl-org/youtube-dl/releases/tag/$LATEST
 ARG YDL_VERSION=2021.04.07
 # bump: static-ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
-ARG FFMPEG_VERSION=4.3.2
+ARG FFMPEG_VERSION=4.4.0
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
 # bump: golang link "Release notes" https://golang.org/doc/devel/release.html
 ARG GOLANG_VERSION=1.16.3
