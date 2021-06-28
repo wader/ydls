@@ -71,7 +71,8 @@ audio and video codec)
 `retranscode` - Retranscode even if input codec is same as output  
 `time` - Only download specificed time range. Ex: `30s`, `20m30s`, `1h20s30s` will limit
 duration. `10s-30s` will seek 10 seconds and stop at 30 seconds (20 second output duration)  
-`items` - If playlist only include this many items
+`items` - If playlist only include this many items  
+`httpchunksize`- Make youtube-dl do range requests of specified size (see youtube-dl `--http-chunk-size`)
 
 `option` - Codec name, time range, `retranscode` or `<N>items`
 
