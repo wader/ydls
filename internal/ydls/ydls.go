@@ -427,6 +427,10 @@ func (ydls *YDLS) download(ctx context.Context, options DownloadOptions, attempt
 		}
 	}
 
+	if options.RequestOptions.HTTPChunkSize != 0 {
+		ydlOptions.HTTPChunkSize = options.RequestOptions.HTTPChunkSize
+	}
+
 	ydlResult, err := goutubedl.New(ctx, options.RequestOptions.MediaRawURL, ydlOptions)
 	if err != nil {
 		log.Printf("Failed to download: %s", err)

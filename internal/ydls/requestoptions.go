@@ -6,17 +6,19 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/wader/ydls/internal/humnum"
 	"github.com/wader/ydls/internal/timerange"
 )
 
 // RequestOptions request options
 type RequestOptions struct {
-	MediaRawURL string              // youtubedl media URL
-	Format      *Format             // output format
-	Codecs      []string            // force codecs
-	Retranscode bool                // force retranscode even if same input codec
-	TimeRange   timerange.TimeRange // time range limit
-	Items       uint                // feed item count limit
+	MediaRawURL   string              // youtubedl media URL
+	Format        *Format             // output format
+	Codecs        []string            // force codecs
+	Retranscode   bool                // force retranscode even if same input codec
+	TimeRange     timerange.TimeRange // time range limit
+	Items         uint                // feed item count limit
+	HTTPChunkSize uint                // youtubedl http chunk size option
 }
 
 // NewRequestOptionsFromQuery /?url=...&format=...
@@ -70,13 +72,24 @@ func NewRequestOptionsFromQuery(v url.Values, formats Formats) (RequestOptions, 
 		items = uint(itemsN)
 	}
 
+	httpChunkSize := uint(0)
+	httpChunkSizeStr := v.Get("httpchunksize")
+	if httpChunkSizeStr != "" {
+		httpChunkSizeN, httpChunkSizeNErr := humnum.Atoi(httpChunkSizeStr)
+		if httpChunkSizeNErr != nil {
+			return RequestOptions{}, fmt.Errorf("invalid HTTP chunk size")
+		}
+		httpChunkSize = uint(httpChunkSizeN)
+	}
+
 	return RequestOptions{
-		MediaRawURL: mediaRawURL,
-		Format:      format,
-		Codecs:      codecs,
-		Retranscode: v.Get("retranscode") != "",
-		TimeRange:   timeRange,
-		Items:       items,
+		MediaRawURL:   mediaRawURL,
+		Format:        format,
+		Codecs:        codecs,
+		Retranscode:   v.Get("retranscode") != "",
+		TimeRange:     timeRange,
+		Items:         items,
+		HTTPChunkSize: httpChunkSize,
 	}, nil
 }
 
@@ -173,7 +186,6 @@ func NewRequestOptionsFromOpts(opts []string, formats Formats) (RequestOptions, 
 				return RequestOptions{}, fmt.Errorf("invalid items count")
 			}
 			r.Items = uint(itemsN)
-			strconv.ParseUint("", 10, 32)
 		} else if _, ok := codecNames[opt]; ok {
 			r.Codecs = append(r.Codecs, opt)
 		} else if tr, trErr := timerange.NewTimeRangeFromString(opt); trErr == nil {
@@ -205,6 +217,9 @@ func (r RequestOptions) QueryValues() url.Values {
 	}
 	if r.Items > 0 {
 		v.Set("items", strconv.Itoa(int(r.Items)))
+	}
+	if r.HTTPChunkSize != 0 {
+		v.Set("httpchunksize", strconv.Itoa(int(r.HTTPChunkSize)))
 	}
 	return v
 }
