@@ -47,7 +47,7 @@ COPY ydls.json /etc
 
 # hack to conditionally get git commit if possible 
 COPY Dockerfile .git* /src/.git/
-RUN echo $(git describe --always 2>/dev/null || echo nogit) > .GIT_COMMIT
+RUN (git describe --always 2>/dev/null || echo nogit) > .GIT_COMMIT
 
 RUN \
   CONFIG=/src/ydls.json \
