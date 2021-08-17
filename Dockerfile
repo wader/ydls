@@ -12,18 +12,18 @@ ARG ALPINE_VERSION=3.14.1
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
-FROM golang:$GOLANG_VERSION-buster AS youtube-dl
+FROM golang:$GOLANG_VERSION AS youtube-dl
 ARG YDL_VERSION
 RUN \
   curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
   chmod a+x /youtube-dl
 
-FROM golang:$GOLANG_VERSION-buster AS ydls-base
+FROM golang:$GOLANG_VERSION AS ydls-base
 WORKDIR /src
 RUN \
   apt-get update -q && \
   apt-get install --no-install-recommends -qy \
-  python3 \
+  python-is-python3 \
   python3-pycryptodome \
   rtmpdump \
   mplayer
