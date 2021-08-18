@@ -1,7 +1,7 @@
 github.com/fortytw2/leaktest v1.3.0 h1:u8491cBMTQ8ft8aeV+adlcytMZylmA5nnwwkRZjI8vw=
 github.com/fortytw2/leaktest v1.3.0/go.mod h1:jDsjWgpAGjm2CA7WthBh/CdZYEPF31XHquHwclZch5g=
-github.com/wader/goutubedl v0.0.0-20210806161854-b5714b7c0b63 h1:aP7inG3GM9hIVbXGV4rh+DUawtweszAqBydB0LwS3IA=
-github.com/wader/goutubedl v0.0.0-20210806161854-b5714b7c0b63/go.mod h1:5KXd5tImdbmz4JoVhePtbIokCwAfEhUVVx3WLHmjYuw=
+github.com/wader/goutubedl v0.0.0-20210817210218-c4f0e4cc717c h1:izM+QubjXHoJdQgzamsHZC/rdBW8IjCeF2RweCLZyTA=
+github.com/wader/goutubedl v0.0.0-20210817210218-c4f0e4cc717c/go.mod h1:5KXd5tImdbmz4JoVhePtbIokCwAfEhUVVx3WLHmjYuw=
 github.com/wader/logutils v0.0.0-20190904144142-6d88a3144654 h1:/H3pKDa/IP88aOSLuF+9b4Sc7hBVX4TCEBMwzsYKYv0=
 github.com/wader/logutils v0.0.0-20190904144142-6d88a3144654/go.mod h1:6+XZabA9xCm6iA5xt7uBVUY9/j+kbPeEgtR2a1lRjKo=
 github.com/wader/osleaktest v0.0.0-20191111175233-f643b0fed071 h1:QkrG4Zr5OVFuC9aaMPmFI0ibfhBZlAgtzDYWfu7tqQk=
