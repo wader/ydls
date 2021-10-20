@@ -52,6 +52,11 @@ const (
 	MediaUnknown
 )
 
+func init() {
+	// we're using yt-dlp at the moment
+	goutubedl.Path = "yt-dlp"
+}
+
 func (m mediaType) String() string {
 	switch m {
 	case MediaAudio:

@@ -1,6 +1,6 @@
-# bump: youtube-dl /YDL_VERSION=([\d.]+)/ https://github.com/ytdl-org/youtube-dl.git|/^\d/|sort
-# bump: youtube-dl link "Release notes" https://github.com/ytdl-org/youtube-dl/releases/tag/$LATEST
-ARG YDL_VERSION=2021.06.06
+# bump: yt-dlp /YT_DLP=([\d.-]+)/ https://github.com/yt-dlp/yt-dlp.git|/^\d/|sort
+# bump: yt-dlp link "Release notes" https://github.com/yt-dlp/yt-dlp.git/releases/tag/$LATEST
+ARG YT_DLP=2021.10.10
 # bump: static-ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
 ARG FFMPEG_VERSION=4.4.0-1
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
@@ -12,11 +12,11 @@ ARG ALPINE_VERSION=3.14.2
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
-FROM golang:$GOLANG_VERSION AS youtube-dl
-ARG YDL_VERSION
+FROM golang:$GOLANG_VERSION AS yt-dlp
+ARG YT_DLP
 RUN \
-  curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
-  chmod a+x /youtube-dl
+  curl -L https://github.com/yt-dlp/yt-dlp/releases/download/$YT_DLP/yt-dlp -o /yt-dlp && \
+  chmod a+x /yt-dlp
 
 FROM golang:$GOLANG_VERSION AS ydls-base
 WORKDIR /src
@@ -29,7 +29,7 @@ RUN \
   mplayer
 
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
-COPY --from=youtube-dl /youtube-dl /usr/local/bin/
+COPY --from=yt-dlp /yt-dlp /usr/local/bin/
 
 FROM ydls-base AS ydls-dev
 RUN \
@@ -81,7 +81,7 @@ RUN apk add --no-cache \
 # image does it https://github.com/docker-library/python/blob/master/3.8/alpine3.10/Dockerfile
 RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
-COPY --from=youtube-dl /youtube-dl /usr/local/bin/
+COPY --from=yt-dlp /yt-dlp /usr/local/bin/
 COPY --from=ydls-builder /go/bin/ydls /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin
 COPY ydls.json $CONFIG
@@ -90,7 +90,7 @@ COPY ydls.json $CONFIG
 RUN \
   ffmpeg -version && \
   ffprobe -version && \
-  youtube-dl --version && \
+  yt-dlp --version && \
   ydls -version
 
 USER nobody
