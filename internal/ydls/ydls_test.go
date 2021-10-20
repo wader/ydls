@@ -335,7 +335,7 @@ func TestRSS(t *testing.T) {
 		t.Errorf("expected title \"%s\" got \"%s\"", expectedTitle, rssRoot.Channel.Title)
 	}
 
-	// TODO: description, not returned by youtube-dl?
+	// TODO: description, not returned by youtube-dlc?
 
 	expectedItemsCount := 2
 	if len(rssRoot.Channel.Items) != expectedItemsCount {

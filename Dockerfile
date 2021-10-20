@@ -1,6 +1,6 @@
-# bump: youtube-dl /YDL_VERSION=([\d.]+)/ https://github.com/ytdl-org/youtube-dl.git|/^\d/|sort
-# bump: youtube-dl link "Release notes" https://github.com/ytdl-org/youtube-dl/releases/tag/$LATEST
-ARG YDL_VERSION=2021.06.06
+# bump: youtube-dlc /YDLC_VERSION=([\d.-]+)/ https://github.com/blackjack4494/yt-dlc.git|/^\d/|sort
+# bump: youtube-dlc link "Release notes" https://github.com/blackjack4494/yt-dlc/releases/tag/$LATEST
+ARG YDLC_VERSION=2020.11.11-3
 # bump: static-ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
 ARG FFMPEG_VERSION=4.4.0-1
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
@@ -12,11 +12,11 @@ ARG ALPINE_VERSION=3.14.2
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
-FROM golang:$GOLANG_VERSION AS youtube-dl
-ARG YDL_VERSION
+FROM golang:$GOLANG_VERSION AS youtube-dlc
+ARG YDLC_VERSION
 RUN \
-  curl -L -o /youtube-dl https://yt-dl.org/downloads/$YDL_VERSION/youtube-dl && \
-  chmod a+x /youtube-dl
+  curl -L -o /youtube-dlc https://github.com/blackjack4494/yt-dlc/releases/download/$YDLC_VERSION/youtube-dlc && \
+  chmod a+x /youtube-dlc
 
 FROM golang:$GOLANG_VERSION AS ydls-base
 WORKDIR /src
@@ -29,7 +29,7 @@ RUN \
   mplayer
 
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
-COPY --from=youtube-dl /youtube-dl /usr/local/bin/
+COPY --from=youtube-dlc /youtube-dlc /usr/local/bin/
 
 FROM ydls-base AS ydls-dev
 RUN \
@@ -81,7 +81,7 @@ RUN apk add --no-cache \
 # image does it https://github.com/docker-library/python/blob/master/3.8/alpine3.10/Dockerfile
 RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
-COPY --from=youtube-dl /youtube-dl /usr/local/bin/
+COPY --from=youtube-dlc /youtube-dlc /usr/local/bin/
 COPY --from=ydls-builder /go/bin/ydls /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin
 COPY ydls.json $CONFIG
@@ -90,7 +90,7 @@ COPY ydls.json $CONFIG
 RUN \
   ffmpeg -version && \
   ffprobe -version && \
-  youtube-dl --version && \
+  youtube-dlc --version && \
   ydls -version
 
 USER nobody

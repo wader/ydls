@@ -52,6 +52,11 @@ const (
 	MediaUnknown
 )
 
+func init() {
+	// we're using youtube-dlc at the moment
+	goutubedl.Path = "youtube-dlc"
+}
+
 func (m mediaType) String() string {
 	switch m {
 	case MediaAudio:
@@ -109,7 +114,7 @@ func safeFilename(filename string) string {
 	return r.Replace(filename)
 }
 
-// translate youtube-dl codec name to ffmpeg codec name
+// translate youtube-dlc codec name to ffmpeg codec name
 func ffmpegCodecFromYDLCodec(c string) (string, bool) {
 	codecNameNormalizeMap := map[string]string{
 		"none": "",
