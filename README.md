@@ -1,6 +1,6 @@
 ## youtube-dl HTTP service
 
-HTTP service for [youtube-dl](https://yt-dl.org) that downloads media from
+HTTP service for [yt-dlp](https://github.com/yt-dlp/yt-dlp) that downloads media from
 requested URL and streams, transmux and transcode to requested format if needed.
 
 It can be used to convert media, create podcasts and audio only versions of media
@@ -40,7 +40,7 @@ TCP port 8080 somehow.
 ### Build and install yourself
 
 Run `go get github.com/wader/ydls/cmd/ydls` to install `ydls`.
-Make sure you have ffmpeg, youtube-dl, rtmpdump and mplayer
+Make sure you have ffmpeg, yt-dlp, rtmpdump and mplayer
 installed and in `PATH`.
 
 Copy and edit [ydls.json](ydls.json) to match your ffmpeg builds
@@ -62,7 +62,7 @@ Download in best format:
 ### Parameters
 
 `format` - Format name. See table above and [ydls.json](ydls.json)  
-`URL` - Any URL that [youtube-dl](https://yt-dl.org) can handle  
+`URL` - Any URL that [yt-dlp](https://github.com/blackjack4494/yt-dlc) can handle  
 `URL-not-encoded` - Non-URL-encoded URL. The idea is to be able to simply
 prepend the download URL with the ydls URL by hand without doing any encoding
 (for example in the browser location bar)  
@@ -115,14 +115,14 @@ to current directory:
 
 `docker run --rm -v "$PWD:$PWD" -w "$PWD" mwader/ydls https://www.youtube.com/watch?v=cF1zJYkBW4A mp3`
 
-youtube-dl URL can point to a plain media file.
+yt-dlp URL can point to a plain media file.
 
 If you run the service using some cloud services you might run into geo-restriction
 issues with some sites like youtube.
 
 ## Development
 
-When fiddling with ffmpeg and youtube-dl related code I usually do this:
+When fiddling with ffmpeg and yt-dlp related code I usually do this:
 
 ```sh
 docker build --target ydls-dev -t ydls-dev . && docker run --rm -ti -v "$PWD:/$PWD" -w "$PWD" ydls-dev
@@ -145,7 +145,7 @@ CONFIG="$PWD/ydls.json" TEST_EXTERNAL=1 go test -v -cover -race ./...
 - Refactor messy downloadFormat function. Maybe a media interface with audio, video and subtitle
 implementations that select best format and return reader and mappings? should share a common
 format picker so formats can be shared and not re-downloaded.
-- Make download part into an interface to support more than youtube-dl.
+- Make download part into an interface to support more than yt-dlp.
 - Bitrate factor per codec when sorting formats (prefer aac over mp3 at same bitrate etc)
 - X-Remote IP header?
 
