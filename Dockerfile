@@ -1,5 +1,5 @@
 # bump: yt-dlp /YT_DLP=([\d.-]+)/ https://github.com/yt-dlp/yt-dlp.git|/^\d/|sort
-# bump: yt-dlp link "Release notes" https://github.com/yt-dlp/yt-dlp.git/releases/tag/$LATEST
+# bump: yt-dlp link "Release notes" https://github.com/yt-dlp/yt-dlp/releases/tag/$LATEST
 ARG YT_DLP=2021.10.10
 # bump: static-ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
 ARG FFMPEG_VERSION=4.4.0-1

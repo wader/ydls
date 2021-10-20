@@ -54,9 +54,9 @@ func init() {
 }
 
 func server(y ydls.YDLS) {
-	youtubedlVersion, err := goutubedl.Version(context.Background())
-	fatalIfErrorf(err, "failed to get youteube-dl version")
-	log.Printf("youtube-dl %s", youtubedlVersion)
+	ytdlpVersion, err := goutubedl.Version(context.Background())
+	fatalIfErrorf(err, "failed to get yt-dlp version")
+	log.Printf("yt-dlp %s", ytdlpVersion)
 
 	yh := &ydls.Handler{YDLS: y}
 
