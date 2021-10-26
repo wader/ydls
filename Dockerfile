@@ -2,7 +2,7 @@
 # bump: yt-dlp link "Release notes" https://github.com/yt-dlp/yt-dlp/releases/tag/$LATEST
 ARG YT_DLP=2021.10.22
 # bump: static-ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
-ARG FFMPEG_VERSION=4.4.0-1
+ARG FFMPEG_VERSION=4.4.1
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
 # bump: golang link "Release notes" https://golang.org/doc/devel/release.html
 ARG GOLANG_VERSION=1.17.2
