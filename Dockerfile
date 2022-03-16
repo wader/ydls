@@ -49,13 +49,16 @@ COPY ydls.json /etc
 COPY Dockerfile .git* /src/.git/
 RUN (git describe --always 2>/dev/null || echo nogit) > .GIT_COMMIT
 
+# -buildvcs=false for now
+# https://github.com/golang/go/issues/51723
 RUN \
   CONFIG=/src/ydls.json \
   TEST_EXTERNAL=1 \
-  go test -v -cover -race ./...
+  go test -buildvcs=false -v -cover -race ./...
 
 RUN \
   go install \
+  -buildvcs=false \
   -installsuffix netgo \
   -tags netgo \
   -ldflags "-X main.gitCommit=$(cat .GIT_COMMIT)" \
