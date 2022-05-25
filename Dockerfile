@@ -2,7 +2,7 @@
 # bump: yt-dlp link "Release notes" https://github.com/yt-dlp/yt-dlp/releases/tag/$LATEST
 ARG YT_DLP=2022.05.18
 # bump: static-ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d/|sort
-ARG FFMPEG_VERSION=5.0.1
+ARG FFMPEG_VERSION=5.0.1-3
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
 # bump: golang link "Release notes" https://golang.org/doc/devel/release.html
 ARG GOLANG_VERSION=1.18.2
@@ -32,6 +32,7 @@ COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=yt-dlp /yt-dlp /usr/local/bin/
 
 FROM ydls-base AS ydls-dev
+ARG TARGETARCH
 RUN \
   apt-get install --no-install-recommends -qy \
   less \
@@ -51,10 +52,11 @@ RUN (git describe --always 2>/dev/null || echo nogit) > .GIT_COMMIT
 
 # -buildvcs=false for now
 # https://github.com/golang/go/issues/51723
+# -race only for amd64 for now, should work on arm64 etc but seems to not work in qemu
 RUN \
   CONFIG=/src/ydls.json \
   TEST_EXTERNAL=1 \
-  go test -buildvcs=false -v -cover -race ./...
+  go test -timeout=30m -buildvcs=false -v -cover $([ "$TARGETARCH" = "amd64" ] && echo -race) ./...
 
 RUN \
   go install \
