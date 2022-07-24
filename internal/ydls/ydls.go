@@ -743,8 +743,16 @@ func (ydls *YDLS) downloadFormat(
 				if subtitleProbErr != nil {
 					log.Printf("  %s %s: error skipping: %s", subtitle.Language, subtitle.Ext, subtitleProbErr)
 					continue
+				}
+
+				// make sure some subtitle was found
+				// ffprobe for ffmpeg 5.1 (and later?) only report error but does not exit with non-zero
+				subtitleCodecName := subtitleProbeInfo.SubtitleCodec()
+				if subtitleCodecName == "" {
+					log.Printf("  %s %s: no subtitle stream found, skipping", subtitle.Language, subtitle.Ext)
+					continue
 				} else {
-					log.Printf("  %s %s: probed: %s", subtitle.Language, subtitle.Ext, subtitleProbeInfo.SubtitleCodec())
+					log.Printf("  %s %s: probed: %s", subtitle.Language, subtitle.Ext, subtitleCodecName)
 				}
 
 				if subtitlesTempDir == "" {
@@ -761,7 +769,7 @@ func (ydls *YDLS) downloadFormat(
 				}
 
 				var subtitleCodec ffmpeg.Codec
-				if options.RequestOptions.Format.SubtitleCodecs.Member(subtitleProbeInfo.SubtitleCodec()) {
+				if options.RequestOptions.Format.SubtitleCodecs.Member(subtitleCodecName) {
 					subtitleCodec = ffmpeg.SubtitleCodec("copy")
 				} else {
 					firstSubtitleCodecName, _ := options.RequestOptions.Format.SubtitleCodecs.First()
@@ -769,8 +777,9 @@ func (ydls *YDLS) downloadFormat(
 				}
 
 				subtitleMap := ffmpeg.Map{
-					Input: ffmpeg.URL(subtitleFile),
-					Codec: subtitleCodec,
+					Input:     ffmpeg.URL(subtitleFile),
+					Specifier: "s:0",
+					Codec:     subtitleCodec,
 				}
 
 				// ffmpeg expects 3 letter iso639 language code
