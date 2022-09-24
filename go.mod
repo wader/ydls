@@ -17,5 +17,5 @@ require (
 	github.com/wader/osleaktest v0.0.0-20191111175233-f643b0fed071
 	// bump: sync /golang.org\/x\/sync .*-(.*)/ gitrefs:https://github.com/golang/sync.git|re:%refs/heads/master%|@commit|/^(.{12})/
 	// bump: sync command go get -d golang.org/x/sync && go mod tidy
-	golang.org/x/sync v0.0.0-20220907140024-f12130a52804
+	golang.org/x/sync v0.0.0-20220923202941-7f9b1623fab7
 )
