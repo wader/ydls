@@ -8,7 +8,7 @@ ARG FFMPEG_VERSION=5.1.2
 ARG GOLANG_VERSION=1.19.3
 # bump: alpine /ALPINE_VERSION=([\d.]+)/ docker:alpine|^3
 # bump: alpine link "Release notes" https://alpinelinux.org/posts/Alpine-$LATEST-released.html
-ARG ALPINE_VERSION=3.16.3
+ARG ALPINE_VERSION=3.17.0
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
@@ -82,9 +82,6 @@ RUN apk add --no-cache \
   py3-pycryptodome \
   rtmpdump \
   mplayer
-# make python3 default python, symlink seems to be the way the official python alpine
-# image does it https://github.com/docker-library/python/blob/master/3.8/alpine3.10/Dockerfile
-RUN ln -s /usr/bin/python3 /usr/bin/python
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=yt-dlp /yt-dlp /usr/local/bin/
 COPY --from=ydls-builder /go/bin/ydls /usr/local/bin/
