@@ -157,6 +157,8 @@ func ffmepgCodecsFromExt(ext string) (acodec string, vcodec string) {
 		"mov",
 		"3gp":
 		return "aac", "h264"
+	case "weba":
+		return "opus", ""
 	case "webm":
 		return "opus", "vp9"
 	case "flv":
