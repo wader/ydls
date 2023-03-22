@@ -611,8 +611,15 @@ func (ydls *YDLS) downloadFormat(
 				log.Printf("    %s", ydlFormat)
 			}
 		} else {
-			return DownloadResult{}, fmt.Errorf("no %s stream found", s.Media)
+			if s.Required {
+				return DownloadResult{}, fmt.Errorf("Found no required %s source stream", s.Media)
+			}
+			log.Printf("Found no optional %s source stream, skipping", s.Media)
 		}
+	}
+
+	if len(streamDownloads) == 0 {
+		return DownloadResult{}, fmt.Errorf("No useful source streams found")
 	}
 
 	type downloadProbeResult struct {
@@ -712,8 +719,13 @@ func (ydls *YDLS) downloadFormat(
 				ffmpegCodec = ffmpeg.VideoCodec(firstNonEmpty(ydls.Config.CodecMap[codec.Name], codec.Name))
 			}
 		} else {
-			return DownloadResult{}, fmt.Errorf("no media found for %v stream (%s:%s)",
+			if sdm.stream.Required {
+				return DownloadResult{}, fmt.Errorf("No media found for required %v stream (%s:%s)",
+					sdm.stream.Media, probeAudioCodec, probeVideoCodec)
+			}
+			log.Printf("No media found for optional %v stream (%s:%s)",
 				sdm.stream.Media, probeAudioCodec, probeVideoCodec)
+			continue
 		}
 
 		ffmpegMaps = append(ffmpegMaps, ffmpeg.Map{
@@ -732,6 +744,10 @@ func (ydls *YDLS) downloadFormat(
 			codec.Name,
 			ydls.Config.CodecMap[codec.Name],
 		)
+	}
+
+	if len(ffmpegMaps) == 0 {
+		return DownloadResult{}, fmt.Errorf("No media found")
 	}
 
 	if !options.RequestOptions.Format.SubtitleCodecs.Empty() && len(ydlResult.Info.Subtitles) > 0 {
@@ -832,7 +848,7 @@ func (ydls *YDLS) downloadFormat(
 	firstOutFormat, _ := options.RequestOptions.Format.Formats.First()
 	ffmpegP := &ffmpeg.FFmpeg{
 		Streams: []ffmpeg.Stream{
-			ffmpeg.Stream{
+			{
 				InputFlags:  inputFlags,
 				OutputFlags: outputFlags,
 				Maps:        ffmpegMaps,

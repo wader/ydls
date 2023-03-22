@@ -81,7 +81,6 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 				// DebugLog: log.New(os.Stdout, "debug> ", 0),
 				// Stderr:   printwriter.New(log.New(os.Stdout, "stderr> ", 0)),
 			}
-
 			if err := ffmpegP.Start(context.Background()); err != nil {
 				t.Errorf("ffmpeg start failed for %s: %v", codec, err)
 			} else if err := ffmpegP.Wait(); err != nil {
@@ -101,11 +100,11 @@ func TestFormats(t *testing.T) {
 
 	for _, c := range []struct {
 		MediaRawURL      string
-		audioOnly        bool
+		hasVideo         bool
 		expectedFilename string
 	}{
-		{soundcloudTestAudioURL, true, "Avalon Emerson Live at Printworks London"},
-		{youtubeTestVideoURL, false, "TEST VIDEO"},
+		{soundcloudTestAudioURL, false, "Avalon Emerson Live at Printworks London"},
+		{youtubeTestVideoURL, true, "TEST VIDEO"},
 	} {
 		for formatName, format := range ydls.Config.Formats {
 			if firstFormat, _ := format.Formats.First(); firstFormat == "rss" {
@@ -115,16 +114,15 @@ func TestFormats(t *testing.T) {
 			t.Run(formatName+"-"+c.MediaRawURL, func(t *testing.T) {
 				defer leakChecks(t)()
 
-				hasVideo := false
+				requireVideo := false
 				for _, s := range format.Streams {
-					if s.Media == MediaVideo {
-						hasVideo = true
+					if s.Media == MediaVideo && s.Required {
+						requireVideo = true
 						break
 					}
 				}
-
-				if c.audioOnly && hasVideo {
-					t.Logf("skip, test stream is audio only\n")
+				if requireVideo && !c.hasVideo {
+					t.Logf("skip, format require video and test stream has no video only\n")
 					return
 				}
 
@@ -170,13 +168,40 @@ func TestFormats(t *testing.T) {
 					return
 				}
 
-				for i := 0; i < len(format.Streams); i++ {
-					formatStream := format.Streams[i]
-					probeStream := pi.Streams[i]
-
-					if !formatStream.CodecNames.Member(probeStream.CodecName) {
-						t.Errorf("expected codec %s found %s", formatStream.CodecNames, probeStream.CodecName)
+				// TODO: rewrite and add video only test?
+				// look for audio
+				audioFound := false
+				for _, f := range format.Streams {
+					if f.Media != MediaAudio {
+						continue
+					}
+					if !f.CodecNames.Member(pi.AudioCodec()) {
+						t.Errorf("expected codec %s found %s", f.CodecNames, pi.AudioCodec())
 						return
+					}
+					audioFound = true
+					break
+				}
+				if !audioFound {
+					t.Errorf("no audio found")
+				}
+
+				if c.hasVideo {
+					videoFound := false
+					// look for video
+					for _, f := range format.Streams {
+						if f.Media != MediaVideo {
+							continue
+						}
+						if !f.CodecNames.Member(pi.VideoCodec()) {
+							t.Errorf("expected codec %s found %s", f.CodecNames, pi.VideoCodec())
+							return
+						}
+						videoFound = true
+						break
+					}
+					if requireVideo && !videoFound {
+						t.Errorf("no video found")
 					}
 				}
 

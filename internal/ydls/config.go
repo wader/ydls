@@ -65,6 +65,7 @@ func (f *Format) UnmarshalJSON(b []byte) (err error) {
 }
 
 type Stream struct {
+	Required  bool
 	Specifier string
 	Codecs    []Codec
 

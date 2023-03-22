@@ -159,7 +159,8 @@ func TestMissingMediaStream(t *testing.T) {
 	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
-	const formatName = "mkv"
+	// mxf requires video, soundcloud is audio only
+	const formatName = "mxf"
 	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
 
 	ctx, cancelFn := context.WithCancel(context.Background())
