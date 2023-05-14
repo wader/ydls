@@ -152,6 +152,8 @@ func ffmepgCodecsFromExt(ext string) (acodec string, vcodec string) {
 		return "mp3", ""
 	case "ogg":
 		return "vorbis", ""
+	case "opus":
+		return "opus", ""
 	case "ogv":
 		return "vorbis", "theora"
 	case "m4a",
