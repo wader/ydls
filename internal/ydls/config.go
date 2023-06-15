@@ -13,9 +13,14 @@ import (
 type Config struct {
 	InputFlags      []string
 	OutputFlags     []string
+	GoutubeDL       GoutubeDLOptions
 	CodecMap        map[string]string
 	Formats         Formats
 	DownloadRetries int
+}
+
+type GoutubeDLOptions struct {
+	Downloader string
 }
 
 // Format media container format, possible codecs, extension and mime

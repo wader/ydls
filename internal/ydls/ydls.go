@@ -423,6 +423,7 @@ func (ydls *YDLS) download(ctx context.Context, options DownloadOptions, attempt
 		StderrFn: func(cmd *exec.Cmd) io.Writer {
 			return printwriter.NewWithPrefix(log, fmt.Sprintf("%s stderr> ", filepath.Base(cmd.Args[0])))
 		},
+		Downloader: ydls.Config.GoutubeDL.Downloader,
 	}
 
 	var firstFormats string

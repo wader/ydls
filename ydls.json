@@ -7,6 +7,9 @@
     "-max_muxing_queue_size",
     "10000"
   ],
+  "GoutubeDL": {
+    "Downloader": "rtsp,rtmp,mms:ffmpeg"
+  },
   "CodecMap": {
     "mp3": "libmp3lame",
     "vorbis": "libvorbis",
