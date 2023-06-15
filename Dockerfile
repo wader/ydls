@@ -24,9 +24,7 @@ RUN \
   apt-get update -q && \
   apt-get install --no-install-recommends -qy \
   python-is-python3 \
-  python3-pycryptodome \
-  rtmpdump \
-  mplayer
+  python3-pycryptodome
 
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=yt-dlp /yt-dlp /usr/local/bin/
@@ -79,9 +77,7 @@ RUN apk add --no-cache \
   ca-certificates \
   tini \
   python3 \
-  py3-pycryptodome \
-  rtmpdump \
-  mplayer
+  py3-pycryptodome
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=yt-dlp /yt-dlp /usr/local/bin/
 COPY --from=ydls-builder /go/bin/ydls /usr/local/bin/
