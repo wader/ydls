@@ -52,7 +52,7 @@ func urlEncode(s string) string {
 func safeContentDispositionFilename(s string) string {
 	rs := []rune(s)
 	for i, r := range rs {
-		if r < 0x20 || r > 0x7e || r == '"' || r == '/' || r == '\\' {
+		if r < 0x20 || r > 0x7e || r == '"' || r == '\'' || r == '`' || r == '/' || r == '\\' {
 			rs[i] = '_'
 		}
 	}

@@ -86,7 +86,7 @@ func TestSafeContentDispositionFilename(t *testing.T) {
 	}{
 		{" abcdefghijklmnopqruvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", " abcdefghijklmnopqruvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"},
 		{"SPÆCIAL", "SP_CIAL"},
-		{"\\\"/", "___"},
+		{"\\\"/'`", "_____"},
 	} {
 		actual := safeContentDispositionFilename(c.s)
 		if actual != c.expect {
