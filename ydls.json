@@ -14,7 +14,6 @@
     "mp3": "libmp3lame",
     "vorbis": "libvorbis",
     "opus": "libopus",
-    "aac": "libfdk_aac",
     "av1": "libsvtav1"
   },
   "Formats": {
