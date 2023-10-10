@@ -142,7 +142,9 @@
       ],
       "FormatFlags": [
         "-movflags",
-        "+isml+frag_keyframe"
+        "+isml+frag_keyframe",
+        "-frag_size",
+        "500000"
       ],
       "Streams": [
         {
