@@ -299,6 +299,22 @@
       ],
       "Ext": "mxf",
       "MIMEType": "application/mxf"
+    },
+    "gif": {
+      "Formats": [
+        "gif"
+      ],
+      "Streams": [
+        {
+          "Required": true,
+          "Specifier": "v:0",
+          "Codecs": [
+            "gif"
+          ]
+        }
+      ],
+      "Ext": "gif",
+      "MIMEType": "image/gif"
     }
   }
 }

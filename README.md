@@ -13,6 +13,7 @@ can handle most format and codecs. Default configuration can transcode to these 
 |-|-|-|-|-|
 |alac|mp4|alac|||
 |flac|flac|flac|||
+|gif|gif||gif||
 |m4a|mp4|aac|||
 |mp3|mp3|mp3|||
 |ogg|ogg|vorbis, opus|||

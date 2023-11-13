@@ -100,11 +100,12 @@ func TestFormats(t *testing.T) {
 
 	for _, c := range []struct {
 		MediaRawURL      string
+		hasAudio         bool
 		hasVideo         bool
 		expectedFilename string
 	}{
-		{soundcloudTestAudioURL, false, "Avalon Emerson Live at Printworks London"},
-		{youtubeTestVideoURL, true, "TEST VIDEO"},
+		{soundcloudTestAudioURL, true, false, "Avalon Emerson Live at Printworks London"},
+		{youtubeTestVideoURL, false, true, "TEST VIDEO"},
 	} {
 		for formatName, format := range ydls.Config.Formats {
 			if firstFormat, _ := format.Formats.First(); firstFormat == "rss" {
@@ -115,14 +116,21 @@ func TestFormats(t *testing.T) {
 				defer leakChecks(t)()
 
 				requireVideo := false
+				requireAudio := false
 				for _, s := range format.Streams {
 					if s.Media == MediaVideo && s.Required {
 						requireVideo = true
-						break
+					}
+					if s.Media == MediaAudio && s.Required {
+						requireAudio = true
 					}
 				}
 				if requireVideo && !c.hasVideo {
-					t.Logf("skip, format require video and test stream has no video only\n")
+					t.Logf("skip, format require video but test stream has no video\n")
+					return
+				}
+				if requireAudio && !c.hasAudio {
+					t.Logf("skip, format require audio but test stream has no audio\n")
 					return
 				}
 
@@ -168,27 +176,26 @@ func TestFormats(t *testing.T) {
 					return
 				}
 
-				// TODO: rewrite and add video only test?
-				// look for audio
-				audioFound := false
-				for _, f := range format.Streams {
-					if f.Media != MediaAudio {
-						continue
+				if c.hasAudio {
+					audioFound := false
+					for _, f := range format.Streams {
+						if f.Media != MediaAudio {
+							continue
+						}
+						if !f.CodecNames.Member(pi.AudioCodec()) {
+							t.Errorf("expected codec %s found %s", f.CodecNames, pi.AudioCodec())
+							return
+						}
+						audioFound = true
+						break
 					}
-					if !f.CodecNames.Member(pi.AudioCodec()) {
-						t.Errorf("expected codec %s found %s", f.CodecNames, pi.AudioCodec())
-						return
+					if requireVideo && !audioFound {
+						t.Errorf("no audio found")
 					}
-					audioFound = true
-					break
-				}
-				if !audioFound {
-					t.Errorf("no audio found")
 				}
 
 				if c.hasVideo {
 					videoFound := false
-					// look for video
 					for _, f := range format.Streams {
 						if f.Media != MediaVideo {
 							continue
