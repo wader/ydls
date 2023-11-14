@@ -152,8 +152,9 @@ func download(y ydls.YDLS) {
 		mediaWriter = os.Stdout
 	}
 
-	io.Copy(mediaWriter, dr.Media)
-	dr.Media.Close()
+	_, err = io.Copy(mediaWriter, dr.Media)
+	fatalIfErrorf(err, "copy failed")
+	_ = dr.Media.Close()
 	dr.Wait()
 	fmt.Print("\n")
 }

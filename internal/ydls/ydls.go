@@ -482,7 +482,7 @@ func (ydls *YDLS) downloadRSS(
 
 	// this needs to use a goroutine to have same api as DownloadFormat etc
 	go func() {
-		w.Write([]byte(xml.Header))
+		_, _ = w.Write([]byte(xml.Header))
 		rssRoot := RSSFromYDLSInfo(
 			options,
 			ydlResult.Info,
@@ -490,7 +490,7 @@ func (ydls *YDLS) downloadRSS(
 		)
 		feedWriter := xml.NewEncoder(w)
 		feedWriter.Indent("", "  ")
-		feedWriter.Encode(rssRoot)
+		_ = feedWriter.Encode(rssRoot)
 		w.Close()
 		close(waitCh)
 	}()
@@ -882,7 +882,7 @@ func (ydls *YDLS) downloadFormat(
 		// TODO: ffmpeg mp3enc id3 writer does not work with streamed output
 		// (id3v2 header length update requires seek)
 		if options.RequestOptions.Format.Prepend == "id3v2" {
-			id3v2.Write(w, id3v2FramesFromMetadata(metadata, ydlResult.Info))
+			_, _ = id3v2.Encode(w, id3v2FramesFromMetadata(metadata, ydlResult.Info))
 		}
 		log.Printf("Starting to copy")
 		n, err := io.Copy(w, ffmpegR)
@@ -890,7 +890,7 @@ func (ydls *YDLS) downloadFormat(
 		log.Printf("Copy ffmpeg done (n=%v err=%v)", n, err)
 
 		cleanupOnDoneFn()
-		ffmpegP.Wait()
+		_ = ffmpegP.Wait()
 		ffmpegStderrPW.Close()
 
 		log.Printf("Done")

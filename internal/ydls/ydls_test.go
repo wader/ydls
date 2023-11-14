@@ -6,7 +6,6 @@ import (
 	"context"
 	"encoding/xml"
 	"io"
-	"io/ioutil"
 	"net/url"
 	"strings"
 	"sync"
@@ -279,7 +278,9 @@ func TestContextCloseDownload(t *testing.T) {
 		cancelFn()
 		wg.Done()
 	}()
-	io.Copy(ioutil.Discard, dr.Media)
+	if _, err := io.Copy(io.Discard, dr.Media); err != nil {
+		t.Fatal(err)
+	}
 	cancelFn()
 	wg.Wait()
 }
@@ -477,6 +478,8 @@ func TestDownloadFormatFallback(t *testing.T) {
 	if err != nil {
 		t.Error("expected no error while download")
 	}
-	io.Copy(ioutil.Discard, dr.Media)
+	if _, err := io.Copy(io.Discard, dr.Media); err != nil {
+		t.Fatal(err)
+	}
 	cancelFn()
 }

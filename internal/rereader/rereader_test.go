@@ -11,7 +11,9 @@ func testShort(t *testing.T, r io.Reader, w io.Writer, restart func()) {
 	b1 := make([]byte, 1)
 	b2 := make([]byte, 2)
 
-	w.Write([]byte{0, 1, 2, 3})
+	if _, err := w.Write([]byte{0, 1, 2, 3}); err != nil {
+		t.Fatal(err)
+	}
 
 	if n, err := io.ReadFull(r, b2); err != nil || n != 2 || !reflect.DeepEqual(b2[:n], []byte{0, 1}) {
 		t.Errorf("read %#v %#v %#v", err, n, b2)
@@ -31,7 +33,9 @@ func testShort(t *testing.T, r io.Reader, w io.Writer, restart func()) {
 func testLarger(t *testing.T, r io.Reader, w io.Writer, restart func()) {
 	b4 := make([]byte, 4)
 
-	w.Write([]byte{0, 1})
+	if _, err := w.Write([]byte{0, 1}); err != nil {
+		t.Fatal(err)
+	}
 
 	// read buffer larger than reread buffer
 	if n, err := io.ReadFull(r, b4); err == nil || n != 2 || !reflect.DeepEqual(b4[:n], []byte{0, 1}) {
