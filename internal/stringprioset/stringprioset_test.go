@@ -70,7 +70,9 @@ func TestString(t *testing.T) {
 
 func TestUnmarshalJSON(t *testing.T) {
 	s := Set{}
-	json.Unmarshal([]byte(`["a", "b"]`), &s)
+	if err := json.Unmarshal([]byte(`["a", "b"]`), &s); err != nil {
+		t.Fatal(err)
+	}
 
 	if !s.Member("a") {
 		t.Error("expectd a to be a member")

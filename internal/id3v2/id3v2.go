@@ -38,8 +38,8 @@ func binaryWriteMany(w io.Writer, fields []interface{}) (int, error) {
 	return tn, nil
 }
 
-// Write write ID3v2 tag
-func Write(w io.Writer, frames []Frame) (int, error) {
+// Encode write ID3v2 tag
+func Encode(w io.Writer, frames []Frame) (int, error) {
 	var err error
 	framesBuf := &bytes.Buffer{}
 

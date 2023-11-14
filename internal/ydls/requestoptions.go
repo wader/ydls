@@ -173,7 +173,6 @@ func NewRequestOptionsFromOpts(opts []string, formats Formats) (RequestOptions, 
 				return RequestOptions{}, fmt.Errorf("invalid items count")
 			}
 			r.Items = uint(itemsN)
-			strconv.ParseUint("", 10, 32)
 		} else if _, ok := codecNames[opt]; ok {
 			r.Codecs = append(r.Codecs, opt)
 		} else if tr, trErr := timerange.NewTimeRangeFromString(opt); trErr == nil {

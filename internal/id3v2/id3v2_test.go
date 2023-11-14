@@ -19,7 +19,9 @@ func TestWrite(t *testing.T) {
 	}
 
 	actual := &bytes.Buffer{}
-	Write(actual, frames)
+	if _, err := Encode(actual, frames); err != nil {
+		t.Fatal(err)
+	}
 
 	expected := []byte(
 		"ID3\x03\x00\x00\x00\x00\x00[" +

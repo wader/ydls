@@ -200,7 +200,9 @@ func (pi *ProbeInfo) UnmarshalJSON(text []byte) error {
 	type probeInfo ProbeInfo
 	var piDummy probeInfo
 	err := json.Unmarshal(text, &piDummy)
-	json.Unmarshal(text, &piDummy.Raw)
+	if err := json.Unmarshal(text, &piDummy.Raw); err != nil {
+		return err
+	}
 	*pi = ProbeInfo(piDummy)
 	return err
 }
@@ -367,7 +369,6 @@ func (f *FFmpeg) Start(ctx context.Context) error {
 	type ffmpegOutput struct {
 		arg string // ffmpeg output argument (pipe:, url)
 	}
-	outputs := []*ffmpegOutput{}
 	outputsMap := map[Output]*ffmpegOutput{}
 
 	closeAfterStartFns := []func(){}
@@ -456,14 +457,12 @@ func (f *FFmpeg) Start(ctx context.Context) error {
 				pw.Close()
 			})
 
-			outputs = append(outputs, fo)
 			outputsMap[o] = fo
 		case URL:
 			fo := &ffmpegOutput{
 				arg: string(o),
 			}
 
-			outputs = append(outputs, fo)
 			outputsMap[o] = fo
 		default:
 			panic(fmt.Sprintf("unknown output type %v", o))
