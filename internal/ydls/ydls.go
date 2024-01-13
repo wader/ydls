@@ -6,7 +6,6 @@ import (
 	"encoding/xml"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"net/url"
@@ -466,7 +465,7 @@ func (ydls *YDLS) downloadRSS(
 	if ydlResult.Info.Thumbnail == "" && webpageRawURL != "" {
 		resp, respErr := options.HTTPClient.Get(webpageRawURL)
 		if respErr == nil {
-			body, _ := ioutil.ReadAll(resp.Body)
+			body, _ := io.ReadAll(resp.Body)
 			resp.Body.Close()
 			linkIconRawURL, _ = linkicon.Find(webpageRawURL, string(body))
 		}
@@ -610,14 +609,14 @@ func (ydls *YDLS) downloadFormat(
 			}
 		} else {
 			if s.Required {
-				return DownloadResult{}, fmt.Errorf("Found no required %s source stream", s.Media)
+				return DownloadResult{}, fmt.Errorf("found no required %s source stream", s.Media)
 			}
 			log.Printf("Found no optional %s source stream, skipping", s.Media)
 		}
 	}
 
 	if len(streamDownloads) == 0 {
-		return DownloadResult{}, fmt.Errorf("No useful source streams found")
+		return DownloadResult{}, fmt.Errorf("no useful source streams found")
 	}
 
 	type downloadProbeResult struct {
@@ -718,7 +717,7 @@ func (ydls *YDLS) downloadFormat(
 			}
 		} else {
 			if sdm.stream.Required {
-				return DownloadResult{}, fmt.Errorf("No media found for required %v stream (%s:%s)",
+				return DownloadResult{}, fmt.Errorf("no media found for required %v stream (%s:%s)",
 					sdm.stream.Media, probeAudioCodec, probeVideoCodec)
 			}
 			log.Printf("No media found for optional %v stream (%s:%s)",
@@ -745,7 +744,7 @@ func (ydls *YDLS) downloadFormat(
 	}
 
 	if len(ffmpegMaps) == 0 {
-		return DownloadResult{}, fmt.Errorf("No media found")
+		return DownloadResult{}, fmt.Errorf("no media found")
 	}
 
 	if !options.RequestOptions.Format.SubtitleCodecs.Empty() && len(ydlResult.Info.Subtitles) > 0 {
@@ -777,7 +776,7 @@ func (ydls *YDLS) downloadFormat(
 				}
 
 				if subtitlesTempDir == "" {
-					tempDir, tempDirErr := ioutil.TempDir("", "ydls-subtitle")
+					tempDir, tempDirErr := os.MkdirTemp("", "ydls-subtitle")
 					if tempDirErr != nil {
 						return DownloadResult{}, fmt.Errorf("failed to create subtitles tempdir: %s", tempDirErr)
 					}
@@ -785,7 +784,7 @@ func (ydls *YDLS) downloadFormat(
 				}
 
 				subtitleFile := filepath.Join(subtitlesTempDir, fmt.Sprintf("%s.%s", subtitle.Language, subtitle.Ext))
-				if err := ioutil.WriteFile(subtitleFile, subtitle.Bytes, 0600); err != nil {
+				if err := os.WriteFile(subtitleFile, subtitle.Bytes, 0600); err != nil {
 					return DownloadResult{}, fmt.Errorf("failed to write subtitle file: %s", err)
 				}
 
