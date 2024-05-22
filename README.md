@@ -70,7 +70,7 @@ prepend the download URL with the ydls URL by hand without doing any encoding
 `codec` - Codec to use instead of default for format (can be specified one or two times for
 audio and video codec)  
 `retranscode` - Retranscode even if input codec is same as output  
-`time` - Only download specificed time range. Ex: `30s`, `20m30s`, `1h20s30s` will limit
+`time` - Only download specificed time range. Ex: `30s`, `20m30s`, `1h20m30s` will limit
 duration. `10s-30s` will seek 10 seconds and stop at 30 seconds (20 second output duration)  
 `items` - If playlist only include this many items
 
