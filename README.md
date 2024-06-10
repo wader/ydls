@@ -18,12 +18,13 @@ can handle most format and codecs. Default configuration can transcode to these 
 |mp3|mp3|mp3|||
 |ogg|ogg|vorbis, opus|||
 |wav|wav|pcm_s16le|||
-|mkv|matroska|aac, flac, alac, ac3, mp3, vorbis, opus|h264, hevc, vp8, vp9, theora, av1|subrip, ass|
-|mp4|mp4|aac, mp3, vorbis, flac, alac|h264, hevc, av1|mov_text|
+|mkv|matroska|aac, alac, ac3, mp3, vorbis, opus, flac|h264, hevc, vp8, vp9, theora, av1|subrip, ass|
+|mp4|mp4|aac, alac, mp3, vorbis, flac|h264, vp9, av1, hevc|mov_text|
 |mxf|mxf|pcm_s16le|mpeg2video||
 |ts|mpegts|aac, mp3, ac3|h264, hevc||
-|webm|webm|vorbis, opus|vp8, vp9, av1|webvtt|
+|webm|webm|vorbis, opus|vp8, av1, vp9|webvtt|
 |rss|mp3|mp3|||
+
 
 The `rss` format transforms a playlist into a RSS audio podcast.
 
