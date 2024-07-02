@@ -1,6 +1,6 @@
 # bump: yt-dlp /YT_DLP=([\d.-]+)/ https://github.com/yt-dlp/yt-dlp.git|/^\d/|sort
 # bump: yt-dlp link "Release notes" https://github.com/yt-dlp/yt-dlp/releases/tag/$LATEST
-ARG YT_DLP=2024.05.27
+ARG YT_DLP=2024.07.01
 # bump: static-ffmpeg /FFMPEG_VERSION=([\d.-]+)/ docker:mwader/static-ffmpeg|/^\d[0-9.-]*$/|sort
 ARG FFMPEG_VERSION=7.0.1
 # bump: golang /GOLANG_VERSION=([\d.]+)/ docker:golang|^1
