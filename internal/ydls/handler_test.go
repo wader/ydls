@@ -116,7 +116,7 @@ func TestYDLSHandlerDownload(t *testing.T) {
 
 	h := ydlsHandlerFromEnv(t)
 	rr := httptest.NewRecorder()
-	testMediaURL := "https://www.youtube.com/watch?v=C0DPdy98e4c"
+	testMediaURL := "https://vimeo.com/454525548"
 	req := httptest.NewRequest("GET", "http://hostname/mp3/"+testMediaURL, nil)
 	h.ServeHTTP(rr, req)
 	resp := rr.Result()

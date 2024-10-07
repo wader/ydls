@@ -497,7 +497,7 @@ func (ydls *YDLS) downloadRSS(
 }
 
 func (ydls *YDLS) downloadRaw(ctx context.Context, debugLog Printer, ydlResult goutubedl.Result) (DownloadResult, error) {
-	dprc, err := downloadAndProbeFormat(ctx, ydlResult, "best", debugLog)
+	dprc, err := downloadAndProbeFormat(ctx, ydlResult, "", debugLog)
 	if err != nil {
 		return DownloadResult{}, err
 	}
