@@ -123,7 +123,7 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		Retries:        yh.YDLS.Config.DownloadRetries,
 	}
 
-	formatName := "best"
+	formatName := "" // default yt-dlp format
 	if requestOptions.Format != nil {
 		formatName = requestOptions.Format.Name
 	}

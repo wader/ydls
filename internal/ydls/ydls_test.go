@@ -66,7 +66,7 @@ func TestForceCodec(t *testing.T) {
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
 			RequestOptions: RequestOptions{
-				MediaRawURL: youtubeTestVideoURL,
+				MediaRawURL: testVideoURL,
 				Format:      &mkvFormat,
 				Codecs:      forceCodecs,
 			},
@@ -75,7 +75,7 @@ func TestForceCodec(t *testing.T) {
 	)
 	if err != nil {
 		cancelFn()
-		t.Errorf("%s: download failed: %s", youtubeTestVideoURL, err)
+		t.Errorf("%s: download failed: %s", testVideoURL, err)
 		return
 	}
 
@@ -84,18 +84,18 @@ func TestForceCodec(t *testing.T) {
 	dr.Wait()
 	cancelFn()
 	if err != nil {
-		t.Errorf("%s: probe failed: %s", youtubeTestVideoURL, err)
+		t.Errorf("%s: probe failed: %s", testVideoURL, err)
 		return
 	}
 
 	if pi.FormatName() != "matroska" {
-		t.Errorf("%s: force codec failed: found %s", youtubeTestVideoURL, pi)
+		t.Errorf("%s: force codec failed: found %s", testVideoURL, pi)
 		return
 	}
 
 	for i := 0; i < len(forceCodecs); i++ {
 		if pi.Streams[i].CodecName != forceCodecs[i] {
-			t.Errorf("%s: force codec failed: %s != %s", youtubeTestVideoURL, pi.Streams[i].CodecName, forceCodecs[i])
+			t.Errorf("%s: force codec failed: %s != %s", testVideoURL, pi.Streams[i].CodecName, forceCodecs[i])
 			return
 		}
 	}
@@ -110,10 +110,10 @@ func TestTimeRangeOption(t *testing.T) {
 	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
-	const formatName = "mkv"
-	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
+	const formatName = "webm"
+	webmFormat, _ := ydls.Config.Formats.FindByName(formatName)
 
-	timeRange, timeRangeErr := timerange.NewTimeRangeFromString("10s-15s")
+	timeRange, timeRangeErr := timerange.NewTimeRangeFromString("1-6s")
 	if timeRangeErr != nil {
 		t.Fatalf("failed to parse time range")
 	}
@@ -123,8 +123,8 @@ func TestTimeRangeOption(t *testing.T) {
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
 			RequestOptions: RequestOptions{
-				MediaRawURL: youtubeTestVideoURL,
-				Format:      &mkvFormat,
+				MediaRawURL: testVideoURL,
+				Format:      &webmFormat,
 				TimeRange:   timeRange,
 			},
 			Retries: ydlsLRetries,
@@ -132,7 +132,7 @@ func TestTimeRangeOption(t *testing.T) {
 	)
 	if err != nil {
 		cancelFn()
-		t.Fatalf("%s: download failed: %s", youtubeTestVideoURL, err)
+		t.Fatalf("%s: download failed: %s", testVideoURL, err)
 	}
 
 	pi, err := ffmpeg.Probe(ctx, ffmpeg.Reader{Reader: io.LimitReader(dr.Media, 10*1024*1024)}, nil, nil)
@@ -140,12 +140,12 @@ func TestTimeRangeOption(t *testing.T) {
 	dr.Wait()
 	cancelFn()
 	if err != nil {
-		t.Errorf("%s: probe failed: %s", youtubeTestVideoURL, err)
+		t.Errorf("%s: probe failed: %s", testVideoURL, err)
 		return
 	}
 
 	if pi.Duration() != timeRange.Duration() {
-		t.Errorf("%s: probed duration not %v, got %v", youtubeTestVideoURL, timeRange.Duration(), pi.Duration())
+		t.Errorf("%s: probed duration not %v, got %v", testVideoURL, timeRange.Duration(), pi.Duration())
 		return
 	}
 }
@@ -160,7 +160,7 @@ func TestMissingMediaStream(t *testing.T) {
 	ydls := ydlsFromEnv(t)
 	// mxf requires video, soundcloud is audio only
 	const formatName = "mxf"
-	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
+	mxfFormat, _ := ydls.Config.Formats.FindByName(formatName)
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
@@ -168,7 +168,7 @@ func TestMissingMediaStream(t *testing.T) {
 		DownloadOptions{
 			RequestOptions: RequestOptions{
 				MediaRawURL: soundcloudTestAudioURL,
-				Format:      &mkvFormat,
+				Format:      &mxfFormat,
 			},
 			Retries: ydlsLRetries,
 		},
@@ -218,8 +218,8 @@ func TestContextCloseProbe(t *testing.T) {
 	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
-	const formatName = "mkv"
-	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
+	const formatName = "mp4"
+	mp4Format, _ := ydls.Config.Formats.FindByName(formatName)
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
@@ -233,8 +233,8 @@ func TestContextCloseProbe(t *testing.T) {
 	_, err := ydls.Download(ctx,
 		DownloadOptions{
 			RequestOptions: RequestOptions{
-				MediaRawURL: youtubeLongTestVideoURL,
-				Format:      &mkvFormat,
+				MediaRawURL: longTestVideoURL,
+				Format:      &mp4Format,
 			},
 			Retries: ydlsLRetries,
 		},
@@ -254,16 +254,16 @@ func TestContextCloseDownload(t *testing.T) {
 	defer leakChecks(t)()
 
 	ydls := ydlsFromEnv(t)
-	const formatName = "mkv"
-	mkvFormat, _ := ydls.Config.Formats.FindByName(formatName)
+	const formatName = "mp4"
+	mp4Format, _ := ydls.Config.Formats.FindByName(formatName)
 
 	ctx, cancelFn := context.WithCancel(context.Background())
 
 	dr, err := ydls.Download(ctx,
 		DownloadOptions{
 			RequestOptions: RequestOptions{
-				MediaRawURL: youtubeLongTestVideoURL,
-				Format:      &mkvFormat,
+				MediaRawURL: longTestVideoURL,
+				Format:      &mp4Format,
 			},
 			Retries: ydlsLRetries,
 		},
@@ -404,6 +404,8 @@ func TestSubtitles(t *testing.T) {
 	if !testExternal {
 		t.Skip("TEST_EXTERNAL")
 	}
+
+	t.Skip("no good subtitles video found yet")
 
 	subtitlesTestVideoURL := "https://www.youtube.com/watch?v=QRS8MkLhQmM"
 	ydls := ydlsFromEnv(t)

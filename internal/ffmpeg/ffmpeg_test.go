@@ -7,7 +7,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"testing"
 	"time"
@@ -157,7 +156,7 @@ func TestURLInput(t *testing.T) {
 	defer leakChecks(t)()
 
 	dummy1 := mustDummy(t, "matroska", "mp3", "h264")
-	tempFile1, tempFile1Err := ioutil.TempFile("", "TestURLInput")
+	tempFile1, tempFile1Err := os.CreateTemp("", "TestURLInput")
 	if tempFile1Err != nil {
 		t.Fatal(tempFile1)
 	}
@@ -168,7 +167,7 @@ func TestURLInput(t *testing.T) {
 	tempFile1.Close()
 
 	dummy2 := mustDummy(t, "matroska", "mp3", "h264")
-	tempFile2, tempFile2Err := ioutil.TempFile("", "TestURLInput")
+	tempFile2, tempFile2Err := os.CreateTemp("", "TestURLInput")
 	if tempFile2Err != nil {
 		t.Fatal(tempFile2Err)
 	}
