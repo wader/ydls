@@ -18,7 +18,7 @@ RUN \
   curl -L https://github.com/yt-dlp/yt-dlp/releases/download/$YT_DLP/yt-dlp -o /yt-dlp && \
   chmod a+x /yt-dlp
 
-FROM golang:$GOLANG_VERSION AS ydls-base
+FROM golang:$GOLANG_VERSION AS base
 WORKDIR /src
 RUN \
   apt-get update -q && \
@@ -29,7 +29,7 @@ RUN \
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=yt-dlp /yt-dlp /usr/local/bin/
 
-FROM ydls-base AS ydls-dev
+FROM base AS dev
 ARG TARGETARCH
 RUN \
   apt-get install --no-install-recommends -qy \
@@ -37,7 +37,7 @@ RUN \
   jq \
   bsdmainutils
 
-FROM ydls-base AS ydls-builder
+FROM base AS builder
 COPY go.mod go.sum /src/
 COPY cmd /src/cmd
 COPY internal /src/internal
@@ -48,14 +48,6 @@ COPY ydls.json /etc
 COPY Dockerfile .git* /src/.git/
 RUN (git describe --always 2>/dev/null || echo nogit) > .GIT_COMMIT
 
-# -buildvcs=false for now
-# https://github.com/golang/go/issues/51723
-# -race only for amd64 for now, should work on arm64 etc but seems to not work in qemu
-RUN \
-  CONFIG=/src/ydls.json \
-  TEST_EXTERNAL=1 \
-  go test -timeout=30m -buildvcs=false -v -cover $([ "$TARGETARCH" = "amd64" ] && echo -race) ./...
-
 RUN \
   go install \
   -buildvcs=false \
@@ -63,6 +55,15 @@ RUN \
   -tags netgo \
   -ldflags "-X main.gitCommit=$(cat .GIT_COMMIT)" \
   ./cmd/ydls
+
+FROM builder AS test
+# -buildvcs=false for now
+# https://github.com/golang/go/issues/51723
+# -race only for amd64 for now, should work on arm64 etc but seems to not work in qemu
+RUN \
+  CONFIG=/src/ydls.json \
+  TEST_EXTERNAL=1 \
+  go test -timeout=30m -buildvcs=false -v -cover $([ "$TARGETARCH" = "amd64" ] && echo -race) ./...
 RUN \
   CONFIG=/etc/ydls.json cmd/ydls/ydls_server_test.sh && \
   CONFIG=/etc/ydls.json cmd/ydls/ydls_get_test.sh
@@ -80,7 +81,7 @@ RUN apk add --no-cache \
   py3-pycryptodome
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=yt-dlp /yt-dlp /usr/local/bin/
-COPY --from=ydls-builder /go/bin/ydls /usr/local/bin/
+COPY --from=builder /go/bin/ydls /usr/local/bin/
 COPY entrypoint.sh /usr/local/bin
 COPY ydls.json $CONFIG
 
