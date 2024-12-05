@@ -8,7 +8,7 @@ require (
 	github.com/fortytw2/leaktest v1.3.0
 	// bump: goutubedl /github.com\/wader\/goutubedl .*-(.*)/ gitrefs:https://github.com/wader/goutubedl.git|re:%refs/heads/master%|@commit|/^(.{12})/
 	// bump: goutubedl command go get -d github.com/wader/goutubedl && go mod tidy
-	github.com/wader/goutubedl v0.0.0-20241118160803-5e1bb9940f3c
+	github.com/wader/goutubedl v0.0.0-20241204165758-63dcb4b7f53f
 	// bump: logutils /github.com\/wader\/logutils .*-(.*)/ gitrefs:https://github.com/wader/logutils.git|re:%refs/heads/master%|@commit|/^(.{12})/
 	// bump: logutils command go get -d github.com/wader/logutils && go mod tidy
 	github.com/wader/logutils v0.0.0-20190904144142-6d88a3144654
