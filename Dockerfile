@@ -8,7 +8,7 @@ ARG FFMPEG_VERSION=7.1
 ARG GOLANG_VERSION=1.23.4
 # bump: alpine /ALPINE_VERSION=([\d.]+)/ docker:alpine|^3
 # bump: alpine link "Release notes" https://alpinelinux.org/posts/Alpine-$LATEST-released.html
-ARG ALPINE_VERSION=3.20.3
+ARG ALPINE_VERSION=3.21.0
 
 FROM mwader/static-ffmpeg:$FFMPEG_VERSION AS ffmpeg
 
