@@ -1,6 +1,6 @@
 module github.com/wader/ydls
 
-go 1.12
+go 1.13
 
 require (
 	// bump: leaktest /github.com\/fortytw2\/leaktest v(.*)/ git:https://github.com/fortytw2/leaktest.git|^1
@@ -19,3 +19,5 @@ require (
 	// bump: sync command go get -d golang.org/x/sync@v$LATEST && go mod tidy
 	golang.org/x/sync v0.11.0
 )
+
+replace github.com/wader/goutubedl => /Users/wader/src/goutubedl
