@@ -8,13 +8,12 @@ import (
 	"github.com/wader/osleaktest"
 )
 
-var testVideoURL = "https://vimeo.com/454525548"
-var longTestVideoURL = "https://vimeo.com/454525548"
+var testVideoURL = "https://media.ccc.de/v/blinkencount"
+var longTestVideoURL = "https://media.ccc.de/v/30C3_-_5443_-_en_-_saal_g_-_201312281830_-_introduction_to_processor_design_-_byterazor#t=491"
 var soundcloudTestAudioURL = "https://soundcloud.com/avalonemerson/avalon-emerson-live-at-printworks-london-march-2017"
 var soundcloudTestPlaylistURL = "https://soundcloud.com/mattheis/sets/kindred-phenomena"
 
 var testExternal = os.Getenv("TEST_EXTERNAL") != ""
-var testYoutube = os.Getenv("TEST_YOUTUBE") != ""
 
 var ydlsLRetries = 3
 

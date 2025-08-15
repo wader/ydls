@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"io"
-	"io/ioutil"
 	"log"
 	"strings"
 	"testing"
@@ -53,7 +52,7 @@ func TestFFmpegHasFormatsCodecs(t *testing.T) {
 	if dummyErr != nil {
 		log.Fatal(dummyErr)
 	}
-	dummyBuf, dummyBufErr := ioutil.ReadAll(dummy)
+	dummyBuf, dummyBufErr := io.ReadAll(dummy)
 	if dummyBufErr != nil {
 		log.Fatal(dummyBufErr)
 	}
@@ -105,7 +104,7 @@ func TestFormats(t *testing.T) {
 		expectedFilename string
 	}{
 		{soundcloudTestAudioURL, true, false, "Avalon Emerson Live at Printworks London"},
-		{testVideoURL, false, true, "Sample Video - 3 minutemp4.mp4"},
+		{testVideoURL, false, true, `Blinkencount`},
 	} {
 		for formatName, format := range ydls.Config.Formats {
 			if firstFormat, _ := format.Formats.First(); firstFormat == "rss" {
