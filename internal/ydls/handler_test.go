@@ -3,7 +3,7 @@ package ydls
 import (
 	"crypto/tls"
 	"html/template"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"net/url"
@@ -116,12 +116,11 @@ func TestYDLSHandlerDownload(t *testing.T) {
 
 	h := ydlsHandlerFromEnv(t)
 	rr := httptest.NewRecorder()
-	testMediaURL := "https://vimeo.com/454525548"
-	req := httptest.NewRequest("GET", "http://hostname/mp3/"+testMediaURL, nil)
+	req := httptest.NewRequest("GET", "http://hostname/mp3/"+testVideoURL, nil)
 	h.ServeHTTP(rr, req)
 	resp := rr.Result()
 
-	mediaBytes, err := ioutil.ReadAll(resp.Body)
+	mediaBytes, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -170,7 +169,7 @@ func TestYDLSHandlerIndexTemplate(t *testing.T) {
 		t.Errorf("expected ok, got %d", resp.StatusCode)
 	}
 
-	body, err := ioutil.ReadAll(resp.Body)
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -271,6 +271,10 @@
       "Formats": [
         "mxf"
       ],
+      "FormatFlags": [
+        "-strict",
+        "unofficial"
+      ],
       "Streams": [
         {
           "Required": true,
