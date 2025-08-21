@@ -6,5 +6,5 @@ github.com/wader/logutils v0.0.0-20190904144142-6d88a3144654 h1:/H3pKDa/IP88aOSL
 github.com/wader/logutils v0.0.0-20190904144142-6d88a3144654/go.mod h1:6+XZabA9xCm6iA5xt7uBVUY9/j+kbPeEgtR2a1lRjKo=
 github.com/wader/osleaktest v0.0.0-20191111175233-f643b0fed071 h1:QkrG4Zr5OVFuC9aaMPmFI0ibfhBZlAgtzDYWfu7tqQk=
 github.com/wader/osleaktest v0.0.0-20191111175233-f643b0fed071/go.mod h1:XD6emOFPHVzb0+qQpiNOdPL2XZ0SRUM0N5JHuq6OmXo=
-golang.org/x/sync v0.15.0 h1:KWH3jNZsfyT6xfAfKiz6MRNmd46ByHDYaZ7KSkCtdW8=
-golang.org/x/sync v0.15.0/go.mod h1:1dzgHSNfp02xaA81J2MS99Qcpr2w7fw1gpm99rleRqA=
+golang.org/x/sync v0.16.0 h1:ycBJEhp9p4vXvUZNszeOq0kGTPghopOL8q0fq3vstxw=
+golang.org/x/sync v0.16.0/go.mod h1:1dzgHSNfp02xaA81J2MS99Qcpr2w7fw1gpm99rleRqA=
