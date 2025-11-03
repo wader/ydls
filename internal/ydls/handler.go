@@ -141,6 +141,17 @@ func (yh *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Security-Policy", "default-src 'none'; reflected-xss block")
 	w.Header().Set("Content-Type", dr.MIMEType)
+
+	// Enable seeking/progress in VLC and other players
+	if dr.SupportsRanges {
+		w.Header().Set("Accept-Ranges", "bytes")
+		if dr.ContentLength > 0 {
+			w.Header().Set("Content-Length", fmt.Sprintf("%d", dr.ContentLength))
+		}
+	} else {
+		w.Header().Set("Accept-Ranges", "none")
+	}
+
 	if dr.Filename != "" {
 		w.Header().Set("Content-Disposition",
 			fmt.Sprintf("attachment; filename*=UTF-8''%s; filename=\"%s\"",

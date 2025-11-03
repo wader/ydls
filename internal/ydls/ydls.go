@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -334,10 +335,13 @@ type DownloadOptions struct {
 
 // DownloadResult download result
 type DownloadResult struct {
-	Media    io.ReadCloser
-	Filename string
-	MIMEType string
-	waitCh   chan struct{}
+	Media          io.ReadCloser
+	Filename       string
+	MIMEType       string
+	waitCh         chan struct{}
+	ContentLength  int64         // Estimated content length for range support
+	SupportsRanges bool          // Whether this stream supports HTTP range requests
+	Duration       time.Duration // Duration of media for progress calculation
 }
 
 // Wait for download resources to cleanup
@@ -490,9 +494,10 @@ func (ydls *YDLS) downloadRSS(
 	}()
 
 	return DownloadResult{
-		Media:    r,
-		MIMEType: rss.MIMEType,
-		waitCh:   waitCh,
+		Media:          r,
+		MIMEType:       rss.MIMEType,
+		waitCh:         waitCh,
+		SupportsRanges: false, // RSS feeds don't support range requests
 	}, nil
 }
 
@@ -522,6 +527,21 @@ func (ydls *YDLS) downloadRaw(ctx context.Context, debugLog Printer, ydlResult g
 	}
 
 	log.Printf("Output format: %s (probed %s)", outFormatName, dprc.probeInfo)
+
+	// Get duration and estimate content length for VLC progress/seeking
+	dr.Duration = dprc.probeInfo.Duration()
+	if dr.Duration == 0 && ydlResult.Info.Duration > 0 {
+		dr.Duration = time.Duration(ydlResult.Info.Duration * float64(time.Second))
+	}
+
+	// Estimate content length from bitrate
+	if bitRate := dprc.probeInfo.Format.BitRate; bitRate != "" {
+		if br, err := strconv.ParseInt(bitRate, 10, 64); err == nil && dr.Duration > 0 {
+			dr.ContentLength = (br / 8) * int64(dr.Duration.Seconds())
+			dr.ContentLength = dr.ContentLength * 11 / 10 // Add 10% overhead
+			dr.SupportsRanges = true
+		}
+	}
 
 	var w io.WriteCloser
 	dr.Media, w = io.Pipe()
@@ -843,6 +863,42 @@ func (ydls *YDLS) downloadFormat(
 	}
 
 	firstOutFormat, _ := options.RequestOptions.Format.Formats.First()
+
+	// Calculate duration and estimate content length for VLC progress/seeking
+	var mediaDuration time.Duration
+	var estimatedBitrate int64
+
+	// Get duration from probe info or ydl info
+	if len(streamDownloads) > 0 && streamDownloads[0].download != nil {
+		mediaDuration = streamDownloads[0].download.probeInfo.Duration()
+	}
+	if mediaDuration == 0 && ydlResult.Info.Duration > 0 {
+		mediaDuration = time.Duration(ydlResult.Info.Duration * float64(time.Second))
+	}
+
+	// Calculate average bitrate from all streams
+	for _, sdm := range streamDownloads {
+		if bitRate := sdm.download.probeInfo.Format.BitRate; bitRate != "" {
+			if br, err := strconv.ParseInt(bitRate, 10, 64); err == nil {
+				estimatedBitrate += br
+			}
+		}
+	}
+
+	// Estimate content length based on duration and bitrate
+	var contentLength int64
+	if mediaDuration > 0 && estimatedBitrate > 0 {
+		// bitrate is in bits/sec, convert to bytes and multiply by duration in seconds
+		contentLength = (estimatedBitrate / 8) * int64(mediaDuration.Seconds())
+		// Add 10% overhead for container format
+		contentLength = contentLength * 11 / 10
+	}
+
+	dr.Duration = mediaDuration
+	dr.ContentLength = contentLength
+	// Enable range support for formats that support seeking (most container formats)
+	dr.SupportsRanges = contentLength > 0 && firstOutFormat != "rss"
+
 	ffmpegP := &ffmpeg.FFmpeg{
 		Streams: []ffmpeg.Stream{
 			{
