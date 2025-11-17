@@ -78,7 +78,9 @@ RUN apk add --no-cache \
   ca-certificates \
   tini \
   python3 \
-  py3-pycryptodome
+  py3-pycryptodome \
+  deno
+RUN apk add -X http://dl-cdn.alpinelinux.org/alpine/edge/community yt-dlp-ejs
 COPY --from=ffmpeg /ffmpeg /ffprobe /usr/local/bin/
 COPY --from=yt-dlp /yt-dlp /usr/local/bin/
 COPY --from=builder /go/bin/ydls /usr/local/bin/
