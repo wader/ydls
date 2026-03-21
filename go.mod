@@ -1,8 +1,6 @@
 module github.com/wader/ydls
 
-go 1.24.0
-
-toolchain go1.24.6
+go 1.25.0
 
 require (
 	// bump: leaktest /github.com\/fortytw2\/leaktest v(.*)/ git:https://github.com/fortytw2/leaktest.git|^1
@@ -19,5 +17,5 @@ require (
 	github.com/wader/osleaktest v0.0.0-20191111175233-f643b0fed071
 	// bump: sync /golang.org\/x\/sync v(.*)/ depsdev:go:golang.org/x/sync|*
 	// bump: sync command go get -d golang.org/x/sync@v$LATEST && go mod tidy
-	golang.org/x/sync v0.19.0
+	golang.org/x/sync v0.20.0
 )
