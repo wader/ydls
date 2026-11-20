@@ -1,9 +1,8 @@
 {
-  "InputFlags": [
-    "-thread_queue_size",
-    "10000"
-  ],
+  "InputFlags": [],
   "OutputFlags": [
+    "-thread_queue_size",
+    "10000",
     "-max_muxing_queue_size",
     "10000"
   ],
